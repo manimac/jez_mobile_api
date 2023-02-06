@@ -1,0 +1,12 @@
+vscode - installed
+node js - installed
+mongodb - installed
+robomongo - intsalled
+git bash - installed
+mssql server - installed
+ssms - installed
+cisco vpn - installed
+putty - installed
+sql operations studio - installed
+clone - 2 projects - completed
+pm2 - installed 
