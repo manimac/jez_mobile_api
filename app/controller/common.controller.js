@@ -31,62 +31,54 @@ RandExp = require('randexp');
 
 // SET STORAGE
 var storage = multer.diskStorage({
-    destination: function (req, file, cb) {
+    destination: function(req, file, cb) {
         var dir = './public/uploads/home'
         if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir, { recursive: true });
         }
         cb(null, dir)
     },
-    filename: function (req, file, cb) {
+    filename: function(req, file, cb) {
         cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname)) // Appending the extension
     }
 })
 
-
-
-
-/** Forget and Reset Password */
-exports.forget = async function (req, res) {
-    const alreadyuser = await userModel.findOne({
-        where: {
-            [Op.or]: [{ 'email': req.body.email }, { 'phone': req.body.email }]
-        }
-    });
-    if (alreadyuser) {
-        let encodeEmail = Buffer.from(alreadyuser.email).toString('base64');
-        res.status(200).send({ user: encodeEmail });
-    } else {
-        res.status(500).send('User not found');
-    }
+exports.getTermAndCondition = function(req, res) {
+    TermAndCondModel.findOne({
+        // where: {
+        //     status: 1
+        // }
+    }).then(function(resp) {
+        res.send(resp);
+    }, (err) => {
+        res.status(500).send(err);
+    })
 }
-exports.resetPassword = async function (req, res) {
-    // let email = Buffer.from(req.body.user, 'base64').toString('ascii')
-    let email = req.body.email;
-    let alreadyuser = await userModel.findOne({
-        where: {
-            [Op.or]: [{ 'email': email }, { 'phone': email }]
-        }
-    });
-    if (alreadyuser) {
-        user = alreadyuser.toJSON();
-        var randomstring1 = new RandExp(/^[A-Z]/);
-        var randomstring2 = new RandExp(/^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*\W)(?!.* ).{8,10}$/);
-        // res.status(200).send({ message: randomstring1.gen()+randomstring2.gen() });
-        // var randomstring = Math.random().toString(36).slice(-8);
-        var randomstring = randomstring1.gen() + randomstring2.gen();
-        user.password = bcrypt.hashSync(randomstring, bcrypt.genSaltSync(8), null);
-        alreadyuser.update(user).then(data => {
-            appUtil.resetedPassword(alreadyuser, randomstring);
-            res.status(200).send({ message: 'Password hasbeen reseted' });
-        }, (err) => {
-            res.status(500).send({ message: 'User Update Error' });
-        });
-    } else {
-        res.status(500).send('User not found');
+
+exports.withdrawRequests = function(req, res) {
+    let user_id = appUtil.getUser(req.headers.authorization).id || null;
+    let where = {};
+    if (req.body.frontend) {
+        where.user_id = user_id;
     }
+    WithdrawRequestModel.findAll({
+        where: where,
+        include: [userModel],
+        // order: [
+        //     ['updatedAt', 'DESC']
+        // ]
+    }).then(function(entries) {
+        res.send(entries || null)
+    }, function(err) {
+        res.status(500).send(err);
+    })
 }
-exports.resetPasswordAdmin = async function (req, res) {
+
+
+
+
+
+exports.resetPasswordAdmin = async function(req, res) {
     let email = req.body.email;
     let id = req.body.id;
     let alreadyuser = await userModel.findOne({
@@ -111,7 +103,7 @@ exports.resetPasswordAdmin = async function (req, res) {
 
 
 /** Filters */
-exports.filters = function (req, res) {
+exports.filters = function(req, res) {
     let type = req.params.type || null;
     let category = req.params.category || null;
     let where = {
@@ -128,11 +120,11 @@ exports.filters = function (req, res) {
         order: [
             ['updatedAt', 'DESC']
         ]
-    }).then(function (entries) {
+    }).then(function(entries) {
         res.send(entries || null)
     });
 }
-exports.filtersByGroup = function (req, res) {
+exports.filtersByGroup = function(req, res) {
     let type = req.params.type || null;
     let category = req.params.category || null;
     let where = {
@@ -150,47 +142,47 @@ exports.filtersByGroup = function (req, res) {
             ['updatedAt', 'DESC']
         ],
         group: ['category']
-    }).then(function (entries) {
+    }).then(function(entries) {
         res.send(entries || null)
     });
 }
-exports.filtersOptions = function (req, res) {
+exports.filtersOptions = function(req, res) {
     FilterModel.findAll({
         order: [
             ['updatedAt', 'DESC']
         ]
-    }).then(function (entries) {
+    }).then(function(entries) {
         res.send(entries || null)
     });
 }
-exports.createFilter = function (req, res) {
-    FilterModel.create(req.body).then(function () {
+exports.createFilter = function(req, res) {
+    FilterModel.create(req.body).then(function() {
         res.send(req.body);
-    }, function (err) {
+    }, function(err) {
         res.status(500).send(err);
     })
 }
-exports.updateFilter = function (req, res) {
-    FilterModel.findByPk(req.body.id).then(function (result) {
+exports.updateFilter = function(req, res) {
+    FilterModel.findByPk(req.body.id).then(function(result) {
         result.update(req.body).then((resp) => {
             res.send(resp);
         })
-    }, function (err) {
+    }, function(err) {
         res.status(500).send(err);
     })
 }
-exports.deleteFilter = function (req, res) {
-    FilterModel.findByPk(req.params.id).then(function (result) {
+exports.deleteFilter = function(req, res) {
+    FilterModel.findByPk(req.params.id).then(function(result) {
         result.destroy().then((resp) => {
             res.send(resp);
         })
-    }, function (err) {
+    }, function(err) {
         res.status(500).send(err);
     })
 }
 
 /** FAQ */
-exports.faqs = function (req, res) {
+exports.faqs = function(req, res) {
     FaqModel.findAll({
         where: {
             'status': 1
@@ -198,38 +190,38 @@ exports.faqs = function (req, res) {
         order: [
             ['updatedAt', 'DESC']
         ]
-    }).then(function (entries) {
+    }).then(function(entries) {
         res.send(entries || null)
     });
 }
-exports.createFaq = function (req, res) {
-    FaqModel.create(req.body).then(function () {
+exports.createFaq = function(req, res) {
+    FaqModel.create(req.body).then(function() {
         res.send(req.body);
-    }, function (err) {
+    }, function(err) {
         res.status(500).send(err);
     })
 }
-exports.updateFaq = function (req, res) {
-    FaqModel.findByPk(req.body.id).then(function (result) {
+exports.updateFaq = function(req, res) {
+    FaqModel.findByPk(req.body.id).then(function(result) {
         result.update(req.body).then((resp) => {
             res.send(resp);
         })
-    }, function (err) {
+    }, function(err) {
         res.status(500).send(err);
     })
 }
-exports.deleteFaq = function (req, res) {
-    FaqModel.findByPk(req.params.id).then(function (result) {
+exports.deleteFaq = function(req, res) {
+    FaqModel.findByPk(req.params.id).then(function(result) {
         result.destroy().then((resp) => {
             res.send(resp);
         })
-    }, function (err) {
+    }, function(err) {
         res.status(500).send(err);
     })
 }
 
 /** Contact Us */
-exports.contactus = function (req, res) {
+exports.contactus = function(req, res) {
     ContactModel.findAll({
         where: {
             //'status': 1
@@ -237,38 +229,38 @@ exports.contactus = function (req, res) {
         order: [
             ['updatedAt', 'DESC']
         ]
-    }).then(function (entries) {
+    }).then(function(entries) {
         res.send(entries || null)
     });
 }
-exports.createContact = function (req, res) {
-    ContactModel.create(req.body).then(function () {
+exports.createContact = function(req, res) {
+    ContactModel.create(req.body).then(function() {
         res.send(req.body);
-    }, function (err) {
+    }, function(err) {
         res.status(500).send(err);
     })
 }
-exports.updateContact = function (req, res) {
-    ContactModel.findByPk(req.body.id).then(function (result) {
+exports.updateContact = function(req, res) {
+    ContactModel.findByPk(req.body.id).then(function(result) {
         result.update(req.body).then((resp) => {
             res.send(resp);
         })
-    }, function (err) {
+    }, function(err) {
         res.status(500).send(err);
     })
 }
-exports.deleteContact = function (req, res) {
-    ContactModel.findByPk(req.params.id).then(function (result) {
+exports.deleteContact = function(req, res) {
+    ContactModel.findByPk(req.params.id).then(function(result) {
         result.destroy().then((resp) => {
             res.send(resp);
         })
-    }, function (err) {
+    }, function(err) {
         res.status(500).send(err);
     })
 }
 
 /** Enquiry  */
-exports.enquiries = function (req, res) {
+exports.enquiries = function(req, res) {
     EnquiryModel.findAll({
         where: {
             //'status': 1
@@ -276,92 +268,82 @@ exports.enquiries = function (req, res) {
         order: [
             ['updatedAt', 'DESC']
         ]
-    }).then(function (entries) {
+    }).then(function(entries) {
         res.send(entries || null)
     });
 }
-exports.createEnquiry = function (req, res) {
-    EnquiryModel.create(req.body).then(function () {
+exports.createEnquiry = function(req, res) {
+    EnquiryModel.create(req.body).then(function() {
         res.send(req.body);
-    }, function (err) {
+    }, function(err) {
         res.status(500).send(err);
     })
 }
-exports.updateEnquiry = function (req, res) {
-    EnquiryModel.findByPk(req.body.id).then(function (result) {
+exports.updateEnquiry = function(req, res) {
+    EnquiryModel.findByPk(req.body.id).then(function(result) {
         result.update(req.body).then((resp) => {
             res.send(resp);
         })
-    }, function (err) {
+    }, function(err) {
         res.status(500).send(err);
     })
 }
-exports.deleteEnquiry = function (req, res) {
-    EnquiryModel.findByPk(req.params.id).then(function (result) {
+exports.deleteEnquiry = function(req, res) {
+    EnquiryModel.findByPk(req.params.id).then(function(result) {
         result.destroy().then((resp) => {
             res.send(resp);
         })
-    }, function (err) {
+    }, function(err) {
         res.status(500).send(err);
     })
 }
 
-exports.getHome = function (req, res) {
-    HomeModel.findOne().then(function (resp) {
+exports.getHome = function(req, res) {
+    HomeModel.findOne().then(function(resp) {
         res.send(resp);
     }, (err) => {
         res.status(500).send(err);
     })
 }
-exports.getAboutUs = function (req, res) {
+exports.getAboutUs = function(req, res) {
     AboutModel.findOne({
         // where: {
         //     status: 1
         // }
-    }).then(function (resp) {
-        res.send(resp);
-    }, (err) => {
-        res.status(500).send(err);
-    })
-}
-exports.getTermAndCondition = function (req, res) {
-    TermAndCondModel.findOne({
-        // where: {
-        //     status: 1
-        // }
-    }).then(function (resp) {
-        res.send(resp);
-    }, (err) => {
-        res.status(500).send(err);
-    })
-}
-exports.getLocation = function (req, res) {
-    LocationModel.findOne({
-        // where: {
-        //     status: 1
-        // }
-    }).then(function (resp) {
+    }).then(function(resp) {
         res.send(resp);
     }, (err) => {
         res.status(500).send(err);
     })
 }
 
-exports.updateHome = function (req, res) {
+exports.getLocation = function(req, res) {
+    LocationModel.findOne({
+        // where: {
+        //     status: 1
+        // }
+    }).then(function(resp) {
+        res.send(resp);
+    }, (err) => {
+        res.status(500).send(err);
+    })
+}
+
+exports.updateHome = function(req, res) {
     var upload = multer({ storage: storage }).single('logo');
-    upload(req, res, function (err) {
+    upload(req, res, function(err) {
         req.body.logo = res.req.file && res.req.file.filename || req.body.logo;
-        HomeModel.findOne().then(function (resp) {
+        HomeModel.findOne().then(function(resp) {
             if (resp) {
                 req.body.updated_by = appUtil.getUser(req.headers.authorization).id || null;
-                resp.update(req.body).then(function (result) {
+                resp.update(req.body).then(function(result) {
                     res.send(result);
                 })
             } else {
                 req.body.created_by = appUtil.getUser(req.headers.authorization).id || null;
                 req.body.updated_by = req.body.created_by;
                 delete req.body.id;
-                HomeModel.create(req.body).then(function (respp) {
+                HomeModel.create(req.body).then(function(respp) {
                     res.send(respp);
                 })
             }
@@ -371,18 +353,18 @@ exports.updateHome = function (req, res) {
     });
 }
 
-exports.updatePeekHour = function (req, res) {
+exports.updatePeekHour = function(req, res) {
 
     StaffingModel.findAll({
         where: {
             status: 1
         }
-    }).then(function (resp) {
-        async.eachSeries(resp, function (res, callback) {
+    }).then(function(resp) {
+        async.eachSeries(resp, function(res, callback) {
             let peekpriceperhr = 0
             if (req.body.peekstaffing)
                 peekpriceperhr = (res.priceperhr * req.body.peekstaffing) / 100;
-            res.update({ peekpriceperhr: peekpriceperhr }).then(function (rep) {
+            res.update({ peekpriceperhr: peekpriceperhr }).then(function(rep) {
                 callback();
             })
         })
@@ -393,12 +375,12 @@ exports.updatePeekHour = function (req, res) {
         where: {
             status: 1
         }
-    }).then(function (resp) {
-        async.eachSeries(resp, function (res, callback) {
+    }).then(function(resp) {
+        async.eachSeries(resp, function(res, callback) {
             let peekpriceperhr = 0;
             if (req.body.peekvehicle)
                 peekpriceperhr = (res.priceperhr * req.body.peektransport) / 100;
-            res.update({ peekpriceperhr: peekpriceperhr }).then(function (rep) {
+            res.update({ peekpriceperhr: peekpriceperhr }).then(function(rep) {
                 callback();
             })
         })
@@ -409,12 +391,12 @@ exports.updatePeekHour = function (req, res) {
         where: {
             status: 1
         }
-    }).then(function (resp) {
-        async.eachSeries(resp, function (res, callback) {
+    }).then(function(resp) {
+        async.eachSeries(resp, function(res, callback) {
             let peekpriceperhr = 0;
             if (req.body.peektransport)
                 peekpriceperhr = (res.priceperhr * req.body.peekvehicle) / 100;
-            res.update({ peekpriceperhr: peekpriceperhr }).then(function (rep) {
+            res.update({ peekpriceperhr: peekpriceperhr }).then(function(rep) {
                 callback();
             })
         })
@@ -425,76 +407,76 @@ exports.updatePeekHour = function (req, res) {
         where: {
             status: 1
         }
-    }).then(function (resp) {
+    }).then(function(resp) {
         let home = { peekvehicle: (req.body.peekvehicle || 0), peekstaffing: (req.body.peekstaffing || 0), peektransport: (req.body.peektransport || 0) };
-        resp.update(home).then(function (updateRes) {
+        resp.update(home).then(function(updateRes) {
             res.send({ success: 1 });
         })
     });
 }
 
-exports.updateAboutUs = function (req, res) {
+exports.updateAboutUs = function(req, res) {
     // var upload = multer({ storage: storage }).single('image');
     // upload(req, res, function(err) {
     //     req.body.image = res.req.file && res.req.file.filename || req.body.image;
     AboutModel.findOne({
-        where: {
-            id: 1
-        }
-    }).then(function (resp) {
-        if (resp) {
-            // req.body.updated_by = appUtil.getUser(req.headers.authorization).id || null;
-            resp.update(req.body).then(function (result) {
-                res.send(result);
-            })
-        } else {
-            // req.body.created_by = appUtil.getUser(req.headers.authorization).id || null;
-            // req.body.updated_by = req.body.created_by;
-            delete req.body.id;
-            AboutModel.create(req.body).then(function (respp) {
-                res.send(respp);
-            })
-        }
-    }, (err) => {
-        res.status(500).send(err);
-    })
-    // });
+            where: {
+                id: 1
+            }
+        }).then(function(resp) {
+            if (resp) {
+                // req.body.updated_by = appUtil.getUser(req.headers.authorization).id || null;
+                resp.update(req.body).then(function(result) {
+                    res.send(result);
+                })
+            } else {
+                // req.body.created_by = appUtil.getUser(req.headers.authorization).id || null;
+                // req.body.updated_by = req.body.created_by;
+                delete req.body.id;
+                AboutModel.create(req.body).then(function(respp) {
+                    res.send(respp);
+                })
+            }
+        }, (err) => {
+            res.status(500).send(err);
+        })
+        // });
 }
 
 
 
-exports.upsertTeam = function (req, res) {
+exports.upsertTeam = function(req, res) {
     // var upload = multer({ storage: storage }).single('image');
     // upload(req, res, function(err) {
     //     req.body.image = res.req.file && res.req.file.filename || req.body.image;
     TeamModel.findOne({
-        where: {
-            id: 1
-        }
-    }).then(function (resp) {
-        if (resp) {
-            // req.body.updated_by = appUtil.getUser(req.headers.authorization).id || null;
-            resp.update(req.body).then(function (result) {
-                updateTeamIdInUser(result.user_id, result.id);
-                updateTeamIdInOrder(result.user_id, result.id);
-                res.send(result);
-            })
-        } else {
-            req.body.user_id = appUtil.getUser(req.headers.authorization).id || null;
-            req.body.isowner = 1;
+            where: {
+                id: 1
+            }
+        }).then(function(resp) {
+            if (resp) {
+                // req.body.updated_by = appUtil.getUser(req.headers.authorization).id || null;
+                resp.update(req.body).then(function(result) {
+                    updateTeamIdInUser(result.user_id, result.id);
+                    updateTeamIdInOrder(result.user_id, result.id);
+                    res.send(result);
+                })
+            } else {
+                req.body.user_id = appUtil.getUser(req.headers.authorization).id || null;
+                req.body.isowner = 1;
 
-            // req.body.updated_by = req.body.created_by;
-            delete req.body.id;
-            TeamModel.create(req.body).then(function (respp) {
-                updateTeamIdInUser(respp.user_id, respp.id);
-                updateTeamIdInOrder(respp.user_id, respp.id);
-                res.send(respp);
-            })
-        }
-    }, (err) => {
-        res.status(500).send(err);
-    })
-    // });
+                // req.body.updated_by = req.body.created_by;
+                delete req.body.id;
+                TeamModel.create(req.body).then(function(respp) {
+                    updateTeamIdInUser(respp.user_id, respp.id);
+                    updateTeamIdInOrder(respp.user_id, respp.id);
+                    res.send(respp);
+                })
+            }
+        }, (err) => {
+            res.status(500).send(err);
+        })
+        // });
 }
 
 function updateTeamIdInUser(user_id, team_id) {
@@ -502,8 +484,8 @@ function updateTeamIdInUser(user_id, team_id) {
         where: {
             id: user_id
         }
-    }).then(function (resp) {
-        resp.update({ team_id: team_id, teamowner: 1 }).then(function (result) {
+    }).then(function(resp) {
+        resp.update({ team_id: team_id, teamowner: 1 }).then(function(result) {
             res.send(result);
         })
     })
@@ -514,14 +496,14 @@ function updateTeamIdInOrder(user_id, team_id) {
         where: {
             user_id: user_id
         }
-    }).then(function (resp) {
-        resp.update({ team_id: team_id }).then(function (result) {
+    }).then(function(resp) {
+        resp.update({ team_id: team_id }).then(function(result) {
             res.send(result);
         })
     })
 }
 
-exports.teams = function (req, res) {
+exports.teams = function(req, res) {
     let user_id = appUtil.getUser(req.headers.authorization).id || null;
     TeamModel.findAll({
         where: {
@@ -531,12 +513,12 @@ exports.teams = function (req, res) {
         order: [
             ['updatedAt', 'DESC']
         ]
-    }).then(function (entries) {
+    }).then(function(entries) {
         res.send(entries || null)
     });
 }
 
-exports.teamMembers = function (req, res) {
+exports.teamMembers = function(req, res) {
     if (req.body.team_id) {
         userModel.findAll({
             where: {
@@ -546,7 +528,7 @@ exports.teamMembers = function (req, res) {
                     [Op.ne]: 1
                 }
             }
-        }).then(function (entries) {
+        }).then(function(entries) {
             res.send(entries || null)
         });
     } else {
@@ -554,59 +536,59 @@ exports.teamMembers = function (req, res) {
     }
 }
 
-exports.deleteTeam = function (req, res) {
-    TeamModel.findByPk(req.params.id).then(function (result) {
+exports.deleteTeam = function(req, res) {
+    TeamModel.findByPk(req.params.id).then(function(result) {
         result.destroy().then((resp) => {
             res.send(resp);
         })
-    }, function (err) {
+    }, function(err) {
         res.status(500).send(err);
     })
 }
 
-exports.updateTermAndCond = function (req, res) {
+exports.updateTermAndCond = function(req, res) {
     // var upload = multer({ storage: storage }).single('image');
     // upload(req, res, function(err) {
     //     req.body.image = res.req.file && res.req.file.filename || req.body.image;
     TermAndCondModel.findOne({
-        where: {
-            id: 1
-        }
-    }).then(function (resp) {
-        if (resp) {
-            // req.body.updated_by = appUtil.getUser(req.headers.authorization).id || null;
-            resp.update(req.body).then(function (result) {
-                res.send(result);
-            })
-        } else {
-            // req.body.created_by = appUtil.getUser(req.headers.authorization).id || null;
-            // req.body.updated_by = req.body.created_by;
-            delete req.body.id;
-            TermAndCondModel.create(req.body).then(function (respp) {
-                res.send(respp);
-            })
-        }
-    }, (err) => {
-        res.status(500).send(err);
-    })
-    // });
-}
-
-exports.updateLocation = function (req, res) {
-    var upload = multer({ storage: storage }).single('banner');
-    upload(req, res, function (err) {
-        req.body.banner = res.req.file && res.req.file.filename || req.body.banner;
-        LocationModel.findOne().then(function (resp) {
+            where: {
+                id: 1
+            }
+        }).then(function(resp) {
             if (resp) {
                 // req.body.updated_by = appUtil.getUser(req.headers.authorization).id || null;
-                resp.update(req.body).then(function (result) {
+                resp.update(req.body).then(function(result) {
                     res.send(result);
                 })
             } else {
                 // req.body.created_by = appUtil.getUser(req.headers.authorization).id || null;
                 // req.body.updated_by = req.body.created_by;
                 delete req.body.id;
-                LocationModel.create(req.body).then(function (respp) {
+                TermAndCondModel.create(req.body).then(function(respp) {
+                    res.send(respp);
+                })
+            }
+        }, (err) => {
+            res.status(500).send(err);
+        })
+        // });
+}
+
+exports.updateLocation = function(req, res) {
+    var upload = multer({ storage: storage }).single('banner');
+    upload(req, res, function(err) {
+        req.body.banner = res.req.file && res.req.file.filename || req.body.banner;
+        LocationModel.findOne().then(function(resp) {
+            if (resp) {
+                // req.body.updated_by = appUtil.getUser(req.headers.authorization).id || null;
+                resp.update(req.body).then(function(result) {
+                    res.send(result);
+                })
+            } else {
+                // req.body.created_by = appUtil.getUser(req.headers.authorization).id || null;
+                // req.body.updated_by = req.body.created_by;
+                delete req.body.id;
+                LocationModel.create(req.body).then(function(respp) {
                     res.send(respp);
                 })
             }
@@ -618,7 +600,7 @@ exports.updateLocation = function (req, res) {
 
 
 /** Filter Location */
-exports.allFilterLocations = function (req, res) {
+exports.allFilterLocations = function(req, res) {
     FilterLocationModel.findAll({
         // where: {
         //     'status': 1
@@ -626,110 +608,92 @@ exports.allFilterLocations = function (req, res) {
         order: [
             ['updatedAt', 'DESC']
         ]
-    }).then(function (entries) {
+    }).then(function(entries) {
         res.send(entries || null)
     });
 }
-exports.createFilterLocation = function (req, res) {
-    FilterLocationModel.create(req.body).then(function () {
+exports.createFilterLocation = function(req, res) {
+    FilterLocationModel.create(req.body).then(function() {
         res.send(req.body);
-    }, function (err) {
+    }, function(err) {
         res.status(500).send(err);
     })
 }
-exports.updateFilterLocation = function (req, res) {
-    FilterLocationModel.findByPk(req.body.id).then(function (result) {
+exports.updateFilterLocation = function(req, res) {
+    FilterLocationModel.findByPk(req.body.id).then(function(result) {
         result.update(req.body).then((resp) => {
             res.send(resp);
         })
-    }, function (err) {
+    }, function(err) {
         res.status(500).send(err);
     })
 }
-exports.deleteFilterLocation = function (req, res) {
-    FilterLocationModel.findByPk(req.params.id).then(function (result) {
+exports.deleteFilterLocation = function(req, res) {
+    FilterLocationModel.findByPk(req.params.id).then(function(result) {
         result.destroy().then((resp) => {
             res.send(resp);
         })
-    }, function (err) {
+    }, function(err) {
         res.status(500).send(err);
     })
 }
 
 
 
-exports.sendPaymentLink = function (req, res) {
+exports.sendPaymentLink = function(req, res) {
     let user = { email: req.body.factuuremail };
 
     userModel.findOne({
         where: {
             'email': req.body.factuuremail
         }
-    }).then(function (response) {
+    }).then(function(response) {
         let data = Buffer.from(req.body && req.body.id.toString()).toString('base64');
         response.data = data;
         appUtil.sendPaymentLink(response);
         res.send(user);
-    }, function (err) {
+    }, function(err) {
         res.status(500).send(err);
     })
 }
 
-exports.createWithdrawRequest = function (req, res) {
+exports.createWithdrawRequest = function(req, res) {
     req.body.status = '3'; // Withdraw request raised
-    WithdrawRequestModel.create(req.body).then(function () {
+    WithdrawRequestModel.create(req.body).then(function() {
         res.send(req.body);
-    }, function (err) {
+    }, function(err) {
         res.status(500).send(err);
     })
 }
-exports.updateWithdrawRequest = function (req, res) {
-    WithdrawRequestModel.findByPk(req.body.id).then(function (result) {
+exports.updateWithdrawRequest = function(req, res) {
+    WithdrawRequestModel.findByPk(req.body.id).then(function(result) {
         result.update(req.body).then((resp) => {
             if (req.body.status == 1) {
                 appUtil.withdrawRequest(req.body.user, "Accepted");
-            }
-            else if (req.body.status == 2) {
+            } else if (req.body.status == 2) {
                 appUtil.withdrawRequest(req.body.user, "Rejected");
             }
             res.send(resp);
         })
-    }, function (err) {
+    }, function(err) {
         res.status(500).send(err);
     })
 }
 
-exports.withdrawrequests = function (req, res) {
-    let user_id = appUtil.getUser(req.headers.authorization).id || null;
-    let where = {};
-    if (req.body.frontend) {
-        where.user_id = user_id;
-    }
-    WithdrawRequestModel.findAll({
-        where: where,
-        include: [userModel],
-        // order: [
-        //     ['updatedAt', 'DESC']
-        // ]
-    }).then(function (entries) {
-        res.send(entries || null)
-    }, function (err) {
-        res.status(500).send(err);
-    })
-}
 
-exports.deleteWithdrawReques = function (req, res) {
-    WithdrawRequestModel.findByPk(req.params.id).then(function (result) {
+
+exports.deleteWithdrawReques = function(req, res) {
+    WithdrawRequestModel.findByPk(req.params.id).then(function(result) {
         result.destroy().then((resp) => {
             res.send(resp);
         })
-    }, function (err) {
+    }, function(err) {
         res.status(500).send(err);
     })
 }
 
 /** Coupon */
-exports.coupons = function (req, res) {
+exports.coupons = function(req, res) {
     let result = { count: 0, data: [] };
     let offset = req.body.offset || 0;
     let limit = req.body.limit || 1000;
@@ -764,33 +728,33 @@ exports.coupons = function (req, res) {
     })
 }
 
-exports.createCoupon = function (req, res) {
-    CouponModel.create(req.body).then(function () {
+exports.createCoupon = function(req, res) {
+    CouponModel.create(req.body).then(function() {
         res.send(req.body);
-    }, function (err) {
+    }, function(err) {
         res.status(500).send(err);
     })
 }
-exports.updateCoupon = function (req, res) {
-    CouponModel.findByPk(req.body.id).then(function (result) {
+exports.updateCoupon = function(req, res) {
+    CouponModel.findByPk(req.body.id).then(function(result) {
         result.update(req.body).then((resp) => {
             res.send(resp);
         })
-    }, function (err) {
+    }, function(err) {
         res.status(500).send(err);
     })
 }
-exports.deleteCoupon = function (req, res) {
-    CouponModel.findByPk(req.params.id).then(function (result) {
+exports.deleteCoupon = function(req, res) {
+    CouponModel.findByPk(req.params.id).then(function(result) {
         result.destroy().then((resp) => {
             res.send(resp);
         })
-    }, function (err) {
+    }, function(err) {
         res.status(500).send(err);
     })
 }
 
-exports.checkCouponUsed = function (req, res) {
+exports.checkCouponUsed = function(req, res) {
     const user_id = appUtil.getUser(req.headers.authorization).id || null;
     let current = moment();
     let where = {};
@@ -823,89 +787,89 @@ exports.checkCouponUsed = function (req, res) {
 
 
 /** Location */
-exports.location = function (req, res) {
+exports.location = function(req, res) {
     LocationModel.findAll({
         order: [
             ['updatedAt', 'DESC']
         ]
-    }).then(function (entries) {
+    }).then(function(entries) {
         res.send(entries || null)
     });
 }
-exports.createlocation = function (req, res) {
-    LocationModel.create(req.body).then(function () {
+exports.createlocation = function(req, res) {
+    LocationModel.create(req.body).then(function() {
         res.send(req.body);
-    }, function (err) {
+    }, function(err) {
         res.status(500).send(err);
     })
 }
-exports.updatelocation = function (req, res) {
-    LocationModel.findByPk(req.body.id).then(function (result) {
+exports.updatelocation = function(req, res) {
+    LocationModel.findByPk(req.body.id).then(function(result) {
         result.update(req.body).then((resp) => {
             res.send(resp);
         })
-    }, function (err) {
+    }, function(err) {
         res.status(500).send(err);
     })
 }
-exports.deletelocation = function (req, res) {
-    LocationModel.findByPk(req.params.id).then(function (result) {
+exports.deletelocation = function(req, res) {
+    LocationModel.findByPk(req.params.id).then(function(result) {
         result.destroy().then((resp) => {
             res.send(resp);
         })
-    }, function (err) {
+    }, function(err) {
         res.status(500).send(err);
     })
 }
 
 
 /** Advertisement */
-exports.advertisement = function (req, res) {
+exports.advertisement = function(req, res) {
     AdvertisementModel.findAll({
         order: [
             ['updatedAt', 'DESC']
         ]
-    }).then(function (entries) {
+    }).then(function(entries) {
         res.send(entries || null)
     });
 }
-exports.createadvertisement = function (req, res) {
+exports.createadvertisement = function(req, res) {
     var upload = multer({ storage: storage }).single('image');
-    upload(req, res, function (err) {
+    upload(req, res, function(err) {
         let returns = null;
         req.body.image = res.req.file && res.req.file.filename || req.body.userimage;
-        AdvertisementModel.create(req.body).then(function (resp) {
-            resp.update(req.body).then(function (result) {
+        AdvertisementModel.create(req.body).then(function(resp) {
+            resp.update(req.body).then(function(result) {
                 res.send(result);
             });
         })
 
     });
 }
-exports.updateadvertisement = function (req, res) {
+exports.updateadvertisement = function(req, res) {
     var upload = multer({ storage: storage }).single('image');
-    upload(req, res, function (err) {
+    upload(req, res, function(err) {
         let returns = null;
         req.body.image = res.req.file && res.req.file.filename || req.body.userimage;
-        AdvertisementModel.findByPk(req.body.id).then(function (resp) {
-            resp.update(req.body).then(function (result) {
+        AdvertisementModel.findByPk(req.body.id).then(function(resp) {
+            resp.update(req.body).then(function(result) {
                 res.send(result);
             });
         })
 
     });
 }
-exports.deleteadvertisement = function (req, res) {
-    AdvertisementModel.findByPk(req.params.id).then(function (result) {
+exports.deleteadvertisement = function(req, res) {
+    AdvertisementModel.findByPk(req.params.id).then(function(result) {
         result.destroy().then((resp) => {
             res.send(resp);
         })
-    }, function (err) {
+    }, function(err) {
         res.status(500).send(err);
     })
 }
 
-exports.userwithdraws = function (req, res) {
+exports.userwithdraws = function(req, res) {
     let user_id = req.params.id || null;
     let where = {};
     where.user_id = user_id;
@@ -915,40 +879,39 @@ exports.userwithdraws = function (req, res) {
         // order: [
         //     ['updatedAt', 'DESC']
         // ]
-    }).then(function (entries) {
+    }).then(function(entries) {
         res.send(entries || null)
-    }, function (err) {
+    }, function(err) {
         res.status(500).send(err);
     })
 }
 
-exports.subscribe = function (req, res) {
+exports.subscribe = function(req, res) {
     appUtil.subscribeEmail(req.body.email);
     res.status(200).send({ message: 'Subscribed' });
 }
 
-exports.getcertificate = function (req, res) {
-    CertificateModel.findOne({
-    }).then(function (resp) {
+exports.getcertificate = function(req, res) {
+    CertificateModel.findOne({}).then(function(resp) {
         res.send(resp);
     }, (err) => {
         res.status(500).send(err);
     })
 }
 
-exports.updatecertificate = function (req, res) {
+exports.updatecertificate = function(req, res) {
     CertificateModel.findOne({
         where: {
             id: 1
         }
-    }).then(function (resp) {
+    }).then(function(resp) {
         if (resp) {
-            resp.update(req.body).then(function (result) {
+            resp.update(req.body).then(function(result) {
                 res.send(result);
             })
         } else {
             delete req.body.id;
-            AboutModel.create(req.body).then(function (respp) {
+            AboutModel.create(req.body).then(function(respp) {
                 res.send(respp);
             })
         }
