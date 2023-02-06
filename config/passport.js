@@ -71,47 +71,6 @@ module.exports = function(passport) {
     // we are using named strategies since we have one for login and one for signup
     // by default, if there was no name, it would just be called 'local'
 
-    passport.use('local-signup', new LocalStrategy({
-        // by default, local strategy uses username and password, we will override with email
-        usernameField: 'email',
-        passwordField: 'password',
-        passReqToCallback: true // allows us to pass back the entire request to the callback
-    }, async function(req, email, password, done) {
-
-        // find a user whose email is the same as the forms email
-        // we are checking to see if the user trying to login already exists
-        const alreadyuser = await User.findOne({ where: { email: email } });
-        if (alreadyuser) {
-            const err = { status: 0, message: 'E-mail bestaat al' };
-            return done(err, false);
-        } else {
-            // if there is no user with that email
-            // create the user
-            const USER = {
-                    email: email,
-                    firstname: req.body.firstname,
-                    role: req.body.role,
-                    is_admin: req.body.is_admin,
-                    password: bcrypt.hashSync(password, bcrypt.genSaltSync(8), null)
-                }
-                // var insertQuery = `INSERT INTO users ( ${Object.keys(newUserMysql).join()} ) values ( ${Object.values(newUserMysql).join()} )`;
-                // console.log(insertQuery);
-                // connection.query(insertQuery, function (err, rows) {
-                //     newUserMysql.id = rows.insertId;
-                //     return done(null, newUserMysql);
-                // });
-            User.create(USER).then(data => {
-                // const baseUrl = req.protocol + '://' + req.get('host');
-                // data.baseUrl = baseUrl;
-                // appUtil.sendVerificationMail(data);
-                return done(null, data);
-            }).catch(err => {
-                return done(err, null);
-            });
-        }
-
-    }));
-
     passport.use('local-signup-user', new LocalStrategy({
         // by default, local strategy uses username and password, we will override with email
         usernameField: 'email',
@@ -200,46 +159,14 @@ module.exports = function(passport) {
                     return done(null, false); // req.flash is the way to set flashdata using connect-flash
                 }
 
-                // if the user is found but the password is wrong
-                if (!bcrypt.compareSync(password, rows.password))
-                    return done(null, false); // create the loginMessage and save it to session as flashdata
+                // // if the user is found but the password is wrong
+                // if (!bcrypt.compareSync(password, rows.password))
+                //     return done(null, false); // create the loginMessage and save it to session as flashdata
+
+                /** Need to place out OTP Check logic */
 
                 // all is well, return successful user
                 return done(null, rows);
-
-            }).then(function(err) {
-                return done(err, null);
-            });
-        }));
-
-    passport.use('local-login-admin', new LocalStrategy({
-            // by default, local strategy uses username and password, we will override with email
-            usernameField: 'email',
-            passwordField: 'password',
-            passReqToCallback: true // allows us to pass back the entire request to the callback
-        },
-        function(req, email, password, done) { // callback with email and password from our form
-
-            User.findOne({
-                where: {
-                    [Op.or]: [{ 'email': email }, { 'phone': email }]
-                }
-            }).then(function(rows) {
-                if (!rows) {
-                    return done(null, false); // req.flash is the way to set flashdata using connect-flash
-                }
-
-                // if the user is found but the password is wrong
-                if (!bcrypt.compareSync(password, rows.password))
-                    return done(null, false); // create the loginMessage and save it to session as flashdata
-
-                // all is well, return successful user
-                if (rows && rows.is_admin) {
-                    return done(null, rows);
-                } else {
-                    return done(null, false);
-                }
-
 
             }).then(function(err) {
                 return done(err, null);

@@ -27,99 +27,7 @@ var storage = multer.diskStorage({
 })
 
 
-exports.allUsers = function(req, res) {
-    let result = { count: 0, data: [] };
-    let offset = req.body.offset || 0;
-    let limit = req.body.limit || 1000;
-    let where = {};
 
-    if (req.body.status) {
-        where.status = req.body.status;
-    }
-    if (req.body.is_admin) {
-        where.is_admin = 1;
-    }
-    if (req.body.fromdate) {
-        const from = moment(req.body.fromdate).startOf('day').format('YYYY-MM-DD HH:mm:ss');
-        const to = req.body.todate && moment(req.body.todate).endOf('day').format('YYYY-MM-DD HH:mm:ss') || moment().endOf('day').format('YYYY-MM-DD HH:mm:ss');
-        where.createdAt = {
-            [Op.between]: [new Date(from), new Date(to)]
-        }
-    }
-
-    UserModel.findAndCountAll({
-        where
-    }).then((output) => {
-        result.count = output.count;
-        UserModel.findAll({
-            where,
-            // include: [UserDetailModel],
-            order: [
-                ['createdAt', 'DESC']
-            ],
-            offset: offset,
-            limit: limit
-        }).then((registered) => {
-            let revised = registered.map((x, i) => {
-                let temp = x && x.toJSON();
-                temp.sno = offset + (i + 1);
-                return temp;
-            })
-            result.data = revised;
-            res.send(result);
-        }).catch((err) => {
-            res.status(500).send(err)
-        })
-    }).catch((err) => {
-        res.status(500).send(err)
-    })
-}
-
-exports.userSearch = function(req, res) {
-    let where = {
-        [Op.or]: [
-            { 'email': req.query.q },
-            { 'phone': req.query.q },
-            {
-                'username': {
-                    [Op.like]: '%' + req.query.q + '%'
-                }
-            }
-        ]
-    }
-    where.status = 1;
-    UserModel.findAll({
-        where,
-        attributes: [
-            "path",
-            "id",
-            "phone",
-            "username",
-            "initial",
-            "email",
-            "userimage"
-        ],
-        order: [
-            ['createdAt', 'DESC']
-        ],
-    }).then((registered) => {
-        if (req.query.from == 'app') {
-            res.status(200).json(registered);
-        }
-        let result = [];
-        result.push(req.query.q);
-        let pArray = [];
-        let revised = registered.map((x, i) => {
-            let temp = x && x.toJSON();
-            // temp.sno = offset + (i + 1);
-            return [temp];
-        });
-        result.push(revised);
-        res.jsonp(result);
-        // res.send(registered);
-        // res.jsonp(req.query.callback + '('+ JSON.stringify(registered) + ');');
-    });
-}
 
 exports.createUserDetail = function(req, res) {
     let authorization = req.headers.authorization,
@@ -153,7 +61,7 @@ exports.verifyUser = function(req, res) {
                 user.update({ is_verified: 1 }).then(function(resp) {
                     res.writeHead(301, {
                         Location: process.env.appUrl
-                      }).end();
+                    }).end();
                     //res.redirect(200, process.env.appUrl);
                     // res.send({ status: 1, message: 'User Verified' });
                 }, function(updateErr) {
@@ -203,28 +111,43 @@ exports.userUpdate = function(req, res) {
 
 }
 
-exports.setFavorite = function(req, res) {
-    UserModel.findByPk(req.body.id).then(function(resp) {
-        resp.update(req.body).then(function(result) {
-            res.send(result);
+exports.resetPassword = async function(req, res) {
+    // let email = Buffer.from(req.body.user, 'base64').toString('ascii')
+    let email = req.body.email;
+    let alreadyuser = await UserModel.findOne({
+        where: {
+            [Op.or]: [{ 'email': email }, { 'phone': email }]
+        }
+    });
+    if (alreadyuser) {
+        user = alreadyuser.toJSON();
+        var randomstring1 = new RandExp(/^[A-Z]/);
+        var randomstring2 = new RandExp(/^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*\W)(?!.* ).{8,10}$/);
+        // res.status(200).send({ message: randomstring1.gen()+randomstring2.gen() });
+        // var randomstring = Math.random().toString(36).slice(-8);
+        var randomstring = randomstring1.gen() + randomstring2.gen();
+        user.password = bcrypt.hashSync(randomstring, bcrypt.genSaltSync(8), null);
+        alreadyuser.update(user).then(data => {
+            appUtil.resetedPassword(alreadyuser, randomstring);
+            res.status(200).send({ message: 'Password hasbeen reseted' });
+        }, (err) => {
+            res.status(500).send({ message: 'User Update Error' });
         });
-    })
+    } else {
+        res.status(500).send('User not found');
+    }
 }
 
-exports.getFavorites = function(req, res) {
-    UserModel.findAll({
-        where: { is_favorite: 1 }
-    }).then(function(resp) {
-        res.send(resp);
-    })
-}
-
-exports.deleteUser = function(req, res) {
-    UserModel.findByPk(req.params.id).then(function(result) {
-        result.destroy().then((resp) => {
-            res.send(resp);
-        })
-    }, function(err) {
-        res.status(500).send(err);
-    })
+exports.forget = async function(req, res) {
+    const alreadyuser = await UserModel.findOne({
+        where: {
+            [Op.or]: [{ 'email': req.body.email }, { 'phone': req.body.email }]
+        }
+    });
+    if (alreadyuser) {
+        let encodeEmail = Buffer.from(alreadyuser.email).toString('base64');
+        res.status(200).send({ user: encodeEmail });
+    } else {
+        res.status(500).send('User not found');
+    }
 }
