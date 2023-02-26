@@ -12,8 +12,6 @@ router.post('/forget', user.forget);
 router.get('/user/verification/:id/:token', user.verifyUser);
 router.post('/reset/password', user.resetPassword);
 
-/** For auth enabled */
-router.use(authMiddware);
 
 /** Profile Screen */
 router.get('/user/get/:id', user.getUser);
@@ -31,5 +29,8 @@ router.post('/order/availability', order.checkAvailability);
 router.post('/products', product.products);
 router.get('/productfind/:id', product.getProductFind);
 router.get('/product/similar/:type/:id', product.getSimilarProducts);
+router.get('/filters/:type?/:category?', common.filters); // type- Rent, Staff, category - Fuel, Truck
 
+/** For auth enabled */
+router.use(authMiddware);
 module.exports = router;

@@ -1,11 +1,11 @@
 module.exports = {
     config: {
         // host: '127.0.0.1',
-        host: 'uranium.da.hostns.io',
+        host: 'capricorn.premium.hostns.io',
         port: '3306',
-        database: 'jezsel_test',
-        user: 'jezsel_test',
-        password: 'jezsel_test',
+        database: 'jezselnl_mobileapp',
+        user: 'jezselnl_mobileapp',
+        password: 'jezselnl_mobileapp',
         dialect: "mysql",
         pool: {
             max: 5,

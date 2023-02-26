@@ -14,6 +14,7 @@ const ExtraModel = MODELS.extra;
 const OrderModel = MODELS.order;
 const OrderHistoryModel = MODELS.orderhistory;
 const WithdrawRequestModel = MODELS.withdrawrequest;
+const FilterModel = MODELS.filter;
 
 exports.products = function(req, res) {
     var result = { count: 0, data: [] };
@@ -295,6 +296,28 @@ exports.extras = function(req, res) {
             ['updatedAt', 'DESC']
         ]
     }).then(function(entries) {
+        res.send(entries || null)
+    });
+}
+
+exports.filters = function (req, res) {
+    let type = req.params.type || null;
+    let category = req.params.category || null;
+    let where = {
+        'status': 1
+    };
+    if (type) {
+        where.type = type;
+    }
+    if (category) {
+        where.category = category;
+    }
+    FilterModel.findAll({
+        where,
+        order: [
+            ['updatedAt', 'DESC']
+        ]
+    }).then(function (entries) {
         res.send(entries || null)
     });
 }
