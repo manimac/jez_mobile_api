@@ -38,7 +38,7 @@ router.post('/signup-user', function(req, res, next) {
     // })
 });
 router.post('/login', function(req, res, next) {
-    passport.authenticate('local-login', function(err, user, info) {
+    passport.authenticate('local-login-app', function(err, user, info) {
         if (err) {
             console.log(err);
             return next(err)
