@@ -14,14 +14,14 @@ const AchievementModel = MODELS.achievement;
 
 // SET STORAGE
 var storage = multer.diskStorage({
-    destination: function(req, file, cb) {
+    destination: function (req, file, cb) {
         var dir = './public/uploads/user'
         if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir, { recursive: true });
         }
         cb(null, dir)
     },
-    filename: function(req, file, cb) {
+    filename: function (req, file, cb) {
         cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname)) // Appending the extension
     }
 })
@@ -29,7 +29,7 @@ var storage = multer.diskStorage({
 
 
 
-exports.createUserDetail = function(req, res) {
+exports.createUserDetail = function (req, res) {
     let authorization = req.headers.authorization,
         decoded;
     try {
@@ -44,27 +44,27 @@ exports.createUserDetail = function(req, res) {
         age: req.body.age,
         dateofbirth: req.body.dateofbirth
     }
-    UserDetailModel.create(UserDetail).then(function() {
+    UserDetailModel.create(UserDetail).then(function () {
         res.send(req.body);
-    }, function(err) {
+    }, function (err) {
         res.status(500).send(err);
     })
 
 }
 
-exports.verifyUser = function(req, res) {
-    UserModel.findByPk(req.params.id).then(function(user) {
+exports.verifyUser = function (req, res) {
+    UserModel.findByPk(req.params.id).then(function (user) {
         if (!user) {
             res.status(204).send('User not available');
         } else if (!user.is_verified) {
             if ((user.verification_token == req.params.token)) {
-                user.update({ is_verified: 1 }).then(function(resp) {
+                user.update({ is_verified: 1 }).then(function (resp) {
                     res.writeHead(301, {
                         Location: process.env.appUrl
                     }).end();
                     //res.redirect(200, process.env.appUrl);
                     // res.send({ status: 1, message: 'User Verified' });
-                }, function(updateErr) {
+                }, function (updateErr) {
                     res.status(500).send(updateErr);
                 })
             } else {
@@ -73,45 +73,45 @@ exports.verifyUser = function(req, res) {
         } else {
             res.send({ status: 1, message: 'User Already Verified' });
         }
-    }).catch(function(err) {
+    }).catch(function (err) {
         res.status(500).send(err);
     });
 }
 
-exports.getUser = function(req, res) {
-    UserModel.findByPk(req.params.id).then(function(result) {
+exports.getUser = function (req, res) {
+    UserModel.findByPk(req.params.id).then(function (result) {
         res.send(result)
-    }, function(err) {
+    }, function (err) {
         res.status(500).send(err);
     })
 }
-exports.userUpdate = function(req, res) {
+exports.userUpdate = function (req, res) {
     var upload = multer({ storage: storage }).single('userimage');
-    upload(req, res, function(err) {
+    upload(req, res, function (err) {
         let returns = null;
         req.body.userimage = res.req.file && res.req.file.filename || req.body.userimage;
         if (req.body.newpassword) {
             req.body.password = bcrypt.hashSync(req.body.newpassword, bcrypt.genSaltSync(8), null);
         }
         // if (req.body.username) {
-        UserModel.findByPk(req.body.id).then(function(resp) {
-                resp.update(req.body).then(function(result) {
-                    res.send(result);
-                });
-            })
-            // } else {
-            //     appUtil.updateUserDetail(req.body).then(function(resp) {
-            //         res.send(resp);
-            //     }, (err) => {
-            //         res.status(500).send(err);
-            //     })
-            // }
+        UserModel.findByPk(req.body.id).then(function (resp) {
+            resp.update(req.body).then(function (result) {
+                res.send(result);
+            });
+        })
+        // } else {
+        //     appUtil.updateUserDetail(req.body).then(function(resp) {
+        //         res.send(resp);
+        //     }, (err) => {
+        //         res.status(500).send(err);
+        //     })
+        // }
 
     });
 
 }
 
-exports.resetPassword = async function(req, res) {
+exports.resetPassword = async function (req, res) {
     // let email = Buffer.from(req.body.user, 'base64').toString('ascii')
     let email = req.body.email;
     let alreadyuser = await UserModel.findOne({
@@ -138,7 +138,7 @@ exports.resetPassword = async function(req, res) {
     }
 }
 
-exports.forget = async function(req, res) {
+exports.forget = async function (req, res) {
     const alreadyuser = await UserModel.findOne({
         where: {
             [Op.or]: [{ 'email': req.body.email }, { 'phone': req.body.email }]
@@ -150,4 +150,14 @@ exports.forget = async function(req, res) {
     } else {
         res.status(500).send('User not found');
     }
+}
+
+exports.appLogin = function (req, res) {
+    appUtil.appLogin(req.body).then(function(resp){
+        if(resp && resp.status == 200) {
+            res.status(200).json({message:'OTP Send to user email'});
+        } else {
+            res.status(204).json({message:'User not found'});
+        }
+    })
 }

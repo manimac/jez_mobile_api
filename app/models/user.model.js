@@ -40,10 +40,18 @@ const UserModel = (sequelize, Sequelize) => {
         wallet: { type: Sequelize.STRING, allowNull: true },
         interestused: { type: Sequelize.STRING, allowNull: true },
         teamowner: { type: Sequelize.BOOLEAN, defaultValue: 0 },
+        otp: { type: Sequelize.STRING, defaultValue: 0 },
+        deviceId: { type: Sequelize.STRING,allowNull: true  },
         path: {
             type: Sequelize.VIRTUAL,
             get() {
                 return `${process.env.baseUrl}uploads/user/`
+            }
+        },
+        fullname: {
+            type: Sequelize.VIRTUAL,
+            get() {
+                return this.firstname +' '+ (this.lastname || '')
             }
         }
     })

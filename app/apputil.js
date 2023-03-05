@@ -2,8 +2,11 @@ const jwt = require('jsonwebtoken');
 const nodemailer = require("nodemailer");
 const handlebars = require('handlebars');
 const fs = require('fs');
+const Sequelize = require('sequelize');
+const Op = Sequelize.Op;
 const MODELS = require("./models");
 const UserDetailModel = MODELS.userDetails;
+const UserModel = MODELS.users;
 
 const apiKey = '4de239d21a197cead36c21be9d305466';
 const apiSecret = 'ad7ba52f89e6fc3eeab86cfe08baaf9e';
@@ -32,36 +35,36 @@ var levelOfRecognition = [
 ];
 exports.levelOfRecognition = levelOfRecognition;
 
-exports.makeUserDetail = function(body) {
-    return new Promise(function(resolve, reject) {
-        UserDetailModel.create(body).then(function(result) {
+exports.makeUserDetail = function (body) {
+    return new Promise(function (resolve, reject) {
+        UserDetailModel.create(body).then(function (result) {
             resolve(result);
-        }, function(err) {
+        }, function (err) {
             reject(err);
         })
     });
 }
-exports.updateUserDetail = function(body) {
-        return new Promise(function(resolve, reject) {
-            UserDetailModel.findOne({
-                where: {
-                    user_id: body.user_id
-                }
-            }).then(function(resp) {
-                resp.update(body).then(function(result) {
-                    resolve(result);
-                }, function(err) {
-                    reject(err);
-                })
-            }, function(err) {
+exports.updateUserDetail = function (body) {
+    return new Promise(function (resolve, reject) {
+        UserDetailModel.findOne({
+            where: {
+                user_id: body.user_id
+            }
+        }).then(function (resp) {
+            resp.update(body).then(function (result) {
+                resolve(result);
+            }, function (err) {
                 reject(err);
             })
+        }, function (err) {
+            reject(err);
+        })
 
-        });
-    }
-    // Mail configs
-var readHTMLFile = function(path, callback) {
-    fs.readFile(path, { encoding: 'utf-8' }, function(err, html) {
+    });
+}
+// Mail configs
+var readHTMLFile = function (path, callback) {
+    fs.readFile(path, { encoding: 'utf-8' }, function (err, html) {
         if (err) {
             throw err;
             callback(err);
@@ -84,23 +87,23 @@ var readHTMLFile = function(path, callback) {
 // });
 
 var transporter = nodemailer.createTransport({
-    host: 'smtp.transip.email',
-    port: 587,
-    auth: {
-        user: "support@jezsel.nl",
-        pass: "Jez28Sel"
-    },
-    tls: { rejectUnauthorized: false },
-    // host: 'uranium.da.hostns.io',
+    // host: 'smtp.transip.email',
     // port: 587,
     // auth: {
-    //     user: "test@jezsel.nl",
-    //     pass: "test@123"
+    //     user: "support@jezsel.nl",
+    //     pass: "Jez28Sel"
     // },
     // tls: { rejectUnauthorized: false },
+    host: 'uranium.da.hostns.io',
+    port: 587,
+    auth: {
+        user: "test@jezsel.nl",
+        pass: "test@123"
+    },
+    tls: { rejectUnauthorized: false },
 });
 
-exports.getUser = function(token) {
+exports.getUser = function (token) {
     let decoded = {};
     try {
         decoded = jwt.verify(token, jwtSecret);
@@ -111,7 +114,7 @@ exports.getUser = function(token) {
     return decoded;
 }
 
-exports.makeRandomText = function(length) {
+exports.makeRandomText = function (length) {
     var result = '';
     var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     var charactersLength = characters.length;
@@ -122,11 +125,11 @@ exports.makeRandomText = function(length) {
 }
 
 /** Verification mail */
-exports.sendVerificationMail = function(user, password = null) {
+exports.sendVerificationMail = function (user, password = null) {
     sendVfMail(user, password).catch(console.error);
 }
 async function sendVfMail(user, password = null) {
-    readHTMLFile('./app/mail/email-temp.html', function(err, html) {
+    readHTMLFile('./app/mail/email-temp.html', function (err, html) {
         var template = handlebars.compile(html);
         let verifyUrl = `${process.env.baseUrl}user/verification/${user.id}/${user.verification_token}`;
         // let comments = `Click the following link to verify your JEZSEL account ${verifyUrl}`;
@@ -148,7 +151,7 @@ async function sendVfMail(user, password = null) {
             subject: 'Uw registratie bij Jezsel.nl - verificatie mail', // Subject lin
             html: htmlToSend
         }
-        transporter.sendMail(detail, function(error, info) {
+        transporter.sendMail(detail, function (error, info) {
             if (error) {
                 return (error);
             } else {
@@ -161,13 +164,13 @@ async function sendVfMail(user, password = null) {
 
 /** order Confirmation */
 
-exports.sendOrderConfirmationMail = function(order, type) {
+exports.sendOrderConfirmationMail = function (order, type) {
     sendOrdConfirmation(order, type).catch(console.error);
     sendOrdConfirmationAdmin(order, type).catch(console.error);
 }
 async function sendOrdConfirmation(order, type) {
     let user = order && order.user || {};
-    readHTMLFile('./app/mail/email-temp.html', function(err, html) {
+    readHTMLFile('./app/mail/email-temp.html', function (err, html) {
         var template = handlebars.compile(html);
         let comments = `Bedankt voor uw bezoek aan Jezsel.nl. Wij hebben uw aanvraag in goede orde ontvangen. Uw ordernummer is ` + order.id + ".</p><p>" + `Heeft u nog vragen naar aanleiding van dit bericht. Dan kunt u contact met ons opnemen per e-mail. Vergeet niet uw ordernummer te vermelden.</p><p>Wij wensen u alvast een fijne ervaring met onze diensten.`;
         var replacements = {
@@ -183,7 +186,7 @@ async function sendOrdConfirmation(order, type) {
             subject: (type && type == 'wallet') ? 'JEZSEL - Bevestiging opwaardering' : 'JEZSEL Bevestiging boeking', // Subject lin
             html: htmlToSend
         }
-        transporter.sendMail(detail, function(error, info) {
+        transporter.sendMail(detail, function (error, info) {
             if (error) {
                 return (error);
             } else {
@@ -195,7 +198,7 @@ async function sendOrdConfirmation(order, type) {
 
 async function sendOrdConfirmationAdmin(order, type) {
     let user = order && order.user || {};
-    readHTMLFile('./app/mail/email-temp.html', function(err, html) {
+    readHTMLFile('./app/mail/email-temp.html', function (err, html) {
         var template = handlebars.compile(html);
         let comments = `We have received a new order. Kindly check the admin panel. Order id - ` + order.id;
         var replacements = {
@@ -211,7 +214,7 @@ async function sendOrdConfirmationAdmin(order, type) {
             subject: (type && type == 'wallet') ? 'JEZSEL - Bevestiging opwaardering' : 'JEZSEL New Order', // Subject lin
             html: htmlToSend
         }
-        transporter.sendMail(detail, function(error, info) {
+        transporter.sendMail(detail, function (error, info) {
             if (error) {
                 return (error);
             } else {
@@ -221,7 +224,7 @@ async function sendOrdConfirmationAdmin(order, type) {
     })
 }
 
-exports.sendPaymentLink = function(user) {
+exports.sendPaymentLink = function (user) {
     main(user).catch(console.error);
 }
 
@@ -240,7 +243,7 @@ async function main(user) {
     // detail.html += `<a href='${verifyUrl}' target='_blank'>Proceed</a><br>Thanks <br> JEZSEL Team`;
     // let info = await transporter.sendMail(detail);
     // return info;
-    readHTMLFile('./app/mail/email-temp.html', function(err, html) {
+    readHTMLFile('./app/mail/email-temp.html', function (err, html) {
         var template = handlebars.compile(html);
         let verifyUrl = `${process.env.appUrl}payment?oud=${user.data}`;
         // let comments = `Click the following link to process the payment ${verifyUrl}`;
@@ -258,7 +261,7 @@ async function main(user) {
             subject: 'JEZSEL Betaallink', // Subject lin
             html: htmlToSend
         }
-        transporter.sendMail(detail, function(error, info) {
+        transporter.sendMail(detail, function (error, info) {
             if (error) {
                 return error;
             } else {
@@ -268,8 +271,8 @@ async function main(user) {
     })
 }
 
-exports.sendOTP = function(phone = null) {
-    return new Promise(function(resolve, reject) {
+exports.sendOTP = function (phone = null) {
+    return new Promise(function (resolve, reject) {
         if (phone) {
             var payload = {
                 origin: 'MY ELOAH',
@@ -277,10 +280,10 @@ exports.sendOTP = function(phone = null) {
                 destination: phone
             };
             // {*code*} placeholder is mandatory and will be replaced by an auto generated numeric code.
-            smsglobal.otp.send(payload, function(error, response) {
+            smsglobal.otp.send(payload, function (error, response) {
                 if (response) {
                     resolve(response)
-                        // verifyOTP();
+                    // verifyOTP();
                 }
                 if (error) {
                     reject(error)
@@ -293,10 +296,10 @@ exports.sendOTP = function(phone = null) {
 
 }
 
-exports.verifyOTP = function(user, code) {
-    return new Promise(function(resolve, reject) {
+exports.verifyOTP = function (user, code) {
+    return new Promise(function (resolve, reject) {
         var id = user.otprequestid; // requestId received upon sending an OTP
-        smsglobal.otp.verifyByRequestId(id, code, function(error, response) {
+        smsglobal.otp.verifyByRequestId(id, code, function (error, response) {
             if (response) {
                 resolve(response);
             }
@@ -311,15 +314,15 @@ exports.verifyOTP = function(user, code) {
 
 
 
-exports.resetedPassword = function(user, password) {
-    return new Promise(async function(resolve, reject) {
-        readHTMLFile('./app/mail/email-temp.html', function(err, html) {
+exports.resetedPassword = function (user, password) {
+    return new Promise(async function (resolve, reject) {
+        readHTMLFile('./app/mail/email-temp.html', function (err, html) {
             var template = handlebars.compile(html);
             let comments = `U heeft aangegeven uw wachtwoord te zijn vergeten van uw Jezsel account. U heeft succesvol uw wachtwoord gereset. Uw huidige wachtwoord is nu ${password}.</p><p>
             Mocht u geen verzoek hebben ingediend om uw wachtwoord te veranderen? Stuur dan een e-mail naar info@jezsel.nl.
             `;
-            
-                // message: `You have successfully reset the password for your JEZSEL account, Your current password is ${password}`,
+
+            // message: `You have successfully reset the password for your JEZSEL account, Your current password is ${password}`,
             var replacements = {
                 username: user.firstname + ' ' + user.lastname,
                 message: comments,
@@ -335,7 +338,7 @@ exports.resetedPassword = function(user, password) {
                 html: htmlToSend
             }
 
-            transporter.sendMail(detail, function(error, info) {
+            transporter.sendMail(detail, function (error, info) {
                 if (error) {
                     reject(error);
                 } else {
@@ -346,9 +349,9 @@ exports.resetedPassword = function(user, password) {
     });
 }
 
-exports.expireNotification = function(order) {
+exports.expireNotification = function (order) {
     let user = order.User
-    readHTMLFile('./app/mail/email-temp.html', function(err, html) {
+    readHTMLFile('./app/mail/email-temp.html', function (err, html) {
         var template = handlebars.compile(html);
         // let comments = `Your Service(` + order.id + `) going to expire in 1 Hour`;
         let comments = `Wij willen u graag aan herinneren dat het laatste uur van de overeengekomen huurperiode is aangebroken. Wij verzoeken u vriendelijk om het voertuig op tijd op de afgesproken locatie terug te brengen.</p><p>
@@ -371,7 +374,7 @@ exports.expireNotification = function(order) {
             subject: 'JEZSEL Nog één uur - Herinnering', // Subject lin
             html: htmlToSend
         }
-        transporter.sendMail(detail, function(error, info) {
+        transporter.sendMail(detail, function (error, info) {
             if (error) {
                 return (error);
             } else {
@@ -381,8 +384,8 @@ exports.expireNotification = function(order) {
     })
 }
 
-exports.cancelNotification = function(user, order) {
-    readHTMLFile('./app/mail/email-temp.html', function(err, html) {
+exports.cancelNotification = function (user, order) {
+    readHTMLFile('./app/mail/email-temp.html', function (err, html) {
         var template = handlebars.compile(html);
         let comments = `U heeft beroep gedaan op uw annuleringsverzekering.</p><p>Hierbij bevestigen wij dat uw annulering in goede orde is aangekomen.</p><p>Wij zien u graag terug bij Jezsel.`;
         var replacements = {
@@ -399,7 +402,7 @@ exports.cancelNotification = function(user, order) {
             subject: 'JEZSEL Annulering', // Subject lin
             html: htmlToSend
         }
-        transporter.sendMail(detail, function(error, info) {
+        transporter.sendMail(detail, function (error, info) {
             if (error) {
                 return (error);
             } else {
@@ -409,8 +412,8 @@ exports.cancelNotification = function(user, order) {
     })
 }
 
-exports.withdrawRequest = function(user, status) {
-    readHTMLFile('./app/mail/email-temp.html', function(err, html) {
+exports.withdrawRequest = function (user, status) {
+    readHTMLFile('./app/mail/email-temp.html', function (err, html) {
         var template = handlebars.compile(html);
         let comments = (status == 'Accepted') ? `U heeft een verzoek gedaan tot uitbetaling van uw wallet. Uw verzoek is goedgekeurd. Het bedrag zal binnen zeven werkdagen worden gestort op uw rekening.</p><p>Wij wensen u nog veel plezier met de diensten van Jezsel.` : `U heeft een verzoek gedaan tot uitbetaling van uw wallet. Uw verzoek is helaas afgekeurd. Binnen 3-5 werkdagen zal er contact met u worden opgenomen om de reden van afwijzing toe te lichten.</p><p>Mocht u nog vragen hebben naar aanleiding van dit bericht, verzoeken wij u vriendelijk om de vijf werkdagen te wachten en na de toelichting uw vraag te stellen. Op het moment dat u eerder contact opneemt, kunnen wij niet garanderen dat wij u verder kunnen helpen.</p><p>U kunt contact met ons opnemen per e-mail. Vergeet niet uw ordernummer te vermelden.`;
         var replacements = {
@@ -428,7 +431,7 @@ exports.withdrawRequest = function(user, status) {
             subject: subjectMdg, // Subject lin
             html: htmlToSend
         }
-        transporter.sendMail(detail, function(error, info) {
+        transporter.sendMail(detail, function (error, info) {
             if (error) {
                 return (error);
             } else {
@@ -438,8 +441,8 @@ exports.withdrawRequest = function(user, status) {
     })
 }
 
-exports.subscribeEmail = function(email) {
-    readHTMLFile('./app/mail/email-temp.html', function(err, html) {
+exports.subscribeEmail = function (email) {
+    readHTMLFile('./app/mail/email-temp.html', function (err, html) {
         var template = handlebars.compile(html);
         let comments = `We have a new Subscriber( ${email} ).`;
         var replacements = {
@@ -456,7 +459,7 @@ exports.subscribeEmail = function(email) {
             subject: 'JEZSEL New Subscription', // Subject lin
             html: htmlToSend
         }
-        transporter.sendMail(detail, function(error, info) {
+        transporter.sendMail(detail, function (error, info) {
             if (error) {
                 return (error);
             } else {
@@ -467,15 +470,15 @@ exports.subscribeEmail = function(email) {
 }
 
 
-exports.sendInvoice = function(invoiceObj) {
-    return new Promise(async function(resolve, reject) {
+exports.sendInvoice = function (invoiceObj) {
+    return new Promise(async function (resolve, reject) {
         let customer = await stripe.customers.create(invoiceObj.user);
         var customerId = customer.id;
         const invoice = await stripe.invoices.create({
             customer: customerId,
             collection_method: 'send_invoice',
             days_until_due: 1,
-            pending_invoice_items_behavior:"exclude"
+            pending_invoice_items_behavior: "exclude"
         });
 
         const invoiceItem = await stripe.invoiceItems.create({
@@ -488,4 +491,76 @@ exports.sendInvoice = function(invoiceObj) {
         await stripe.invoices.sendInvoice(invoice.id);
         resolve({ msg: invoice.id })
     });
+}
+
+/** App Login */
+exports.appLogin = function (body) {
+    return new Promise(function (resolve, reject) {
+        const email = body.email;
+        UserModel.findOne({
+            where: {
+                [Op.or]: [{ 'email': email }, { 'phone': email }],
+            }
+        }).then(async function (row) {
+            if (row) {
+                await sendOTP(row);
+                resolve({
+                    'message': 'OTP Send to user Email', status: 200
+                });
+            } else {
+                resolve({
+                    'message': 'OTP Send to user Email', status: 204
+                });
+            }
+        });
+    })
+}
+/** OTP  */
+async function sendOTP(userObj) {
+    readHTMLFile('./app/mail/email-temp.html', function (err, html) {
+        var template = handlebars.compile(html);
+        const otp = generateOTP();
+        UserModel.update({ otp: otp }, {
+            where: {
+                id: userObj.id
+            }
+        }).then(() => {
+            console.log('Record updated successfully');
+        }).catch((error) => {
+            console.error('Error updating record:', error);
+        });
+        let comments = `Jezsel logic OTP: ${otp}`;
+        var replacements = {
+            username: userObj.fullname,
+            message: comments,
+            message2: '',
+        };
+
+        var htmlToSend = template(replacements);
+        // send mail with defined transport object
+        let detail = {
+            from: 'support@jezsel.nl', // sender address
+            to: userObj.email, // list of receivers
+            subject: 'JEZSEL Login OTP', // Subject lin
+            html: htmlToSend
+        }
+        transporter.sendMail(detail, function (error, info) {
+            if (error) {
+                return (error);
+            } else {
+                return (true);
+            }
+        })
+    })
+}
+
+function generateOTP() {
+    let otp = "";
+    const possibleChars = "0123456789";
+    for (let i = 0; i < 6; i++) {
+        const randomCharIndex = Math.floor(Math.random() * possibleChars.length);
+        const randomChar = possibleChars.charAt(randomCharIndex);
+        otp += randomChar;
+    }
+    return otp;
 }
