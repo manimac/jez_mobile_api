@@ -2,7 +2,7 @@
 const request = require('request');
 const appUtil = require('../apputil');
 
-exports.deviceList = function(req,res) {
+exports.deviceList = function (req, res) {
     let qString = `?query=in nulla&active=true&limit=20&offset=0&sort=serial_number,erp_delivery_number`;
     let headers = { 'X-CloudBoxx-ApiKey': 'dSAqwwfQL6qSfmkYS0X2FDjPxyZC7ZjnQ4rxGHpDpGH27Lt8mWD6JpnSeUOIR10F', 'Accept': `application/json` };
     const cOptions = {
@@ -10,7 +10,7 @@ exports.deviceList = function(req,res) {
         method: 'GET',
         headers: headers
     };
-    request(cOptions, function(err, resp) {
+    request(cOptions, function (err, resp) {
         if (err) {
             console.log(err);
             res.status(500).send(err);
@@ -19,15 +19,21 @@ exports.deviceList = function(req,res) {
     });
 }
 
-exports.lockUnlock = function(req,res) {
+exports.lockUnlock = function (req, res) {
     let qString = `/${req.body.qnr}/central-lock?fallback=true`;
     let headers = { 'X-CloudBoxx-ApiKey': 'dSAqwwfQL6qSfmkYS0X2FDjPxyZC7ZjnQ4rxGHpDpGH27Lt8mWD6JpnSeUOIR10F', 'Accept': `application/json` };
     const cOptions = {
         url: 'https://api.cloudboxx.invers.com/api/devices' + qString,
-        method: 'PUT',
-        headers: headers
+        method: 'POST',
+        headers: headers,
+        body: {
+            // add the data you want to send here
+            state: req.body.state,    // locked / unlocked
+
+        },
+        json: true
     };
-    request(cOptions, function(err, resp) {
+    request(cOptions, function (err, resp) {
         if (err) {
             console.log(err);
             res.status(500).send(err);
@@ -36,7 +42,7 @@ exports.lockUnlock = function(req,res) {
     });
 }
 
-exports.getDeliveryCharge = function(req, res) {
+exports.getDeliveryCharge = function (req, res) {
     const options = {
         url: 'https://apiv2.shiprocket.in/v1/external/auth/login',
         method: 'POST',
@@ -59,7 +65,7 @@ exports.getDeliveryCharge = function(req, res) {
                 method: 'GET',
                 headers: headers
             };
-            request(cOptions, function(err, resp) {
+            request(cOptions, function (err, resp) {
                 if (err) {
                     console.log(err);
                     res.status(500).send(err);
