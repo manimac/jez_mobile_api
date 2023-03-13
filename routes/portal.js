@@ -5,6 +5,7 @@ const user = require('../app/controller/user.controller');
 const common = require('../app/controller/common.controller');
 const order = require('../app/controller/order.controller');
 const product = require('../app/controller/product.controller');
+const invers = require('../app/controller/inversapi.controller');
 const authMiddware = passport.authenticate('jwt', { session: false });
 
 router.get('/terms-and-condition', common.getTermAndCondition);
@@ -33,4 +34,6 @@ router.get('/filters/:type?/:category?', common.filters); // type- Rent, Staff, 
 
 /** For auth enabled */
 router.use(authMiddware);
+router.post('/invers/devices-list', invers.deviceList);
+router.post('/invers/lock-unlock', invers.lockUnlock);
 module.exports = router;

@@ -46,11 +46,13 @@ router.post('/login', function(req, res, next) {
         if (!user) {
             // *** Display message without using flash option
             // re-render the login form with a message
-            return res.status(400).send({ message: "Invalid Credentials" });
+            // return res.status(400).send({ message: "Invalid Credentials" });
+            res.status(500).send('User not found');
         }
         user = user.toJSON();
         if (user.is_verified == 0) {
-            return res.status(400).send({ message: "Verifeer uw account om in te loggen" });
+            res.status(500).send('Verifeer uw account om in te loggen');
+            // return res.status(400).send({ message: "Verifeer uw account om in te loggen" });
         }
         delete user.password;
         delete user.status;
