@@ -32,6 +32,10 @@ router.get('/productfind/:id', product.getProductFind);
 router.get('/product/similar/:type/:id', product.getSimilarProducts);
 router.get('/filters/:type?/:category?', common.filters); // type- Rent, Staff, category - Fuel, Truck
 
+//Invoice
+router.get('/userinvoice/:id', order.invoiceslist);
+router.get('/userfindinvoice/:id', order.userfindinvoice);
+
 /** For auth enabled */
 router.use(authMiddware);
 router.post('/invers/devices-list', invers.deviceList);

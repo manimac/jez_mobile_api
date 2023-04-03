@@ -1070,3 +1070,25 @@ exports.findExpiredOrderForInvoice = function(req, res) {
         })
     });
 }
+
+//Invoice
+exports.invoiceslist = function (req, res) {
+    let where = { invoice: 1, user_id: req.params.id, invoiceid: { [Op.ne]: null } }
+    OrderHistoryModel.findAll({
+        where,
+        order: [
+                    ['createdAt', 'DESC']
+                ],
+    }).then(function (result) {
+        res.send(result);
+    }, function (err) {
+        res.status(500).send(err);
+    })
+}
+
+exports.userfindinvoice = async function (req, res) {
+    const invoice = await stripe.invoices.retrieve(
+        req.params.id
+    );
+    res.send(invoice);
+}
