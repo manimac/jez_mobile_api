@@ -49,6 +49,11 @@ db.withdrawrequest = require("./withdrawrequest.model")(sequelize, Sequelize);
 db.coupon = require("./coupon.model")(sequelize, Sequelize);
 db.certificate = require("./certificate.model")(sequelize, Sequelize);
 
+db.employee = require("./employee.model")(sequelize, Sequelize);
+db.employer = require("./employer.model")(sequelize, Sequelize);
+db.staffOrTransportRequest = require("./staffrortransportequest.model")(sequelize, Sequelize);
+db.staffOrTransportInterest = require("./staffortransportinterest.model")(sequelize, Sequelize);
+
 // db.transportmenu = require("./transportmenu.model")(sequelize, Sequelize);
 // db.transport = require("./transport.model")(sequelize, Sequelize);
 // db.transportregister = require("./transportregister.model")(sequelize, Sequelize);
@@ -68,6 +73,16 @@ db.withdrawrequest.belongsTo(db.team, { foreignKey: 'team_id', targetKey: 'id' }
 db.product.hasMany(db.extra, { foreignKey: 'type', sourceKey: 'type' });
 db.order.hasMany(db.orderhistory, { foreignKey: 'order_id', targetKey: 'id' });
 
+db.order.hasMany(db.staffOrTransportRequest, { foreignKey: 'order_id', targetKey: 'id' });
+db.employer.hasMany(db.staffOrTransportRequest, { foreignKey: 'employer_id', targetKey: 'id' });
+db.staffOrTransportRequest.belongsTo(db.order, { foreignKey: 'order_id', targetKey: 'id' });
+db.staffOrTransportRequest.belongsTo(db.employer, { foreignKey: 'employer_id', targetKey: 'id' });
+db.staffOrTransportRequest.belongsTo(db.employee, { foreignKey: 'employee_id', targetKey: 'id' });
+db.staffOrTransportInterest.belongsTo(db.staffOrTransportRequest, { foreignKey: 'staffortransportrequest_id', targetKey: 'id' });
+db.employee.belongsTo(db.users, { foreignKey: 'user_id', targetKey: 'id' });
+db.employer.belongsTo(db.users, { foreignKey: 'user_id', targetKey: 'id' });
+db.staffOrTransportRequest.belongsTo(db.users, { foreignKey: 'user_id', targetKey: 'id' });
+db.staffOrTransportInterest.belongsTo(db.users, { foreignKey: 'user_id', targetKey: 'id' });
 
 db.home.belongsTo(db.users, { foreignKey: 'created_by', targetKey: 'id' });
 db.home.belongsTo(db.users, { foreignKey: 'updated_by', targetKey: 'id' });
