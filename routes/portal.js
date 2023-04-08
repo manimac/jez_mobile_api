@@ -6,6 +6,8 @@ const common = require('../app/controller/common.controller');
 const order = require('../app/controller/order.controller');
 const product = require('../app/controller/product.controller');
 const invers = require('../app/controller/inversapi.controller');
+const employee = require('../app/controller/employee.controller');
+const employer = require('../app/controller/employer.controller');
 const authMiddware = passport.authenticate('jwt', { session: false });
 
 router.get('/terms-and-condition', common.getTermAndCondition);
@@ -18,6 +20,7 @@ router.post('/reset/password', user.resetPassword);
 router.get('/user/get/:id', user.getUser);
 router.post('/user/update', user.userUpdate);
 router.post('/orders', order.orders);
+router.post('/orders-app', order.ordersForApp);
 router.post('/order/my-wallet', order.myWallet);
 router.post('/withdraws', common.withdrawRequests);
 router.get('/product/extras', product.extras);
@@ -36,4 +39,14 @@ router.get('/filters/:type?/:category?', common.filters); // type- Rent, Staff, 
 router.use(authMiddware);
 router.post('/invers/devices-list', invers.deviceList);
 router.post('/invers/lock-unlock', invers.lockUnlock);
+
+router.post('/order/staff-transport-request/update', order.updateStaffOrTransportRequest);
+router.post('/order/staff-transport-interest/create', order.makeStaffOrTransportInterest);
+router.post('/order/staff-transport-interest/update', order.updateStaffOrTransportInterest);
+
+router.post('/employee/create', employee.createEmployee);
+router.post('/employee/update', employee.updateEmployee);
+router.post('/employer/create', employer.createEmployer);
+router.post('/employer/update', employer.updateEmployer);
+
 module.exports = router;

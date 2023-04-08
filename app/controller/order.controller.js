@@ -15,115 +15,728 @@ const UserModel = MODELS.users;
 const ExtraModel = MODELS.extra;
 const OrderModel = MODELS.order;
 const OrderHistoryModel = MODELS.orderhistory;
+const StaffOrTransportRequestModel = MODELS.staffOrTransportRequest;
+const StaffOrTransportInterestModel = MODELS.staffOrTransportInterest;
 const WithdrawRequestModel = MODELS.withdrawrequest;
 
 // SET STORAGE
 var storage = multer.diskStorage({
-    destination: function(req, file, cb) {
+    destination: function (req, file, cb) {
         var dir = './public/uploads/product'
         if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir, { recursive: true });
         }
         cb(null, dir)
     },
-    filename: function(req, file, cb) {
+    filename: function (req, file, cb) {
         cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname)) // Appending the extension
     }
 })
 
-exports.deleteOrder = function(req, res) {
-    OrderHistoryModel.destroy({ where: { order_id: req.params.id } }).then(function(result) {
-        OrderModel.findByPk(req.params.id).then(function(result) {
+
+exports.oldproducts = function (req, res) {
+    var result = { count: 0, data: [] };
+    var offset = req.body.offset || 0;
+    var limit = req.body.limit || 1000000;
+    //search 
+    var bookedVehicle = [];
+    const search = req.body.search || {};
+    if (search && search.checkindate && search.checkintime && search.checkoutdate && search.checkouttime) {
+        let where = {};
+        search.checkindatetime = moment(search.checkindate + ' ' + search.checkintime, 'DD-MM-YYYY HH:mm');
+        search.checkoutdatetime = moment(search.checkoutdate + ' ' + search.checkouttime, 'DD-MM-YYYY HH:mm');
+
+        let checkindatetimeex = search.checkindatetime.clone();
+        let checkoutdatetimeex = search.checkoutdatetime.clone();
+        search.checkindatetimeex = checkindatetimeex.subtract(60, 'minutes').format('YYYY-MM-DD HH:mm:ss');
+        search.checkoutdatetimeex = checkoutdatetimeex.add(60, 'minutes').format('YYYY-MM-DD HH:mm:ss');
+
+
+        //     search.checkindatetime = moment(search.checkindate + ' ' + search.checkintime).format('YYYY-MM-DD HH:mm:ss');
+        // moment(search.checkindate).format('YYYY-MM-DD') +' '+ moment(search.checkintime, 'HH:mm').format('HH:mm:ss')
+
+        //     let current = moment().utc().format('YYYY-MM-DD') + ' ' + moment().utc().format('HH:mm:ss');
+        // let oneHrAfter = moment().utc().format('YYYY-MM-DD') + ' ' + moment().add('1', 'hours').utc().format('HH:mm:ss');
+
+
+        // where.checkoutdate = {
+        //     [Op.between]: [search.checkindatetimeex.toDate(), search.checkoutdatetimeex.toDate()]
+        // };
+
+        // where[Op.or] = [{
+        //     checkindate: {
+        //         [Op.between]: ['2022-10-10 01:00:00', '2022-10-10 04:30:00']
+        //     }
+        // }, {
+        //     checkoutdate: {
+        //         [Op.between]: ['2022-10-10 01:00:00', '2022-10-10 04:30:00']
+        //     }
+        // }]
+        where[Op.or] = [{
+            checkindate: {
+                [Op.between]: [search.checkindatetimeex, search.checkoutdatetimeex]
+            }
+        }, {
+            checkoutdate: {
+                [Op.between]: [search.checkindatetimeex, search.checkoutdatetimeex]
+            }
+        }]
+
+        where.status = 1;
+        where.type = req.body.type;
+        where.filterlocation_id = search.locationid;
+        OrderHistoryModel.findAll({ where: where }).then((resp) => {
+            bookedVehicle = resp.map((x, i) => {
+                return x.product_id;
+            });
+            content();
+        })
+
+    }
+    // else if (req.body.frontend) {
+    //     let where = {};
+    //     where.checkoutdate = {
+    //         [Op.between]: [moment().add(45, 'minutes').toDate(), moment().toDate()]
+    //     };
+    //     where.status = 1;
+    //     where.type = req.body.type;
+    //     where.filterlocation_id = req.body.filterlocation_id;
+    //     OrderHistoryModel.findAll({ where }).then((resp) => {
+    //         bookedVehicle = resp.map((x, i) => {
+    //             return x.product_id;
+    //         });
+    //         content();
+    //     })
+    // } 
+    else {
+        content();
+    }
+
+    function content() {
+        let where = {};
+        if (req.body.status) {
+            where.status = req.body.status;
+        }
+        if (req.body.type) {
+            where.type = req.body.type;
+        }
+        if (search.locationid) {
+            where.location_id = search.locationid;
+        }
+        let filter = [];
+        if (req.body.vehicle) {
+            filter.push({
+                'vehicle': {
+                    [Op.in]: req.body.vehicle.split(',')
+                }
+            })
+        }
+        if (req.body.fuel) {
+            filter.push({
+                'fuel': {
+                    [Op.in]: req.body.fuel.split(',')
+                }
+            })
+        }
+        if (req.body.transmission) {
+            filter.push({
+                'transmission': {
+                    [Op.in]: req.body.transmission.split(',')
+                }
+            })
+        }
+        if (req.body.parkingspace) {
+            filter.push({
+                'parkingspace': {
+                    [Op.in]: req.body.parkingspace.split(',')
+                }
+            })
+        }
+        if (req.body.storagespace) {
+            filter.push({
+                'storagespace': {
+                    [Op.in]: req.body.storagespace.split(',')
+                }
+            })
+        }
+        if (req.body.beroep) {
+            filter.push({
+                'beroep': {
+                    [Op.in]: req.body.beroep.split(',')
+                }
+            })
+        }
+        if (req.body.leeftijd) {
+            filter.push({
+                'leeftijd': {
+                    [Op.in]: req.body.leeftijd.split(',')
+                }
+            })
+        }
+        if (req.body.ervaring) {
+            filter.push({
+                'ervaring': {
+                    [Op.in]: req.body.ervaring.split(',')
+                }
+            })
+        }
+        if (req.body.nationality) {
+            filter.push({
+                'nationality': {
+                    [Op.in]: req.body.nationality.split(',')
+                }
+            })
+        }
+        if (req.body.voertuig) {
+            filter.push({
+                'voertuig': {
+                    [Op.in]: req.body.voertuig.split(',')
+                }
+            })
+        }
+
+        if (req.body.fromdate) {
+            const from = moment(req.body.fromdate).startOf('day').format('YYYY-MM-DD HH:mm:ss');
+            const to = req.body.todate && moment(req.body.todate).endOf('day').format('YYYY-MM-DD HH:mm:ss') || moment().endOf('day').format('YYYY-MM-DD HH:mm:ss');
+            where.createdAt = {
+                [Op.between]: [new Date(from), new Date(to)]
+            }
+        }
+        if (req.body.showindex) {
+            where.showinindex = 1;
+        }
+        if (filter.length) {
+            where[Op.and] = filter
+        }
+
+        ProductModel.findAndCountAll({
+            where
+        }).then((output) => {
+            result.count = output.count;
+            ProductModel.findAll({
+                where,
+                include: [{
+                    model: ProductImageModel,
+                    attributes: ['id', 'path', 'image']
+                }, {
+                    model: ExtraModel,
+                    attributes: ['id', 'type', 'description', 'price', 'isGroup']
+                }],
+                order: [
+                    ['createdAt', 'DESC']
+                ],
+                offset: offset,
+                limit: limit
+            }).then((registered) => {
+                let revised = registered.map((x, i) => {
+                    let temp = x && x.toJSON();
+                    temp.sno = offset + (i + 1);
+                    if (bookedVehicle.indexOf(temp.id) >= 0) {
+                        temp.disabled = true;
+                    }
+                    return temp;
+                })
+                revised = revised.filter(element => (!element.disabled))
+                result.data = revised;
+                result.count = revised.length;
+                res.send(result);
+            }).catch((err) => {
+                res.status(500).send(err)
+            })
+        }).catch((err) => {
+            res.status(500).send(err)
+        })
+    }
+
+}
+
+
+/** Products */
+
+exports.products = function (req, res) {
+    var result = { count: 0, data: [] };
+    var offset = req.body.offset || 0;
+    var limit = req.body.limit || 1000000;
+    //search 
+    var bookedVehicle = [];
+    const search = req.body.search || {};
+    if (search && search.checkindate && search.checkintime && search.checkoutdate && search.checkouttime) {
+        let where = {};
+        search.checkindatetime = moment(search.checkindate + ' ' + search.checkintime, 'DD-MM-YYYY HH:mm');
+        search.checkoutdatetime = moment(search.checkoutdate + ' ' + search.checkouttime, 'DD-MM-YYYY HH:mm');
+
+        let checkindatetimeex = search.checkindatetime.clone();
+        let checkoutdatetimeex = search.checkoutdatetime.clone();
+        search.checkindatetimeex = checkindatetimeex.subtract(60, 'minutes').format('YYYY-MM-DD HH:mm:ss');
+        search.checkoutdatetimeex = checkoutdatetimeex.add(60, 'minutes').format('YYYY-MM-DD HH:mm:ss');
+        // where[Op.or] = [{
+        //     checkindate: {
+        //         [Op.between]: [search.checkindatetimeex, search.checkoutdatetimeex]
+        //     }
+        // }, {
+        //     checkoutdate: {
+        //         [Op.between]: [search.checkindatetimeex, search.checkoutdatetimeex]
+        //     }
+        // }]
+
+        where[Op.or] = [
+            {
+                [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.checkindatetimeex),
+                Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.checkindatetimeex)]
+            },
+            {
+                [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.checkoutdatetimeex),
+                Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.checkoutdatetimeex)]
+            }
+        ]
+
+        where.status = 1;
+        where.type = [req.body.type, 'maintenance'];
+        where.filterlocation_id = search.locationid;
+        if (appUtil.getUser(req.headers.authorization).id) {
+            where.user_id = {
+                [Op.not]: appUtil.getUser(req.headers.authorization).id
+            }
+        }
+
+        OrderHistoryModel.findAll({ where: where }).then((resp) => {
+            bookedVehicle = resp.map((x, i) => {
+                return x.product_id;
+            });
+            if (appUtil.getUser(req.headers.authorization).id) {
+                let userWhere = {};
+                userWhere.status = 1;
+                userWhere.type = [req.body.type, 'maintenance'];
+                userWhere.filterlocation_id = search.locationid;
+                userWhere.user_id = appUtil.getUser(req.headers.authorization).id;
+
+                search.checkindatetime = moment(search.checkindate + ' ' + search.checkintime, 'DD-MM-YYYY HH:mm');
+                search.checkoutdatetime = moment(search.checkoutdate + ' ' + search.checkouttime, 'DD-MM-YYYY HH:mm');
+
+                let checkindatetimeex = search.checkindatetime.clone();
+                let checkoutdatetimeex = search.checkoutdatetime.clone();
+                search.checkindatetimeex = checkindatetimeex.add(10, 'seconds').format('YYYY-MM-DD HH:mm:ss');
+                search.checkoutdatetimeex = checkoutdatetimeex.format('YYYY-MM-DD HH:mm:ss');
+
+                // userWhere[Op.or] = [{
+                //     checkindate: {
+                //         [Op.between]: [search.checkindatetimeex, search.checkoutdatetimeex]
+                //     }
+                // }, {
+                //     checkoutdate: {
+                //         [Op.between]: [search.checkindatetimeex, search.checkoutdatetimeex]
+                //     }
+                // }]
+
+                userWhere[Op.or] = [
+                    {
+                        [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.checkindatetimeex),
+                        Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.checkindatetimeex)]
+                    },
+                    {
+                        [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.checkoutdatetimeex),
+                        Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.checkoutdatetimeex)]
+                    }
+                ]
+
+                OrderHistoryModel.findAll({ where: userWhere }).then((resp) => {
+                    let userBookedVehicle = resp.map((x, i) => {
+                        return x.product_id;
+                    });
+                    bookedVehicle = bookedVehicle.concat(userBookedVehicle.filter(bo => bookedVehicle.every(ao => ao != bo)));
+                    content();
+                })
+            }
+            else {
+                content();
+            }
+        })
+    }
+    else {
+        content();
+    }
+
+    function content() {
+        let where = {};
+        if (req.body.status) {
+            where.status = req.body.status;
+        }
+        if (req.body.type) {
+            where.type = req.body.type;
+        }
+        if (search.locationid) {
+            where.location_id = search.locationid;
+        }
+        let filter = [];
+        if (req.body.vehicle) {
+            filter.push({
+                'vehicle': {
+                    [Op.in]: req.body.vehicle.split(',')
+                }
+            })
+        }
+        if (req.body.fuel) {
+            filter.push({
+                'fuel': {
+                    [Op.in]: req.body.fuel.split(',')
+                }
+            })
+        }
+        if (req.body.transmission) {
+            filter.push({
+                'transmission': {
+                    [Op.in]: req.body.transmission.split(',')
+                }
+            })
+        }
+        if (req.body.parkingspace) {
+            filter.push({
+                'parkingspace': {
+                    [Op.in]: req.body.parkingspace.split(',')
+                }
+            })
+        }
+        if (req.body.storagespace) {
+            filter.push({
+                'storagespace': {
+                    [Op.in]: req.body.storagespace.split(',')
+                }
+            })
+        }
+        if (req.body.beroep) {
+            filter.push({
+                'beroep': {
+                    [Op.in]: req.body.beroep.split(',')
+                }
+            })
+        }
+        if (req.body.leeftijd) {
+            filter.push({
+                'leeftijd': {
+                    [Op.in]: req.body.leeftijd.split(',')
+                }
+            })
+        }
+        if (req.body.ervaring) {
+            filter.push({
+                'ervaring': {
+                    [Op.in]: req.body.ervaring.split(',')
+                }
+            })
+        }
+        if (req.body.nationality) {
+            filter.push({
+                'nationality': {
+                    [Op.in]: req.body.nationality.split(',')
+                }
+            })
+        }
+        if (req.body.voertuig) {
+            filter.push({
+                'voertuig': {
+                    [Op.in]: req.body.voertuig.split(',')
+                }
+            })
+        }
+
+        if (req.body.fromdate) {
+            const from = moment(req.body.fromdate).startOf('day').format('YYYY-MM-DD HH:mm:ss');
+            const to = req.body.todate && moment(req.body.todate).endOf('day').format('YYYY-MM-DD HH:mm:ss') || moment().endOf('day').format('YYYY-MM-DD HH:mm:ss');
+            where.createdAt = {
+                [Op.between]: [new Date(from), new Date(to)]
+            }
+        }
+        if (req.body.showindex) {
+            where.showinindex = 1;
+        }
+        if (filter.length) {
+            where[Op.and] = filter
+        }
+        if (!req.body.fromadmin) {
+            where.status = 1;
+        }
+        ProductModel.findAndCountAll({
+            where
+        }).then((output) => {
+            result.count = output.count;
+            ProductModel.findAll({
+                where,
+                include: [{
+                    model: ProductImageModel,
+                    attributes: ['id', 'path', 'image']
+                }, {
+                    model: ExtraModel,
+                    attributes: ['id', 'type', 'description', 'price', 'isGroup']
+                }],
+                order: [
+                    ['createdAt', 'DESC']
+                ],
+                offset: offset,
+                limit: limit
+            }).then((registered) => {
+                let revised = registered.map((x, i) => {
+                    let temp = x && x.toJSON();
+                    temp.sno = offset + (i + 1);
+                    if (bookedVehicle.indexOf(temp.id) >= 0) {
+                        temp.disabled = true;
+                    }
+                    return temp;
+                })
+                revised = revised.filter(element => (!element.disabled))
+                result.data = revised;
+                result.count = revised.length;
+                res.send(result);
+            }).catch((err) => {
+                res.status(500).send(err)
+            })
+        }).catch((err) => {
+            res.status(500).send(err)
+        })
+    }
+
+}
+
+exports.createProduct = function (req, res) {
+    // var upload = multer({ storage: storage }).single('thumbnail');
+    var upload = multer({ storage: storage }).fields([{
+        name: 'thumbnail',
+        maxCount: 1
+    }, {
+        name: 'images',
+        maxCount: 10
+    }]);
+    upload(req, res, function (err) {
+        req.body.thumbnail = res.req.files && (res.req.files.thumbnail && res.req.files.thumbnail[0].filename);
+        req.body.status = 1;
+        ProductModel.create(req.body).then(function (product) {
+            if (res.req.files && res.req.files.images) {
+                product.images = [];
+                async.eachSeries(res.req.files.images, function (image, callback) {
+                    let productImage = { product_id: product.id, image: image.filename };
+                    ProductImageModel.create(productImage).then(function (resp) {
+                        product.images.push(resp);
+                        callback();
+                    }, function (err) {
+                        res.send(err);
+                    })
+                }, function (err) {
+                    res.send(product);
+                })
+            } else {
+                res.send(product);
+            }
+
+        }, function (err) {
+            res.status(500).send(err);
+        })
+    })
+}
+exports.updateProduct = function (req, res) {
+    // var upload = multer({ storage: storage }).single('thumbnail');
+    var upload = multer({ storage: storage }).fields([{
+        name: 'thumbnail',
+        maxCount: 1
+    }, {
+        name: 'images',
+        maxCount: 10
+    }]);
+    upload(req, res, function (err) {
+        ProductModel.findByPk(req.body.id).then(function (result) {
+            req.body.thumbnail = res.req.files && (res.req.files.thumbnail && res.req.files.thumbnail[0].filename) || result.thumbnail;
+            result.update(req.body).then((resp) => {
+                result.images = [];
+                async.eachSeries(res.req.files.images, function (image, callback) {
+                    let productImage = { product_id: result.id, image: image.filename };
+                    ProductImageModel.create(productImage).then(function (resp) {
+                        result.images.push(resp);
+                        callback();
+                    }, function (err) {
+                        res.send(err);
+                    })
+                }, function (err) {
+                    res.send(resp);
+                })
+            })
+        }, function (err) {
+            res.status(500).send(err);
+        })
+    })
+}
+exports.deleteProduct = function (req, res) {
+    ProductModel.findByPk(req.params.id).then(function (result) {
+        result.destroy().then((resp) => {
+            res.send(resp);
+        })
+    }, function (err) {
+        res.status(500).send(err);
+    })
+}
+exports.deleteOrder = function (req, res) {
+    OrderHistoryModel.destroy({ where: { order_id: req.params.id } }).then(function (result) {
+        OrderModel.findByPk(req.params.id).then(function (result) {
             result.destroy().then((resp) => {
                 res.send(resp);
             })
-        }, function(err) {
+        }, function (err) {
             res.status(500).send(err);
         })
-    }, function(err) {
+    }, function (err) {
         res.status(500).send(err);
     })
 }
 
+exports.deleteProductImage = function (req, res) {
+    ProductImageModel.findByPk(req.params.id).then(function (result) {
+        result.destroy().then((resp) => {
+            res.send(resp);
+        })
+    }, function (err) {
+        res.status(500).send(err);
+    })
+}
 
-
-exports.getProduct = function(req, res) {
+exports.getProduct = function (req, res) {
     ProductModel.findOne({
         where: { route: req.params.route },
         include: [{
             model: ProductImageModel,
             attributes: ['id', 'path', 'image']
         }],
-    }).then(function(resp) {
+    }).then(function (resp) {
         res.send(resp);
-    }, function(err) {
+    }, function (err) {
         res.status(500).send(err);
     })
 }
 
+exports.getProductFind = function (req, res) {
+    ProductModel.findOne({
+        where: { id: req.params.id },
+        include: [{
+            model: ProductImageModel,
+            attributes: ['id', 'path', 'image']
+        }],
+    }).then(function (resp) {
+        res.send(resp);
+    }, function (err) {
+        res.status(500).send(err);
+    })
+}
 
+exports.getSimilarProducts = function (req, res) {
+    ProductModel.findAll({
+        where: {
+            type: req.params.type,
+            id: {
+                [Op.not]: req.params.id
+            }
+        },
+        limit: 3
+    }).then(function (resp) {
+        res.send(resp);
+    }, function (err) {
+        res.status(500).send(err);
+    })
+}
 
-exports.uploadVehicleImage = function(req, res) {
+exports.uploadVehicleImage = function (req, res) {
     var upload = multer({ storage: storage }).array('image', 10);
-    upload(req, res, function(err) {
+    upload(req, res, function (err) {
         console.log(res.req.files);
-        async.eachSeries(res.req.files, function(file, callback) {
-                req.body.image = file && file.filename;
-                if (req.body.image) {
-                    VehicleImageModel.create(req.body).then(function() {
-                        callback();
-                    }, (err) => {
-                        res.status(500).send(err);
-                    })
-                } else {
+        async.eachSeries(res.req.files, function (file, callback) {
+            req.body.image = file && file.filename;
+            if (req.body.image) {
+                VehicleImageModel.create(req.body).then(function () {
                     callback();
-                }
-            }, (err) => {
-                res.send({ message: 'Success' });
-            })
-            // req.body.image = res.req.file && res.req.file.filename;
-            // if (req.body.image) {
-            //     VehicleImageModel.create(req.body).then(function () {
-            //         res.send(req.body);
-            //     }, function (err) {
-            //         res.status(500).send(err);
-            //     })
-            // } else {
-            //     res.send(req.body);
-            // }
+                }, (err) => {
+                    res.status(500).send(err);
+                })
+            } else {
+                callback();
+            }
+        }, (err) => {
+            res.send({ message: 'Success' });
+        })
+        // req.body.image = res.req.file && res.req.file.filename;
+        // if (req.body.image) {
+        //     VehicleImageModel.create(req.body).then(function () {
+        //         res.send(req.body);
+        //     }, function (err) {
+        //         res.status(500).send(err);
+        //     })
+        // } else {
+        //     res.send(req.body);
+        // }
     });
 }
 
 // Vehicle Registers
-exports.getVehicleRegister = function(req, res) {
+exports.getVehicleRegister = function (req, res) {
     let registeruser_id = appUtil.getUser(req.headers.authorization).id || null;
     VehicleRegisterModel.findAll({
         where: {
             'registeruser_id': registeruser_id
         },
         include: [{
-                model: VehicleModel,
-                attributes: ['id', 'name']
-            },
-            {
-                model: UserModel,
-                as: 'registeruser',
-                attributes: ['id', 'firstname', 'lastname']
-            },
-            {
-                model: UserModel,
-                as: 'paymentuser',
-                attributes: ['id', 'firstname', 'lastname']
-            }
+            model: VehicleModel,
+            attributes: ['id', 'name']
+        },
+        {
+            model: UserModel,
+            as: 'registeruser',
+            attributes: ['id', 'firstname', 'lastname']
+        },
+        {
+            model: UserModel,
+            as: 'paymentuser',
+            attributes: ['id', 'firstname', 'lastname']
+        }
         ],
-    }).then(function(resp) {
+    }).then(function (resp) {
         res.send(resp);
-    }, function(err) {
+    }, function (err) {
         res.status(500).send(err);
     })
 }
-
-exports.productIdeal = async function(req, res) {
+/** vehicle register */
+exports.createVehicleRegister = function (req, res) {
+    req.body.registeruser_id = req.body.registeruser_id || appUtil.getUser(req.headers.authorization).id;
+    req.body.totenmetdatum = moment(req.body.totenmetdatum + ' ' + req.body.totenmetdtijd).format('YYYY-MM-DD HH:mm:ss');
+    req.body.totenmetdtijd = moment(req.body.totenmetdatum).format('HH:mm');
+    req.body.vanafdatum = moment(req.body.vanafdatum + ' ' + req.body.vanafdtijd).format('YYYY-MM-DD HH:mm:ss');
+    req.body.vanafdtijd = moment(req.body.vanafdatum).format('HH:mm');
+    req.body.amount = parseFloat(req.body.amount);
+    req.body.paymentuser_id = appUtil.getUser(req.headers.authorization).id || null;
+    stripeAmount = req.body.amount * 100;
+    VehicleRegisterModel.create(req.body).then(function () {
+        res.send(req.body);
+    }, function (err) {
+        res.status(500).send(err);
+    })
+    // stripe.charges.create({
+    //     amount: Math.round(stripeAmount),
+    //     currency: 'EUR',
+    //     // payment_method_types: ['ideal'], // Added for iDeal Payments
+    //     description: `jesel_rent_${req.body.registeruser_id}`,
+    //     source: req.body.stripetoken && req.body.stripetoken.id,
+    // }, (err, charge) => {
+    //     if (err) {
+    //         console.log(err);
+    //         res.send(err).status(500);
+    //     }
+    //     if (charge && charge.status == 'succeeded') {
+    //         req.body.paymentchargeid = charge.id;
+    //         VehicleRegisterModel.create(req.body).then(function() {
+    //             res.send(req.body);
+    //         }, function(err) {
+    //             res.status(500).send(err);
+    //         })
+    //     } else {
+    //         res.status(500).send(charge);
+    //     }
+    // })
+}
+exports.productIdeal = async function (req, res) {
     stripeAmount = req.body.total * 100;
     let pName = req.body.pname;
 
@@ -158,13 +771,127 @@ exports.productIdeal = async function(req, res) {
     // const encInput = Buffer.from(JSON.stringify(req.body)).toString('base64');
 
 }
+exports.updateVehicleRegister = function (req, res) {
+    VehicleRegisterModel.findByPk(req.body.id).then(function (result) {
+        result.update(req.body).then((resp) => {
+            res.send(resp);
+        })
+    }, function (err) {
+        res.status(500).send(err);
+    })
+}
+exports.deleteVehicleRegister = function (req, res) {
+    VehicleRegisterModel.findByPk(req.params.id).then(function (result) {
+        result.destroy().then((resp) => {
+            res.send(resp);
+        })
+    }, function (err) {
+        res.status(500).send(err);
+    })
+}
 
+exports.vehicleRegisters = function (req, res) {
+    let result = { count: 0, data: [] };
+    let offset = req.body.offset || 0;
+    let limit = req.body.limit || 1;
+    let where = {};
 
+    if (req.body.status) {
+        where.status = req.body.status;
+    }
+    if (req.body.registeruser_id) {
+        where.registeruser_id = registeruser_id;
+    }
+    if (req.body.fromdate) {
+        const from = moment(req.body.fromdate).startOf('day').format('YYYY-MM-DD HH:mm:ss');
+        const to = req.body.todate && moment(req.body.todate).endOf('day').format('YYYY-MM-DD HH:mm:ss') || moment().endOf('day').format('YYYY-MM-DD HH:mm:ss');
+        where.createdAt = {
+            [Op.between]: [new Date(from), new Date(to)]
+        }
+    }
 
+    VehicleRegisterModel.findAndCountAll({
+        where
+    }).then((output) => {
+        result.count = output.count;
+        VehicleRegisterModel.findAll({
+            where,
+            include: [{
+                model: VehicleModel,
+                attributes: ['id', 'name']
+            },
+            {
+                model: UserModel,
+                as: 'registeruser',
+                attributes: ['id', 'firstname', 'lastname']
+            },
+            {
+                model: UserModel,
+                as: 'paymentuser',
+                attributes: ['id', 'firstname', 'lastname']
+            }
+            ],
+            order: [
+                ['createdAt', 'DESC']
+            ],
+            offset: offset,
+            limit: limit
+        }).then((registered) => {
+            let revised = registered.map((x, i) => {
+                let temp = x && x.toJSON();
+                temp.sno = offset + (i + 1);
+                return temp;
+            })
+            result.data = revised;
+            res.send(result);
+        }).catch((err) => {
+            res.status(500).send(err)
+        })
+    }).catch((err) => {
+        res.status(500).send(err)
+    })
+}
 
+/** Extra */
+exports.extras = function (req, res) {
+    ExtraModel.findAll({
+        where: {
+            'status': 1
+        },
+        order: [
+            ['updatedAt', 'DESC']
+        ]
+    }).then(function (entries) {
+        res.send(entries || null)
+    });
+}
+exports.createExtra = function (req, res) {
+    ExtraModel.create(req.body).then(function () {
+        res.send(req.body);
+    }, function (err) {
+        res.status(500).send(err);
+    })
+}
+exports.updateExtra = function (req, res) {
+    ExtraModel.findByPk(req.body.id).then(function (result) {
+        result.update(req.body).then((resp) => {
+            res.send(resp);
+        })
+    }, function (err) {
+        res.status(500).send(err);
+    })
+}
+exports.deleteExtra = function (req, res) {
+    ExtraModel.findByPk(req.params.id).then(function (result) {
+        result.destroy().then((resp) => {
+            res.send(resp);
+        })
+    }, function (err) {
+        res.status(500).send(err);
+    })
+}
 
-
-exports.findExtraByType = function(req, res) {
+exports.findExtraByType = function (req, res) {
     ExtraModel.findAll({
         where: {
             'status': 1,
@@ -173,17 +900,17 @@ exports.findExtraByType = function(req, res) {
         order: [
             ['updatedAt', 'DESC']
         ]
-    }).then(function(entries) {
+    }).then(function (entries) {
         res.send(entries || null)
     });
 }
 
-exports.makeOrder = function(req, res) {
+exports.makeOrder = function (req, res) {
     delete req.body.id;
     const USER = appUtil.getUser(req.headers.authorization);
     req.body.user_id = USER.id || null;
     let checkOutDates = [];
-    async.eachSeries(req.body.products, function(product, pCallback) {
+    async.eachSeries(req.body.products, function (product, pCallback) {
         const search = product.search;
         checkOutDates.push(moment(search.checkoutdate + ' ' + search.checkouttime, 'DD-MM-YYYY HH:mm'));
         pCallback();
@@ -216,71 +943,78 @@ exports.makeOrder = function(req, res) {
         if (resp.status == 1) {
             appUtil.sendOrderConfirmationMail(resp, req.body.type);
         }
-        async.eachSeries(req.body.products, function(product, pCallback) {
-            let orderhistory = product;
-            orderhistory.order_id = resp.id;
-            orderhistory.product_id = product.id;
-            orderhistory.name = product.name;
-            orderhistory.price = product.priceperhr;
-            orderhistory.advancepaid = product.advancePayment;
-            orderhistory.user_id = USER.id || null;
-            if (product.search) {
-                const search = product.search;
-                orderhistory.filterlocation_id = search.locationid;
-                // orderhistory.checkindate = moment(search.checkindate + ' ' + search.checkintime, 'DD-MM-YYYY HH:mm').format('YYYY-MM-DD HH:mm:ss');
-                orderhistory.checkindate = moment(search.checkindate, 'DD-MM-YYYY').format('YYYY-MM-DD') + ' ' + moment(search.checkintime, 'HH:mm').format('HH:mm:ss');
-                orderhistory.checkintime = moment(search.checkintime, 'HH:mm').format('HH:mm');
-                // orderhistory.checkoutdate = moment(search.checkoutdate + ' ' + search.checkouttime, 'DD-MM-YYYY HH:mm').format('YYYY-MM-DD HH:mm:ss');
-                orderhistory.checkoutdate = moment(search.checkoutdate, 'DD-MM-YYYY').format('YYYY-MM-DD') + ' ' + moment(search.checkouttime, 'HH:mm').format('HH:mm:ss');
-                orderhistory.checkouttime = moment(search.checkouttime, 'HH:mm').format('HH:mm');
-                // orderhistory.maxcanceldate = moment(product.maxcanceldate + ' ' + search.checkintime, 'DD-MM-YYYY HH:mm').format('YYYY-MM-DD HH:mm:ss');
+        async.eachSeries(req.body.products, function (product, pCallback) {
+            if (product.type == 'rent') {
+                let orderhistory = product;
+                orderhistory.order_id = resp.id;
+                orderhistory.product_id = product.id;
+                orderhistory.name = product.name;
+                orderhistory.price = product.priceperhr;
+                orderhistory.advancepaid = product.advancePayment;
+                orderhistory.user_id = USER.id || null;
+                if (product.search) {
+                    const search = product.search;
+                    orderhistory.filterlocation_id = search.locationid;
+                    // orderhistory.checkindate = moment(search.checkindate + ' ' + search.checkintime, 'DD-MM-YYYY HH:mm').format('YYYY-MM-DD HH:mm:ss');
+                    orderhistory.checkindate = moment(search.checkindate, 'DD-MM-YYYY').format('YYYY-MM-DD') + ' ' + moment(search.checkintime, 'HH:mm').format('HH:mm:ss');
+                    orderhistory.checkintime = moment(search.checkintime, 'HH:mm').format('HH:mm');
+                    // orderhistory.checkoutdate = moment(search.checkoutdate + ' ' + search.checkouttime, 'DD-MM-YYYY HH:mm').format('YYYY-MM-DD HH:mm:ss');
+                    orderhistory.checkoutdate = moment(search.checkoutdate, 'DD-MM-YYYY').format('YYYY-MM-DD') + ' ' + moment(search.checkouttime, 'HH:mm').format('HH:mm:ss');
+                    orderhistory.checkouttime = moment(search.checkouttime, 'HH:mm').format('HH:mm');
+                    // orderhistory.maxcanceldate = moment(product.maxcanceldate + ' ' + search.checkintime, 'DD-MM-YYYY HH:mm').format('YYYY-MM-DD HH:mm:ss');
 
-                if (product.maxcanceldate) {
-                    orderhistory.maxcanceldate = moment(product.maxcanceldate, 'DD-MM-YYYY').format('YYYY-MM-DD') + ' ' + moment(search.checkintime, 'HH:mm').format('HH:mm:ss');
-                }
-
-                // let maxCheckoutDate = orderhistory.checkoutdate;
-                orderhistory.maxcheckoutdateutc = search.maxcheckoutdateutc;
-            }
-            delete orderhistory.id;
-            OrderHistoryModel.create(orderhistory).then((history) => {
-                resp.Orderhistories.push(history);
-                async.eachSeries(product['Extras'], function(extra, eCallback) {
-                    if (extra.checked) {
-                        let orderhistory = extra;
-                        orderhistory.order_id = resp.id;
-                        orderhistory.product_id = history.product_id;
-                        orderhistory.advancepaid = product.advancePayment;
-                        orderhistory.price = extra.price;
-                        orderhistory.extra_id = extra.id;
-                        orderhistory.name = extra.description;
-                        if (product.search) {
-                            const search = product.search;
-                            orderhistory.filterlocation_id = search.locationid;
-                            orderhistory.checkindate = moment(search.checkindate + ' ' + search.checkintime, 'DD-MM-YYYY HH:mm').format('YYYY-MM-DD HH:mm:ss');
-                            orderhistory.checkintime = moment(search.checkintime, 'HH:mm').format('HH:mm');
-                            orderhistory.checkoutdate = moment(search.checkoutdate + ' ' + search.checkouttime, 'DD-MM-YYYY HH:mm').format('YYYY-MM-DD HH:mm:ss');
-                            orderhistory.checkouttime = moment(search.checkouttime, 'HH:mm').format('HH:mm');
-                            orderhistory.maxcanceldate = moment(extra.maxcanceldate + ' ' + search.checkintime, 'DD-MM-YYYY HH:mm').format('YYYY-MM-DD HH:mm:ss');
-                        }
-
-                        delete orderhistory.id;
-                        OrderHistoryModel.create(orderhistory).then((hhistory) => {
-                            eCallback();
-                        }, (err) => {
-                            res.send(err);
-                        })
-                    } else {
-                        eCallback();
+                    if (product.maxcanceldate) {
+                        orderhistory.maxcanceldate = moment(product.maxcanceldate, 'DD-MM-YYYY').format('YYYY-MM-DD') + ' ' + moment(search.checkintime, 'HH:mm').format('HH:mm:ss');
                     }
-                }, function(err) {
-                    pCallback();
-                })
-            }, (err) => {
-                res.send(err);
-            })
 
-        }, function(err) {
+                    // let maxCheckoutDate = orderhistory.checkoutdate;
+                    orderhistory.maxcheckoutdateutc = search.maxcheckoutdateutc;
+                }
+                delete orderhistory.id;
+                OrderHistoryModel.create(orderhistory).then((history) => {
+                    resp.Orderhistories.push(history);
+                    async.eachSeries(product['Extras'], function (extra, eCallback) {
+                        if (extra.checked) {
+                            let orderhistory = extra;
+                            orderhistory.order_id = resp.id;
+                            orderhistory.product_id = history.product_id;
+                            orderhistory.advancepaid = product.advancePayment;
+                            orderhistory.price = extra.price;
+                            orderhistory.extra_id = extra.id;
+                            orderhistory.name = extra.description;
+                            if (product.search) {
+                                const search = product.search;
+                                orderhistory.filterlocation_id = search.locationid;
+                                orderhistory.checkindate = moment(search.checkindate + ' ' + search.checkintime, 'DD-MM-YYYY HH:mm').format('YYYY-MM-DD HH:mm:ss');
+                                orderhistory.checkintime = moment(search.checkintime, 'HH:mm').format('HH:mm');
+                                orderhistory.checkoutdate = moment(search.checkoutdate + ' ' + search.checkouttime, 'DD-MM-YYYY HH:mm').format('YYYY-MM-DD HH:mm:ss');
+                                orderhistory.checkouttime = moment(search.checkouttime, 'HH:mm').format('HH:mm');
+                                orderhistory.maxcanceldate = moment(extra.maxcanceldate + ' ' + search.checkintime, 'DD-MM-YYYY HH:mm').format('YYYY-MM-DD HH:mm:ss');
+                            }
+
+                            delete orderhistory.id;
+                            OrderHistoryModel.create(orderhistory).then((hhistory) => {
+                                eCallback();
+                            }, (err) => {
+                                res.send(err);
+                            })
+                        } else {
+                            eCallback();
+                        }
+                    }, function (err) {
+                        pCallback();
+                    })
+                }, (err) => {
+                    res.send(err);
+                })
+            } else {
+                makeStaffOrTransportRequest(product).then((resp) => {
+                    pCallback();
+                }, function (err) {
+                    res.status(500).send(err);
+                })
+            }
+        }, function (err) {
             if (err) res.send(err);
             res.send(resp);
         })
@@ -288,7 +1022,45 @@ exports.makeOrder = function(req, res) {
     })
 }
 
-exports.checkAvailability = function(req, res) {
+function makeStaffOrTransportRequest(body) {
+    return new Promise((resolve, reject) => {
+        StaffOrTransportRequestModel.create(body).then((resp) => {
+            resolve(resp);
+        }, function (err) {
+            reject(err);
+        })
+    })
+}
+
+exports.updateStaffOrTransportRequest = function (req, res) {
+    StaffOrTransportRequestModel.findByPk(req.body.id).then(function (result) {
+        result.update(req.body).then((resp) => {
+            res.send(resp);
+        })
+    }, function (err) {
+        res.status(500).send(err);
+    })
+}
+
+exports.makeStaffOrTransportInterest = function (req, res) {
+    StaffOrTransportInterestModel.create(req.body).then((resp) => {
+        res.send(resp);
+    }, function (err) {
+        res.status(500).send(err);
+    })
+}
+
+exports.updateStaffOrTransportInterest = function (req, res) {
+    StaffOrTransportInterestModel.findByPk(req.body.id).then(function (result) {
+        result.update(req.body).then((resp) => {
+            res.send(resp);
+        })
+    }, function (err) {
+        res.status(500).send(err);
+    })
+}
+
+exports.checkAvailability = function (req, res) {
 
     // var bookedVehicle = [];
     const search = req.body
@@ -315,16 +1087,13 @@ exports.checkAvailability = function(req, res) {
     // }]
 
     where[Op.or] = [{
-            [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.checkindatetimeex),
-                Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.checkindatetimeex)
-            ]
-        },
-        {
-            [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.checkoutdatetimeex),
-                Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.checkoutdatetimeex)
-            ]
-        }
-    ]
+        [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.checkindatetimeex),
+        Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.checkindatetimeex)]
+    },
+    {
+        [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.checkoutdatetimeex),
+        Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.checkoutdatetimeex)]
+    }]
 
     where.status = 1;
     where.type = req.body.type;
@@ -358,16 +1127,13 @@ exports.checkAvailability = function(req, res) {
                 // }];
 
                 hWhere[Op.or] = [{
-                        [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.defaultcheckindatetimeex),
-                            Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.defaultcheckindatetimeex)
-                        ]
-                    },
-                    {
-                        [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.defaultcheckoutdatetimeex),
-                            Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.defaultcheckoutdatetimeex)
-                        ]
-                    }
-                ];
+                    [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.defaultcheckindatetimeex),
+                    Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.defaultcheckindatetimeex)]
+                },
+                {
+                    [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.defaultcheckoutdatetimeex),
+                    Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.defaultcheckoutdatetimeex)]
+                }];
 
                 // hWhere.checkoutdate = {
                 //     [Op.between]: [search.checkindatetime.toDate(), search.checkoutdatetime.toDate()]
@@ -437,21 +1203,18 @@ exports.checkAvailability = function(req, res) {
             //     }
             // }];
             hWhere[Op.or] = [{
-                    [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.defaultcheckindatetimeex),
-                        Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.defaultcheckindatetimeex)
-                    ]
-                },
-                {
-                    [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.defaultcheckoutdatetimeex),
-                        Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.defaultcheckoutdatetimeex)
-                    ]
-                }
-            ];
+                [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.defaultcheckindatetimeex),
+                Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.defaultcheckindatetimeex)]
+            },
+            {
+                [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.defaultcheckoutdatetimeex),
+                Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.defaultcheckoutdatetimeex)]
+            }];
             hWhere.status = 1;
-            hWhere.type = req.body.type;
+            //hWhere.type = req.body.type;
             hWhere.product_id = search.product_id;
             hWhere.filterlocation_id = search.locationid;
-            hWhere.type = 'maintenance';
+            hWhere.type = [req.body.type, 'maintenance'];
             OrderHistoryModel.findOne({
                 where: hWhere,
             }).then((mResp) => {
@@ -467,7 +1230,7 @@ exports.checkAvailability = function(req, res) {
 }
 
 
-exports.checkAvailabilityProducts = function(req, res) {
+exports.checkAvailabilityProducts = function (req, res) {
 
     // var bookedVehicle = [];
     const search = req.body;
@@ -532,7 +1295,7 @@ exports.checkAvailabilityProducts = function(req, res) {
 
 }
 
-exports.returnBookedTimes = function(req, res) {
+exports.returnBookedTimes = function (req, res) {
 
     // var bookedVehicle = [];
     const search = req.body
@@ -567,7 +1330,7 @@ exports.returnBookedTimes = function(req, res) {
 
 }
 
-exports.getOrder = function(req, res) {
+exports.getOrder = function (req, res) {
     let where = { id: req.body.id, status: 3 };
     OrderModel.findOne({
         where,
@@ -577,8 +1340,8 @@ exports.getOrder = function(req, res) {
     })
 }
 
-exports.updateOrder = function(req, res) {
-    OrderModel.findByPk(req.body.id).then(function(result) {
+exports.updateOrder = function (req, res) {
+    OrderModel.findByPk(req.body.id).then(function (result) {
         result.update(req.body).then((resp) => {
             resp = resp.toJSON();
             const USER = appUtil.getUser(req.headers.authorization);
@@ -587,12 +1350,12 @@ exports.updateOrder = function(req, res) {
                 appUtil.sendOrderConfirmationMail(resp, resp.type);
             res.send(resp);
         })
-    }, function(err) {
+    }, function (err) {
         res.status(500).send(err);
     })
 }
 
-exports.orders = function(req, res) {
+exports.orders = function (req, res) {
     let result = { count: 0, data: [] };
     let offset = req.body.offset || 0;
     let limit = req.body.limit || 1000;
@@ -636,12 +1399,68 @@ exports.orders = function(req, res) {
     })
 }
 
-exports.myWallet = function(req, res) {
+exports.ordersForApp = function (req, res) {
+    let result = { count: 0, data: [] };
+    let offset = req.body.offset || 0;
+    let limit = req.body.limit || 1000;
+    let orderHistoryWhere = { status: 1 };
+    let where = {};
+    let invoice = 0;
+    if (req.body.past) {
+        invoice = 1;
+    }
+    orderHistoryWhere.invoice = invoice;
+    if (req.body.status) {
+        orderHistoryWhere.status = req.body.status;
+    }
+    // if (req.body.frontend) {
+    if (req.body.team_id)
+        where.team_id = req.body.team_id;
+    else
+        orderHistoryWhere.user_id = appUtil.getUser(req.headers.authorization).id || null;
+    // }
+    OrderHistoryModel.findAndCountAll({
+        where: orderHistoryWhere
+    }).then((output) => {
+        result.count = output.count;
+        OrderHistoryModel.findAll({
+            where: orderHistoryWhere,
+            include: [{
+                model: OrderModel,
+                where: where,
+                required: true
+            }, {
+                model: UserModel,
+                required: false
+            }],
+            order: [
+                ['createdAt', 'DESC']
+            ],
+            offset: offset,
+            limit: limit
+        }).then((registered) => {
+            let revised = registered.map((x, i) => {
+                let temp = x && x.toJSON();
+                temp.sno = offset + (i + 1);
+                return temp;
+            })
+            result.data = revised;
+            res.send(result);
+        }).catch((err) => {
+            res.status(500).send(err)
+        })
+    }).catch((err) => {
+        res.status(500).send(err)
+    })
+}
+
+exports.myWallet = function (req, res) {
     let user_id = appUtil.getUser(req.headers.authorization).id || null;
     let team_id = req.body.team_id || null;
     let whereObj = {
         maxcheckoutdate: {
-            [Op.lte]: moment().toDate()
+            [Op.lte]: Sequelize.literal("NOW()")
+            // [Op.lte]: moment().toDate()
         },
         status: 1,
         // type: {
@@ -661,14 +1480,14 @@ exports.myWallet = function(req, res) {
     OrderModel.findAll({
         where: whereObj,
         include: [OrderHistoryModel],
-    }).then(async(orders) => {
-        let totalAmountPaid = orders && orders.reduce(function(a, b) {
+    }).then(async (orders) => {
+        let totalAmountPaid = orders && orders.reduce(function (a, b) {
             return a + parseFloat(b.amountpaid);
         }, 0);
         /** Remove cancel amount - which immedietly added in wallet */
         let cancelAmountWithInCheckoutDate = 0;
-        async.eachSeries(orders, function(order, oCallback) {
-            async.eachSeries(order.Orderhistories, function(history, hCallback) {
+        async.eachSeries(orders, function (order, oCallback) {
+            async.eachSeries(order.Orderhistories, function (history, hCallback) {
                 if (history.status == 0) {
                     cancelAmountWithInCheckoutDate += parseFloat(history.advancepaid);
                 }
@@ -714,7 +1533,7 @@ exports.myWallet = function(req, res) {
         });
         /** Interest calculation */
         var currentInterest = 0;
-        async.eachSeries(fromWallet, function(element, wCallback) {
+        async.eachSeries(fromWallet, function (element, wCallback) {
             let fromDate = new Date(element.createdAt);
             let toDate = new Date();
             let diffTime = Math.abs(toDate - fromDate);
@@ -728,16 +1547,36 @@ exports.myWallet = function(req, res) {
             wCallback();
         })
         totalWallet += currentInterest;
+
+        let whereeWallet = {
+            status: 1,
+            maxcheckoutdate: {
+                [Op.gte]: Sequelize.literal("NOW()")
+                // [Op.lte]: moment().toDate()
+            },
+        }
+        if (team_id) {
+            whereeWallet[Op.or] = [{
+                user_id: user_id
+            }, {
+                team_id: team_id
+            }]
+        } else {
+            whereeWallet.user_id = user_id;
+        }
+        let fromeWallet = await OrderModel.findAll({
+            where: whereeWallet,
+            include: [OrderHistoryModel],
+        });
         /** Wallet amount */
-        let totalWalletPaid = fromWallet && fromWallet.reduce(function(a, b) {
-            // return a + parseFloat(b['fromwallet']);
+        let totalWalletPaid = fromeWallet && fromeWallet.reduce(function (a, b) {
             return a + (parseFloat(b['fromwallet']) || 0);
         }, 0);
         let currentWalletAmount = totalWallet - (totalWalletPaid || 0);
         /** Cancel amount add */
         let cancelAmount = 0;
-        async.eachSeries(fromWallet, function(order, oCallback) {
-            async.eachSeries(order.Orderhistories, function(history, hCallback) {
+        async.eachSeries(fromWallet, function (order, oCallback) {
+            async.eachSeries(order.Orderhistories, function (history, hCallback) {
                 if (history.status == 0) {
                     cancelAmount += parseFloat(history.advancepaid);
                 }
@@ -764,7 +1603,7 @@ exports.myWallet = function(req, res) {
             whereWithdraw.user_id = user_id;
         }
         let allWithdrawRequests = await WithdrawRequestModel.findAll({ where: whereWithdraw });
-        let withdrawAmount = allWithdrawRequests && allWithdrawRequests.reduce(function(a, b) {
+        let withdrawAmount = allWithdrawRequests && allWithdrawRequests.reduce(function (a, b) {
             return a + parseFloat(b['amount']);
         }, 0);
         currentWalletAmount = currentWalletAmount - withdrawAmount;
@@ -776,7 +1615,7 @@ exports.myWallet = function(req, res) {
     })
 }
 
-exports.cancelOrderHistory = function(req, res) {
+exports.cancelOrderHistory = function (req, res) {
     req.body.canceleddate = moment().format('YYYY-MM-DD HH:mm:ss')
     OrderHistoryModel.findOne({
         where: {
@@ -788,8 +1627,8 @@ exports.cancelOrderHistory = function(req, res) {
                 model: UserModel,
             }]
         }],
-    }).then(function(resp) {
-        resp.update(req.body).then(function(result) {
+    }).then(function (resp) {
+        resp.update(req.body).then(function (result) {
             if (result.Order && result.Order.User) {
                 appUtil.cancelNotification(result.Order.User, result);
             }
@@ -798,8 +1637,7 @@ exports.cancelOrderHistory = function(req, res) {
     });
 }
 
-
-exports.findOrderExpireNotification = function(req, res) {
+exports.oldfindOrderExpireNotification = function (req, res) {
     let where = {};
     where.maxcheckoutdateutc = {
         [Op.lt]: Sequelize.literal("DATE_ADD(NOW(), INTERVAL 1 HOUR)"),
@@ -807,15 +1645,15 @@ exports.findOrderExpireNotification = function(req, res) {
     };
     where.status = 1;
     where.mail = 0;
-    OrderHistoryModel.findAll({
+    OrderModel.findAll({
         where: where,
         include: [UserModel]
-    }).then(function(resp) {
-        async.eachSeries(resp, function(order, oCallback) {
+    }).then(function (resp) {
+        async.eachSeries(resp, function (order, oCallback) {
             if (order.User) {
                 appUtil.expireNotification(order);
-                OrderHistoryModel.findByPk(order.id).then(function(resp1) {
-                    resp1.update({ mail: 1 }).then(function(result) {
+                OrderModel.findByPk(order.id).then(function (resp1) {
+                    resp1.update({ mail: 1 }).then(function (result) {
 
                     });
                 })
@@ -829,14 +1667,73 @@ exports.findOrderExpireNotification = function(req, res) {
     });
 }
 
+exports.findOrderExpireNotification = function (req, res) {
+    let where = {};
+    where.maxcheckoutdateutc = {
+        [Op.lt]: Sequelize.literal("DATE_ADD(NOW(), INTERVAL 1 HOUR)"),
+        [Op.gte]: Sequelize.literal("NOW()")
+    };
+    where.status = 1;
+    where.mail = 0;
+    OrderHistoryModel.findAll({
+        where: where,
+        include: [UserModel]
+    }).then(function (resp) {
+        async.eachSeries(resp, function (order, oCallback) {
+            if (order.User) {
+                appUtil.expireNotification(order);
+                OrderHistoryModel.findByPk(order.id).then(function (resp1) {
+                    resp1.update({ mail: 1 }).then(function (result) {
 
+                    });
+                })
+            }
 
-exports.updateDriverLicense = function(req, res) {
+            oCallback();
+        }, (err) => {
+            return true;
+        })
+        return true;
+    });
+}
+
+exports.findOrderExpireNotificationTemp = function (req, res) {
+    let where = {};
+    where.maxcheckoutdateutc = {
+        [Op.lt]: Sequelize.literal("DATE_ADD(NOW(), INTERVAL 1 HOUR)"),
+        [Op.gte]: Sequelize.literal("NOW()")
+    };
+    where.status = 1;
+    where.mail = 0;
+    OrderHistoryModel.findAll({
+        where: where,
+        include: [UserModel]
+    }).then(function (resp) {
+        // async.eachSeries(resp, function (order, oCallback) {
+        //     if (order.User) {
+        //         appUtil.expireNotification(order);
+        //         OrderHistoryModel.findByPk(order.id).then(function (resp1) {
+        //             resp1.update({ mail: 1 }).then(function (result) {
+
+        //             });
+        //         })
+        //     }
+
+        //     oCallback();
+        // }, (err) => {
+        //     // return true;
+        //     res.send(err);
+        // })
+        res.send(resp);
+    });
+}
+
+exports.updateDriverLicense = function (req, res) {
     var upload = multer({ storage: storage }).single('image');
-    upload(req, res, function(err) {
+    upload(req, res, function (err) {
         req.body.driverlicense = res.req.file && res.req.file.filename || req.body.driverlicense;
-        OrderModel.findByPk(req.body.id).then(function(resp) {
-            resp.update(req.body).then(function(result) {
+        OrderModel.findByPk(req.body.id).then(function (resp) {
+            resp.update(req.body).then(function (result) {
                 res.send(result);
             });
         })
@@ -844,12 +1741,13 @@ exports.updateDriverLicense = function(req, res) {
     });
 }
 
-exports.userorders = function(req, res) {
+exports.userorders = function (req, res) {
     let result = { count: 0, data: [] };
     let offset = 0;
     let limit = 10000000;
     let where = {};
     where.user_id = req.params.id || null;
+    where.status = 1;
     OrderModel.findAndCountAll({
         where: where
     }).then((output) => {
@@ -878,8 +1776,7 @@ exports.userorders = function(req, res) {
     })
 }
 
-
-exports.userwallet = function(req, res) {
+exports.userwallet = function (req, res) {
     let user_id = req.params.id || null;
     let whereObj = {
         maxcheckoutdate: {
@@ -894,14 +1791,14 @@ exports.userwallet = function(req, res) {
     OrderModel.findAll({
         where: whereObj,
         include: [OrderHistoryModel],
-    }).then(async(orders) => {
-        let totalAmountPaid = orders && orders.reduce(function(a, b) {
+    }).then(async (orders) => {
+        let totalAmountPaid = orders && orders.reduce(function (a, b) {
             return a + parseFloat(b.amountpaid);
         }, 0);
         /** Remove cancel amount - which immedietly added in wallet */
         let cancelAmountWithInCheckoutDate = 0;
-        async.eachSeries(orders, function(order, oCallback) {
-            async.eachSeries(order.Orderhistories, function(history, hCallback) {
+        async.eachSeries(orders, function (order, oCallback) {
+            async.eachSeries(order.Orderhistories, function (history, hCallback) {
                 if (history.status == 0) {
                     cancelAmountWithInCheckoutDate += parseFloat(history.advancepaid);
                 }
@@ -928,7 +1825,7 @@ exports.userwallet = function(req, res) {
         });
         /** Interest calculation */
         var currentInterest = 0;
-        async.eachSeries(fromWallet, function(element, wCallback) {
+        async.eachSeries(fromWallet, function (element, wCallback) {
             let fromDate = new Date(element.createdAt);
             let toDate = new Date();
             let diffTime = Math.abs(toDate - fromDate);
@@ -943,15 +1840,37 @@ exports.userwallet = function(req, res) {
         })
         totalWallet += currentInterest;
         /** Wallet amount */
-        let totalWalletPaid = fromWallet && fromWallet.reduce(function(a, b) {
-            // return a + parseFloat(b['fromwallet']);
+        // let totalWalletPaid = fromWallet && fromWallet.reduce(function (a, b) {
+        //     // return a + parseFloat(b['fromwallet']);
+        //     return a + (parseFloat(b['fromwallet']) || 0);
+        // }, 0);
+
+
+
+
+        let whereeWallet = {
+            status: 1,
+            user_id: user_id,
+            maxcheckoutdate: {
+                [Op.gte]: Sequelize.literal("NOW()")
+                // [Op.lte]: moment().toDate()
+            },
+        }
+        let fromeWallet = await OrderModel.findAll({
+            where: whereeWallet,
+            include: [OrderHistoryModel],
+        });
+        /** Wallet amount */
+        let totalWalletPaid = fromeWallet && fromeWallet.reduce(function (a, b) {
             return a + (parseFloat(b['fromwallet']) || 0);
         }, 0);
+
+
         let currentWalletAmount = totalWallet - (totalWalletPaid || 0);
         /** Cancel amount add */
         let cancelAmount = 0;
-        async.eachSeries(fromWallet, function(order, oCallback) {
-            async.eachSeries(order.Orderhistories, function(history, hCallback) {
+        async.eachSeries(fromWallet, function (order, oCallback) {
+            async.eachSeries(order.Orderhistories, function (history, hCallback) {
                 if (history.status == 0) {
                     cancelAmount += parseFloat(history.advancepaid);
                 }
@@ -969,7 +1888,7 @@ exports.userwallet = function(req, res) {
         };
         whereWithdraw.user_id = user_id;
         let allWithdrawRequests = await WithdrawRequestModel.findAll({ where: whereWithdraw });
-        let withdrawAmount = allWithdrawRequests && allWithdrawRequests.reduce(function(a, b) {
+        let withdrawAmount = allWithdrawRequests && allWithdrawRequests.reduce(function (a, b) {
             return a + parseFloat(b['amount']);
         }, 0);
         currentWalletAmount = currentWalletAmount - withdrawAmount;
@@ -981,8 +1900,7 @@ exports.userwallet = function(req, res) {
     })
 }
 
-
-exports.findExpiredOrderForInvoice = function(req, res) {
+exports.findExpiredOrderForInvoice = function (req, res) {
     let where = {};
     where.maxcheckoutdateutc = {
         [Op.lt]: Sequelize.literal("NOW()"),
@@ -998,8 +1916,8 @@ exports.findExpiredOrderForInvoice = function(req, res) {
         where: where,
         include: [UserModel, OrderModel],
         // raw: true
-    }).then(function(resp) {
-        async.eachSeries(resp, function(order, oCallback) {
+    }).then(function (resp) {
+        async.eachSeries(resp, function (order, oCallback) {
             let invoiceResp = { user: {}, product: {} };
             async function core() {
                 if (order.User && order.Order && order.Order.status == 1) {
@@ -1013,6 +1931,17 @@ exports.findExpiredOrderForInvoice = function(req, res) {
                         });
                     } catch (e) {
                         console.error('findExpiredOrderForInvoice Await exception: ', e);
+                    }
+                    let extrasOrder;
+                    try {
+                        extrasOrder = await OrderHistoryModel.findAll({
+                            where: {
+                                order_id: order.order_id,
+                                extra_id: { [Op.ne]: null }
+                            }
+                        });
+                    } catch (e) {
+                        console.error('extrasOrder Await exception: ', e);
                     }
                     let user = {}
                     user.name = order.User.firstname + ' ' + (order.User.lastname || '');
@@ -1042,23 +1971,35 @@ exports.findExpiredOrderForInvoice = function(req, res) {
 
                     invoiceResp.user = user;
                     let minutes_diff = order.minutes_diff;
+                    let discount = null;
                     if (!firstOrder || (firstOrder && !firstOrder.id)) {
-                        minutes_diff = minutes_diff - 60; // Reduce 1 hr for first order
+                        // minutes_diff = minutes_diff - 60; // Reduce 1 hr for first order
+                        discount = {
+                            description: "1 uur korting",
+                            price: ((order.price * (1)) * 100).toFixed(2)
+                        }
                     }
+                    let checkin = new Date(order.checkindate);
+                    let checkinDateNew = checkin.toDateString() + " " + checkin.toLocaleTimeString();;
+                    let checkout = new Date(order.checkoutdate);
+                    let checkoutDateNew = checkout.toDateString() + " " + checkout.toLocaleTimeString();;
                     let product = {
-                        description: order.name || '',
+                        description: order.name + " ( " + checkinDateNew + " - " + checkoutDateNew + " )" || '',
                         price: ((order.price * (minutes_diff / 60)) * 100).toFixed(2)
                     };
                     invoiceResp.product = product;
-                    appUtil.sendInvoice(invoiceResp).then(function(resp) {
-                        OrderHistoryModel.findByPk(order.id).then(function(resp1) {
-                            resp1.update({ invoice: 1 }).then(function(result) {
+                    invoiceResp.discount = discount;
+                    invoiceResp.extrasOrder = extrasOrder;
+                    appUtil.sendInvoice(invoiceResp).then(function (resp) {
+                        let invId = resp.msg;
+                        OrderHistoryModel.findByPk(order.id).then(function (resp1) {
+                            resp1.update({ invoice: 1, invoiceid: invId }).then(function (result) {
                                 oCallback();
                             });
                         })
                     });
-
-                } else {
+                }
+                else {
                     oCallback();
                 }
                 console.log(invoiceResp);
@@ -1069,4 +2010,114 @@ exports.findExpiredOrderForInvoice = function(req, res) {
             return true;
         })
     });
+}
+
+exports.findExpiredOrderForInvoiceTemp = function (req, res) {
+    let where = {};
+    where.maxcheckoutdateutc = {
+        [Op.lt]: Sequelize.literal("NOW()"),
+        [Op.gte]: Sequelize.literal("DATE_SUB(NOW(), INTERVAL 1 HOUR)")
+    };
+    where.status = 1;
+    where.invoice = 0;
+    OrderHistoryModel.findAll({
+        // attributes: [
+        //     "*", Sequelize.literal("TIMESTAMPDIFF(MINUTE, checkindate, checkoutdate) AS minutes_diff"),
+        //     // [Sequelize.fn('TIMESTAMPDIFF', Sequelize.col('checkindate'), Sequelize.col('checkoutdate'), 'MINUTE'), 'minutes_diff']
+        // ],
+        where: where,
+        include: [{
+            model: UserModel,
+        }],
+        // raw: true
+    }).then(function (resp) {
+        res.send(resp)
+    });
+
+}
+
+exports.updateRead = function (req, res) {
+    OrderModel.findByPk(req.body.id).then(function (result) {
+        result.update(req.body).then((resp) => {
+            res.send(resp);
+        })
+    }, function (err) {
+        res.status(500).send(err);
+    })
+}
+
+exports.updateUserRead = function (req, res) {
+    UserModel.findByPk(req.body.id).then(function (result) {
+        result.update(req.body).then((resp) => {
+            res.send(resp);
+        })
+    }, function (err) {
+        res.status(500).send(err);
+    })
+}
+
+exports.updateWithdrawRead = function (req, res) {
+    WithdrawRequestModel.findByPk(req.body.id).then(function (result) {
+        result.update(req.body).then((resp) => {
+            res.send(resp);
+        })
+    }, function (err) {
+        res.status(500).send(err);
+    })
+}
+
+exports.getunReadOrders = function (req, res) {
+    let where = { isreaded: 0, status: 1 }
+    OrderModel.findAndCountAll({
+        where
+    }).then(function (result) {
+        res.send(result);
+    }, function (err) {
+        res.status(500).send(err);
+    })
+}
+
+exports.getunReadUsers = function (req, res) {
+    let where = { isreaded: 0 }
+    UserModel.findAndCountAll({
+        where
+    }).then(function (result) {
+        res.send(result);
+    }, function (err) {
+        res.status(500).send(err);
+    })
+}
+
+exports.getunReadWithdraw = function (req, res) {
+    let where = { isreaded: 0 }
+    WithdrawRequestModel.findAndCountAll({
+        where
+    }).then(function (result) {
+        res.send(result);
+    }, function (err) {
+        res.status(500).send(err);
+    })
+}
+
+
+
+exports.invoiceslist = function (req, res) {
+    let where = { invoice: 1, user_id: req.params.id, invoiceid: { [Op.ne]: null } }
+    OrderHistoryModel.findAll({
+        where,
+        order: [
+            ['createdAt', 'DESC']
+        ],
+    }).then(function (result) {
+        res.send(result);
+    }, function (err) {
+        res.status(500).send(err);
+    })
+}
+
+exports.userfindinvoice = async function (req, res) {
+    const invoice = await stripe.invoices.retrieve(
+        req.params.id
+    );
+    res.send(invoice);
 }
