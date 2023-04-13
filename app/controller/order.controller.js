@@ -18,11 +18,25 @@ const OrderHistoryModel = MODELS.orderhistory;
 const StaffOrTransportRequestModel = MODELS.staffOrTransportRequest;
 const StaffOrTransportInterestModel = MODELS.staffOrTransportInterest;
 const WithdrawRequestModel = MODELS.withdrawrequest;
+const ScreenshotModel = MODELS.screenshot;
 
 // SET STORAGE
 var storage = multer.diskStorage({
     destination: function (req, file, cb) {
         var dir = './public/uploads/product'
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
+        }
+        cb(null, dir)
+    },
+    filename: function (req, file, cb) {
+        cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname)) // Appending the extension
+    }
+})
+
+var screenShotStorage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        var dir = './public/uploads/screenshot'
         if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir, { recursive: true });
         }
@@ -1428,7 +1442,15 @@ exports.ordersForApp = function (req, res) {
             include: [{
                 model: OrderModel,
                 where: where,
-                required: true
+                required: true,
+                include: [{
+                    model: OrderHistoryModel,
+                    where: {
+                        extra_id: {
+                            [Op.not]: null
+                        }
+                    }
+                }]
             }, {
                 model: UserModel,
                 required: false
@@ -2032,4 +2054,72 @@ exports.userfindinvoice = async function (req, res) {
         req.params.id
     );
     res.send(invoice);
+}
+
+/** Screenshots  */
+exports.upsertScreenshots = function (req, res) {
+    // var upload = multer({ storage: storage }).single('thumbnail');
+    var upload = multer({ storage: screenShotStorage }).fields([{
+        name: 'initialimage1',
+        maxCount: 1
+    }, {
+        name: 'initialimage2',
+        maxCount: 1
+    }, {
+        name: 'initialimage3',
+        maxCount: 1
+    }, {
+        name: 'initialimage4',
+        maxCount: 1
+    }, {
+        name: 'completedimage1',
+        maxCount: 1
+    }, {
+        name: 'completedimage2',
+        maxCount: 1
+    }, {
+        name: 'completedimage3',
+        maxCount: 1
+    }, {
+        name: 'completedimage4',
+        maxCount: 1
+    }]);
+    upload(req, res, function (err) {
+        if (err) {
+            res.status(500).send(err)
+        }
+        ScreenshotModel.findOne({
+            where: { orderhistory_id: req.body.orderhistory_id, status: 1 },
+        }).then(function (resp) {
+            if (resp) {
+                req.body.initialimage1 = res.req.files && (res.req.files.initialimage1 && res.req.files.initialimage1[0].filename) || resp.initialimage1;
+                req.body.initialimage2 = res.req.files && (res.req.files.initialimage2 && res.req.files.initialimage2[0].filename) || resp.initialimage2;
+                req.body.initialimage3 = res.req.files && (res.req.files.initialimage3 && res.req.files.initialimage3[0].filename) || resp.initialimage3;
+                req.body.initialimage4 = res.req.files && (res.req.files.initialimage4 && res.req.files.initialimage4[0].filename) || resp.initialimage4;
+                req.body.completedimage1 = res.req.files && (res.req.files.completedimage1 && res.req.files.completedimage1[0].filename) || resp.completedimage1;
+                req.body.completedimage2 = res.req.files && (res.req.files.completedimage2 && res.req.files.completedimage2[0].filename) || resp.completedimage2;
+                req.body.completedimage3 = res.req.files && (res.req.files.completedimage3 && res.req.files.completedimage3[0].filename) || resp.completedimage3;
+                req.body.completedimage4 = res.req.files && (res.req.files.completedimage4 && res.req.files.completedimage4[0].filename) || resp.completedimage4;
+                resp.update(req.body).then(function (result) {
+                    res.send(result);
+                }).catch((err) => {
+                    res.status(500).send(err)
+                })
+            } else {
+                req.body.initialimage1 = res.req.files && (res.req.files.initialimage1 && res.req.files.initialimage1[0].filename) || null;
+                req.body.initialimage2 = res.req.files && (res.req.files.initialimage2 && res.req.files.initialimage2[0].filename) || null;
+                req.body.initialimage3 = res.req.files && (res.req.files.initialimage3 && res.req.files.initialimage3[0].filename) || null;
+                req.body.initialimage4 = res.req.files && (res.req.files.initialimage4 && res.req.files.initialimage4[0].filename) || null;
+                req.body.completedimage1 = res.req.files && (res.req.files.completedimage1 && res.req.files.completedimage1[0].filename) || null;
+                req.body.completedimage2 = res.req.files && (res.req.files.completedimage2 && res.req.files.completedimage2[0].filename) || null;
+                req.body.completedimage3 = res.req.files && (res.req.files.completedimage3 && res.req.files.completedimage3[0].filename) || null;
+                req.body.completedimage4 = res.req.files && (res.req.files.completedimage4 && res.req.files.completedimage4[0].filename) || null;
+                ScreenshotModel.create(req.body).then(function (respp) {
+                    res.send(respp);
+                }).catch((err) => {
+                    res.status(500).send(err)
+                })
+            }
+        });
+    })
 }

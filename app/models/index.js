@@ -53,6 +53,7 @@ db.employee = require("./employee.model")(sequelize, Sequelize);
 db.employer = require("./employer.model")(sequelize, Sequelize);
 db.staffOrTransportRequest = require("./staffrortransportequest.model")(sequelize, Sequelize);
 db.staffOrTransportInterest = require("./staffortransportinterest.model")(sequelize, Sequelize);
+db.screenshot = require("./screenshot.model")(sequelize, Sequelize);
 
 // db.transportmenu = require("./transportmenu.model")(sequelize, Sequelize);
 // db.transport = require("./transport.model")(sequelize, Sequelize);
@@ -98,6 +99,7 @@ db.orderhistory.belongsTo(db.extra, { foreignKey: 'extra_id', targetKey: 'id' })
 db.orderhistory.belongsTo(db.filterlocation, { foreignKey: 'filterlocation_id', targetKey: 'id' })
 db.orderhistory.belongsTo(db.order, { foreignKey: 'order_id', targetKey: 'id' })
 db.orderhistory.belongsTo(db.users, { foreignKey: 'user_id', targetKey: 'id' });
+db.screenshot.belongsTo(db.orderhistory, { foreignKey: 'orderhistory_id', targetKey: 'id' })
 // db.transportregister.belongsTo(db.users, { foreignKey: 'created_by', targetKey: 'id' });
 // db.transportregister.belongsTo(db.users, { foreignKey: 'updated_by', targetKey: 'id' });
 

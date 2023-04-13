@@ -47,6 +47,8 @@ router.post('/invers/lock-unlock', invers.lockUnlock);
 router.post('/order/staff-transport-request/update', order.updateStaffOrTransportRequest);
 router.post('/order/staff-transport-interest/create', order.makeStaffOrTransportInterest);
 router.post('/order/staff-transport-interest/update', order.updateStaffOrTransportInterest);
+/** Screenshots update */
+router.post('/screenshot/upsert', order.upsertScreenshots);
 
 router.post('/employee/create', employee.createEmployee);
 router.post('/employee/update', employee.updateEmployee);
