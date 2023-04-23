@@ -54,5 +54,6 @@ router.post('/employee/create', employee.createEmployee);
 router.post('/employee/update', employee.updateEmployee);
 router.post('/employer/create', employer.createEmployer);
 router.post('/employer/update', employer.updateEmployer);
+router.post('/payment/ideal', order.productIdeal);
 
 module.exports = router;
