@@ -1427,6 +1427,9 @@ exports.ordersForApp = function (req, res) {
     if (req.body.status) {
         orderHistoryWhere.status = req.body.status;
     }
+    if (req.body.id) {
+        orderHistoryWhere.id = req.body.id;
+    }
     // if (req.body.frontend) {
     if (req.body.team_id)
         where.team_id = req.body.team_id;
