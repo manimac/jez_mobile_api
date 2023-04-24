@@ -10,6 +10,12 @@ const EmployerModel = (sequelize, Sequelize) => {
         kvk: { type: Sequelize.STRING, allowNull: true },
         btw: { type: Sequelize.STRING, allowNull: true },
         status: { type: Sequelize.INTEGER, defaultValue: 1 },
+        path: {
+            type: Sequelize.VIRTUAL,
+            get() {
+                return `${process.env.baseUrl}uploads/employer/`
+            }
+        }
     })
 
     return Employer

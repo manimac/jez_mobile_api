@@ -67,9 +67,9 @@ app.use(bodyParser.json({ type: 'application/*+json' }));
 const authRoutes = require('./routes/auth');
 app.use('/api', authRoutes);
 app.use('/jezsel/api', authRoutes);
-// const userRoutes   = require('./routes/user');
-// app.use('/user',userRoutes);
-// app.use('/jezsel/user',userRoutes);
+const userRoutes   = require('./routes/user');
+app.use('/user',userRoutes);
+app.use('/jezsel/user',userRoutes);
 const portalRoute = require('./routes/portal');
 app.use('/jezsel', portalRoute);
 // Server listener

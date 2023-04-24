@@ -44,6 +44,8 @@ router.use(authMiddware);
 router.post('/invers/devices-list', invers.deviceList);
 router.post('/invers/lock-unlock', invers.lockUnlock);
 
+router.post('/order/staff-transport-requests', order.staffOrTransportRequests);
+router.post('/order/staff-transport-request/create', order.createStaffOrTransportRequest);
 router.post('/order/staff-transport-request/update', order.updateStaffOrTransportRequest);
 router.post('/order/staff-transport-interest/create', order.makeStaffOrTransportInterest);
 router.post('/order/staff-transport-interest/update', order.updateStaffOrTransportInterest);
@@ -52,6 +54,7 @@ router.post('/screenshot/upsert', order.upsertScreenshots);
 
 router.post('/employee/create', employee.createEmployee);
 router.post('/employee/update', employee.updateEmployee);
+router.post('/employer/get', employer.getEmployer);
 router.post('/employer/create', employer.createEmployer);
 router.post('/employer/update', employer.updateEmployer);
 

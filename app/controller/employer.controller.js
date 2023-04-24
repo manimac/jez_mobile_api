@@ -25,6 +25,22 @@ var storage = multer.diskStorage({
 })
 
 /** Employee */
+exports.getEmployer = function (req, res) {
+    const USER = appUtil.getUser(req.headers.authorization);
+    let user_id = USER.id;
+    if (req.body.user_id) {
+        user_id = req.body.user_id;
+    }
+    if (USER) {
+        EmployerModel.findOne({ where: { user_id: user_id, status: 1 } }).then((resp) => {
+            res.send(resp);
+        }).catch((err) => {
+            res.status(500).send(err);
+        })
+    } else {
+        res.status(500).send("Required Login");
+    }
+}
 
 exports.createEmployer = function (req, res) {
     var upload = multer({ storage: storage }).fields([{

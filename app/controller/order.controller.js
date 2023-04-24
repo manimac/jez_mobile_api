@@ -958,7 +958,7 @@ exports.makeOrder = function (req, res) {
             appUtil.sendOrderConfirmationMail(resp, req.body.type);
         }
         async.eachSeries(req.body.products, function (product, pCallback) {
-            if (product.type == 'rent') {
+            if (product.type == 'rent' || product.type == 'Rent' || product.type == 'RENT') {
                 let orderhistory = product;
                 orderhistory.order_id = resp.id;
                 orderhistory.product_id = product.id;
@@ -1022,6 +1022,9 @@ exports.makeOrder = function (req, res) {
                     res.send(err);
                 })
             } else {
+                product.order_id = resp.id;
+                product.user_id = USER && USER.id;
+                product.workdate = moment(product.workdate, 'DD-MM-YYYY').format('YYYY-MM-DD');
                 makeStaffOrTransportRequest(product).then((resp) => {
                     pCallback();
                 }, function (err) {
@@ -1033,6 +1036,39 @@ exports.makeOrder = function (req, res) {
             res.send(resp);
         })
 
+    })
+}
+
+exports.staffOrTransportRequests = function (req, res) {
+    const USER = appUtil.getUser(req.headers.authorization);
+    let where = {};
+    where.user_id = USER.id;
+    where.status = 1;
+    if (req.body.user_id) {
+        where.user_id = req.body.user_id;
+    }
+    if (req.body.status) {
+        where.status = req.body.status;
+    }
+    StaffOrTransportRequestModel.findAll(
+        {
+            where: where,
+            order: [
+                ['updatedAt', 'DESC']
+            ],
+        },
+    ).then((resp) => {
+        res.send(resp);
+    }, function (err) {
+        res.status(500).send(err);
+    })
+}
+
+exports.createStaffOrTransportRequest = function (req, res) {
+    makeStaffOrTransportRequest(req.body).then((resp) => {
+        res.send(resp);
+    }, function (err) {
+        res.status(500).send(err);
     })
 }
 

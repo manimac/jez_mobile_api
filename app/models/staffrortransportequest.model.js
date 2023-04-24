@@ -5,12 +5,11 @@ const staffOrTransportRequest = (sequelize, Sequelize) => {
         title: { type: Sequelize.STRING, allowNull: true },
         description: { type: Sequelize.STRING, allowNull: true },
         industry: { type: Sequelize.STRING, allowNull: true },
-        industry: { type: Sequelize.STRING, allowNull: true },
         cancelperiod: { type: Sequelize.STRING, allowNull: true },
         workdate: { type: 'Timestamp', allowNull: true },
         worktime: { type: Sequelize.STRING, allowNull: true },
         rate: { type: Sequelize.STRING, allowNull: true },
-        type: { type: Sequelize.STRING, allowNull: true }, // 10.	Freelancers / Temporary worker
+        worktype: { type: Sequelize.STRING, allowNull: true }, // 10.	Freelancers / Temporary worker
         location: { type: Sequelize.STRING, allowNull: true }, 
         contact: { type: Sequelize.STRING, allowNull: true }, 
         from: { type: Sequelize.STRING, allowNull: true }, 
