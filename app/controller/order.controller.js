@@ -1463,6 +1463,9 @@ exports.ordersForApp = function (req, res) {
     if (req.body.status) {
         orderHistoryWhere.status = req.body.status;
     }
+    if (req.body.id) {
+        orderHistoryWhere.id = req.body.id;
+    }
     // if (req.body.frontend) {
     if (req.body.team_id)
         where.team_id = req.body.team_id;
@@ -2158,4 +2161,40 @@ exports.upsertScreenshots = function (req, res) {
             }
         });
     })
+}
+
+exports.productIdeal = async function (req, res) {
+    stripeAmount = req.body.total * 100;
+    let pName = req.body.pname;
+
+    const session = await stripe.checkout.sessions.create({
+        line_items: [{
+            price_data: {
+                // To accept `ideal`, all line items must have currency: eur
+                currency: 'EUR',
+                product_data: {
+                    name: pName,
+                    metadata: {
+                        'id': '',
+                        'name': pName
+                    }
+                },
+                unit_amount: Math.round(stripeAmount),
+            },
+            quantity: 1,
+        }],
+        payment_method_types: [
+            'card',
+            'ideal',
+        ],
+        mode: 'payment',
+        invoice_creation: {enabled: true},
+        success_url: `${process.env.appUrl}payment-success`,
+        cancel_url: `${process.env.appUrl}payment-failure`,
+    });
+
+    res.json({ url: session.url, paymentchargeid: session.payment_intent }) // <-- this is the changed line
+
+    // const encInput = Buffer.from(JSON.stringify(req.body)).toString('base64');
+
 }
