@@ -26,10 +26,30 @@ var storage = multer.diskStorage({
 
 /** Employee */
 
+exports.getEmployee = function (req, res) {
+    const USER = appUtil.getUser(req.headers.authorization);
+    let user_id = USER.id;
+    if (req.body.user_id) {
+        user_id = req.body.user_id;
+    }
+    if (USER) {
+        EmployeeModel.findOne({ where: { user_id: user_id, status: 1 } }).then((resp) => {
+            res.send(resp);
+        }).catch((err) => {
+            res.status(500).send(err);
+        })
+    } else {
+        res.status(500).send("Required Login");
+    }
+}
+
 exports.createEmployee = function (req, res) {
-    var upload = multer({ storage: storage }).single('profileimage');
+    var upload = multer({ storage: storage }).fields([{
+        name: 'profileimage',
+        maxCount: 2
+    }]);
     upload(req, res, function (err) {
-        req.body.profileimage = res.req.file && res.req.file.filename;
+        req.body.profileimage = res.req.files && (res.req.files.profileimage && res.req.files.profileimage[0].filename || null);
         EmployeeModel.create(req.body).then(function () {
             res.send(req.body);
         }, function (err) {
@@ -40,10 +60,13 @@ exports.createEmployee = function (req, res) {
 }
 
 exports.updateEmployee = function (req, res) {
-    var upload = multer({ storage: storage }).single('profileimage');
+    var upload = multer({ storage: storage }).fields([{
+        name: 'profileimage',
+        maxCount: 2
+    }]);
     upload(req, res, function (err) {
         EmployeeModel.findByPk(req.body.id).then(function (result) {
-            req.body.profileimage = res.req.file && res.req.file.filename || result.profileimage;
+            req.body.profileimage = res.req.files && (res.req.files.profileimage && res.req.files.profileimage[0].filename || result.profileimage);
             result.update(req.body).then((resp) => {
                 res.send(resp);
             })
@@ -51,4 +74,39 @@ exports.updateEmployee = function (req, res) {
             res.status(500).send(err);
         })
     });
+}
+
+exports.stripePaymentSheet = async (req, res, next) => {
+    try {
+        const data = req.body;
+        console.log(req.body);
+        const params = {
+            email: data.email,
+            name: data.name,
+        };
+        const customer = await stripe.customers.create(params);
+        console.log(customer.id);
+
+        const ephemeralKey = await stripe.ephemeralKeys.create(
+            { customer: customer.id },
+            { apiVersion: '2020-08-27' }
+        );
+        const paymentIntent = await stripe.paymentIntents.create({
+            amount: parseInt(data.amount),
+            currency: data.currency,
+            customer: customer.id,
+            automatic_payment_methods: {
+                enabled: true,
+            },
+        });
+        const response = {
+            paymentIntent: paymentIntent.client_secret,
+            ephemeralKey: ephemeralKey.secret,
+            customer: customer.id,
+        };
+        res.status(200).send(response);
+    } catch (e) {
+        console.log(e.message || e);
+        next(e);
+    }
 }
