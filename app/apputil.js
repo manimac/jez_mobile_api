@@ -87,20 +87,20 @@ var readHTMLFile = function (path, callback) {
 // });
 
 var transporter = nodemailer.createTransport({
-    // host: 'smtp.transip.email',
-    // port: 587,
-    // auth: {
-    //     user: "support@jezsel.nl",
-    //     pass: "Jez28Sel"
-    // },
-    // tls: { rejectUnauthorized: false },
-    host: 'uranium.da.hostns.io',
+    host: 'smtp.transip.email',
     port: 587,
     auth: {
-        user: "test@jezsel.nl",
-        pass: "test@123"
+        user: "support@jezsel.nl",
+        pass: "Jez+28=Sel1983"
     },
     tls: { rejectUnauthorized: false },
+    // host: 'uranium.da.hostns.io',
+    // port: 587,
+    // auth: {
+    //     user: "test@jezsel.nl",
+    //     pass: "test@123"
+    // },
+    // tls: { rejectUnauthorized: false },
 });
 
 exports.getUser = function (token) {
