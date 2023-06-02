@@ -54,6 +54,7 @@ db.employer = require("./employer.model")(sequelize, Sequelize);
 db.staffOrTransportRequest = require("./staffrortransportequest.model")(sequelize, Sequelize);
 db.staffOrTransportInterest = require("./staffortransportinterest.model")(sequelize, Sequelize);
 db.screenshot = require("./screenshot.model")(sequelize, Sequelize);
+db.specification = require("./specification.model")(sequelize, Sequelize);
 
 // db.transportmenu = require("./transportmenu.model")(sequelize, Sequelize);
 // db.transport = require("./transport.model")(sequelize, Sequelize);

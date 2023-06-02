@@ -91,6 +91,7 @@ exports.stripePaymentSheet = async (req, res, next) => {
             { customer: customer.id },
             { apiVersion: '2020-08-27' }
         );
+        
         const paymentIntent = await stripe.paymentIntents.create({
             amount: parseInt(data.amount),
             currency: data.currency,
