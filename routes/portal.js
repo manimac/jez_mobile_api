@@ -35,6 +35,12 @@ router.get('/productfind/:id', product.getProductFind);
 router.get('/product/similar/:type/:id', product.getSimilarProducts);
 router.get('/filters/:type?/:category?', common.filters); // type- Rent, Staff, category - Fuel, Truck
 
+router.get('/specifications', product.specifications);
+router.post('/specification/create', product.createSpecifications);
+router.post('/specification/update', product.updateSpecifications);
+router.delete('/specification/delete/:id', product.deleteSpecifications);
+
+
 //Invoice
 router.get('/userinvoice/:id', order.invoiceslist);
 router.get('/userfindinvoice/:id', order.userfindinvoice);

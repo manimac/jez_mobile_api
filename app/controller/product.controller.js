@@ -15,8 +15,9 @@ const OrderModel = MODELS.order;
 const OrderHistoryModel = MODELS.orderhistory;
 const WithdrawRequestModel = MODELS.withdrawrequest;
 const FilterModel = MODELS.filter;
+const SpecificationModel = MODELS.specification;
 
-exports.products = function(req, res) {
+exports.products = function (req, res) {
     var result = { count: 0, data: [] };
     var offset = req.body.offset || 0;
     var limit = req.body.limit || 1000000;
@@ -43,15 +44,15 @@ exports.products = function(req, res) {
         // }]
 
         where[Op.or] = [{
-                [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.checkindatetimeex),
-                    Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.checkindatetimeex)
-                ]
-            },
-            {
-                [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.checkoutdatetimeex),
-                    Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.checkoutdatetimeex)
-                ]
-            }
+            [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.checkindatetimeex),
+            Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.checkindatetimeex)
+            ]
+        },
+        {
+            [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.checkoutdatetimeex),
+            Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.checkoutdatetimeex)
+            ]
+        }
         ]
 
         where.status = 1;
@@ -93,15 +94,15 @@ exports.products = function(req, res) {
                 // }]
 
                 userWhere[Op.or] = [{
-                        [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.checkindatetimeex),
-                            Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.checkindatetimeex)
-                        ]
-                    },
-                    {
-                        [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.checkoutdatetimeex),
-                            Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.checkoutdatetimeex)
-                        ]
-                    }
+                    [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.checkindatetimeex),
+                    Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.checkindatetimeex)
+                    ]
+                },
+                {
+                    [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.checkoutdatetimeex),
+                    Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.checkoutdatetimeex)
+                    ]
+                }
                 ]
 
                 OrderHistoryModel.findAll({ where: userWhere }).then((resp) => {
@@ -257,21 +258,21 @@ exports.products = function(req, res) {
 
 }
 
-exports.getProductFind = function(req, res) {
+exports.getProductFind = function (req, res) {
     ProductModel.findOne({
         where: { id: req.params.id },
         include: [{
             model: ProductImageModel,
             attributes: ['id', 'path', 'image']
         }],
-    }).then(function(resp) {
+    }).then(function (resp) {
         res.send(resp);
-    }, function(err) {
+    }, function (err) {
         res.status(500).send(err);
     })
 }
 
-exports.getSimilarProducts = function(req, res) {
+exports.getSimilarProducts = function (req, res) {
     ProductModel.findAll({
         where: {
             type: req.params.type,
@@ -280,14 +281,14 @@ exports.getSimilarProducts = function(req, res) {
             }
         },
         limit: 3
-    }).then(function(resp) {
+    }).then(function (resp) {
         res.send(resp);
-    }, function(err) {
+    }, function (err) {
         res.status(500).send(err);
     })
 }
 
-exports.extras = function(req, res) {
+exports.extras = function (req, res) {
     ExtraModel.findAll({
         where: {
             'status': 1
@@ -295,7 +296,7 @@ exports.extras = function(req, res) {
         order: [
             ['updatedAt', 'DESC']
         ]
-    }).then(function(entries) {
+    }).then(function (entries) {
         res.send(entries || null)
     });
 }
@@ -320,4 +321,43 @@ exports.filters = function (req, res) {
     }).then(function (entries) {
         res.send(entries || null)
     });
+}
+
+exports.specifications = function (req, res) {
+    SpecificationModel.findAll({
+        where: {
+            'status': 1
+        },
+        order: [
+            ['updatedAt', 'DESC']
+        ]
+    }).then(function (entries) {
+        res.send(entries || null)
+    });
+}
+
+exports.createSpecifications = function (req, res) {
+    SpecificationModel.create(req.body).then(function (entries) {
+        res.send(entries || null)
+    });
+}
+
+exports.updateSpecifications = function (req, res) {
+    SpecificationModel.findByPk(req.body.id).then(function (result) {
+        result.update(req.body).then((resp) => {
+            res.send(resp);
+        })
+    }, function (err) {
+        res.status(500).send(err);
+    })
+}
+
+exports.deleteSpecifications = function(req, res) {
+    SpecificationModel.findByPk(req.params.id).then(function(result) {
+        result.destroy().then((resp) => {
+            res.send(resp);
+        })
+    }, function(err) {
+        res.status(500).send(err);
+    })
 }
