@@ -16,6 +16,7 @@ const OrderHistoryModel = MODELS.orderhistory;
 const WithdrawRequestModel = MODELS.withdrawrequest;
 const FilterModel = MODELS.filter;
 const SpecificationModel = MODELS.specification;
+const ProductSpecificationModel = MODELS.productspecification;
 
 exports.products = function (req, res) {
     var result = { count: 0, data: [] };
@@ -229,6 +230,11 @@ exports.products = function (req, res) {
                 }, {
                     model: ExtraModel,
                     attributes: ['id', 'type', 'description', 'price', 'isGroup']
+                },
+                {
+                    model: ProductSpecificationModel,
+                    include: [SpecificationModel],
+                    required: false
                 }],
                 order: [
                     ['createdAt', 'DESC']
@@ -352,12 +358,12 @@ exports.updateSpecifications = function (req, res) {
     })
 }
 
-exports.deleteSpecifications = function(req, res) {
-    SpecificationModel.findByPk(req.params.id).then(function(result) {
+exports.deleteSpecifications = function (req, res) {
+    SpecificationModel.findByPk(req.params.id).then(function (result) {
         result.destroy().then((resp) => {
             res.send(resp);
         })
-    }, function(err) {
+    }, function (err) {
         res.status(500).send(err);
     })
 }

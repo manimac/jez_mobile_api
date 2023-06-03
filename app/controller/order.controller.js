@@ -19,6 +19,7 @@ const StaffOrTransportRequestModel = MODELS.staffOrTransportRequest;
 const StaffOrTransportInterestModel = MODELS.staffOrTransportInterest;
 const WithdrawRequestModel = MODELS.withdrawrequest;
 const ScreenshotModel = MODELS.screenshot;
+const ProductSpecificationModel = MODELS.productspecification;
 
 // SET STORAGE
 var storage = multer.diskStorage({
@@ -522,7 +523,7 @@ exports.createProduct = function (req, res) {
     upload(req, res, function (err) {
         req.body.thumbnail = res.req.files && (res.req.files.thumbnail && res.req.files.thumbnail[0].filename);
         req.body.status = 1;
-        ProductModel.create(req.body).then(function (product) {
+        ProductModel.create(req.body).then(async function (product) {
             if (res.req.files && res.req.files.images) {
                 product.images = [];
                 async.eachSeries(res.req.files.images, function (image, callback) {
@@ -533,10 +534,28 @@ exports.createProduct = function (req, res) {
                     }, function (err) {
                         res.send(err);
                     })
-                }, function (err) {
+                }, async function (err) {
+                    try {
+                        let specifications = req.body.specifications && JSON.parse(req.body.specifications) || [];
+                        for (const spec of specifications) {
+                            const productSpec = { product_id: product.id, specification_id: spec.id };
+                            const resp = await ProductSpecificationModel.create(productSpec);
+                        }
+                    } catch (err) {
+                        throw err;
+                    }
                     res.send(product);
                 })
             } else {
+                try {
+                    let specifications = req.body.specifications && JSON.parse(req.body.specifications) || [];
+                    for (const spec of specifications) {
+                        const productSpec = { product_id: result.id, specification_id: spec.id };
+                        const resp = await ProductSpecificationModel.create(productSpec);
+                    }
+                } catch (err) {
+                    throw err;
+                }
                 res.send(product);
             }
 
@@ -567,7 +586,17 @@ exports.updateProduct = function (req, res) {
                     }, function (err) {
                         res.send(err);
                     })
-                }, function (err) {
+                }, async function (err) {
+                    try {
+                        let specifications = req.body.specifications && JSON.parse(req.body.specifications) || [];
+                        await ProductSpecificationModel.destroy({ where: { product_id: result.id } });
+                        for (const spec of specifications) {
+                            const productSpec = { product_id: result.id, specification_id: spec.id };
+                            const resp = await ProductSpecificationModel.create(productSpec);
+                        }
+                    } catch (err) {
+                        throw err;
+                    }
                     res.send(resp);
                 })
             })
@@ -2188,7 +2217,7 @@ exports.productIdeal = async function (req, res) {
             'ideal',
         ],
         mode: 'payment',
-        invoice_creation: {enabled: true},
+        invoice_creation: { enabled: true },
         success_url: `${process.env.appUrl}payment-success`,
         cancel_url: `${process.env.appUrl}payment-failure`,
     });
