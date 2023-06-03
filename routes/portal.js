@@ -26,6 +26,10 @@ router.post('/withdraws', common.withdrawRequests);
 router.get('/product/extras', product.extras);
 
 /** Booking Screen */
+router.post('/order/create', order.createProduct);
+router.post('/order/update', order.updateProduct);
+router.delete('/order/delete/:id', order.deleteProduct);
+router.delete('/order/image/delete/:id', order.deleteProductImage);
 router.post('/order/make-order', order.makeOrder);
 router.post('/order/update-status', order.updateOrder);
 router.post('/order/availability', order.checkAvailability);

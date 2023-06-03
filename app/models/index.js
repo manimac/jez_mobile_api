@@ -55,6 +55,7 @@ db.staffOrTransportRequest = require("./staffrortransportequest.model")(sequeliz
 db.staffOrTransportInterest = require("./staffortransportinterest.model")(sequelize, Sequelize);
 db.screenshot = require("./screenshot.model")(sequelize, Sequelize);
 db.specification = require("./specification.model")(sequelize, Sequelize);
+db.productspecification = require("./productspecification.model")(sequelize, Sequelize);
 
 // db.transportmenu = require("./transportmenu.model")(sequelize, Sequelize);
 // db.transport = require("./transport.model")(sequelize, Sequelize);
@@ -121,6 +122,10 @@ db.screenshot.belongsTo(db.orderhistory, { foreignKey: 'orderhistory_id', target
 // db.vehicle.belongsTo(db.users, { foreignKey: 'updated_by', targetKey: 'id' });
 
 db.product.hasMany(db.productimage, { foreignKey: 'product_id', targetKey: 'id' });
+db.product.hasMany(db.productspecification, { foreignKey: 'product_id', targetKey: 'id' });
+db.productspecification.belongsTo(db.product, { foreignKey: 'product_id', targetKey: 'id' });
+db.specification.hasMany(db.productspecification, { foreignKey: 'specification_id', targetKey: 'id' });
+db.productspecification.belongsTo(db.specification, { foreignKey: 'specification_id', targetKey: 'id' });
 db.product.belongsTo(db.filterlocation, { foreignKey: 'location_id', targetKey: 'id' });
 db.product.belongsTo(db.filter, { foreignKey: 'vehicle', targetKey: 'id' });
 db.product.belongsTo(db.filter, { foreignKey: 'fuel', targetKey: 'id' });
