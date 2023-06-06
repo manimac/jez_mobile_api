@@ -26,6 +26,10 @@ router.post('/withdraws', common.withdrawRequests);
 router.get('/product/extras', product.extras);
 
 /** Booking Screen */
+router.post('/order/create', order.createProduct);
+router.post('/order/update', order.updateProduct);
+router.delete('/order/delete/:id', order.deleteProduct);
+router.delete('/order/image/delete/:id', order.deleteProductImage);
 router.post('/order/make-order', order.makeOrder);
 router.post('/order/update-status', order.updateOrder);
 router.post('/order/availability', order.checkAvailability);
@@ -34,6 +38,12 @@ router.post('/products', product.products);
 router.get('/productfind/:id', product.getProductFind);
 router.get('/product/similar/:type/:id', product.getSimilarProducts);
 router.get('/filters/:type?/:category?', common.filters); // type- Rent, Staff, category - Fuel, Truck
+
+router.get('/specifications', product.specifications);
+router.post('/specification/create', product.createSpecifications);
+router.post('/specification/update', product.updateSpecifications);
+router.delete('/specification/delete/:id', product.deleteSpecifications);
+
 
 //Invoice
 router.get('/userinvoice/:id', order.invoiceslist);
