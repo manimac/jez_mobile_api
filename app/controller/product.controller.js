@@ -270,6 +270,10 @@ exports.getProductFind = function (req, res) {
         include: [{
             model: ProductImageModel,
             attributes: ['id', 'path', 'image']
+        },{
+            model: ProductSpecificationModel,
+            include: [SpecificationModel],
+            required: false
         }],
     }).then(function (resp) {
         res.send(resp);
