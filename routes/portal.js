@@ -74,4 +74,6 @@ router.post('/employer/update', employer.updateEmployer);
 
 router.post('/payment/ideal', order.productIdeal);
 
+router.post('/reset/password', common.resetPassword);
+
 module.exports = router;
