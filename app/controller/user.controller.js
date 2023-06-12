@@ -157,7 +157,7 @@ exports.appLogin = function (req, res) {
         if(resp && resp.status == 200) {
             res.status(200).json({message:'OTP Send to user email'});
         } else {
-            res.status(204).json({message:'User not found'});
+            res.status(500).send('User not found');
         }
     })
 }
