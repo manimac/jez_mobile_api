@@ -75,6 +75,32 @@ exports.withdrawRequests = function(req, res) {
 }
 
 
+exports.resetPassword = async function (req, res) {
+    // let email = Buffer.from(req.body.user, 'base64').toString('ascii')
+    let email = req.body.email;
+    let alreadyuser = await userModel.findOne({
+        where: {
+            [Op.or]: [{ 'email': email }, { 'phone': email }]
+        }
+    });
+    if (alreadyuser) {
+        user = alreadyuser.toJSON();
+        var randomstring1 = new RandExp(/^[A-Z]/);
+        var randomstring2 = new RandExp(/^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*\W)(?!.* ).{8,10}$/);
+        // res.status(200).send({ message: randomstring1.gen()+randomstring2.gen() });
+        // var randomstring = Math.random().toString(36).slice(-8);
+        var randomstring = randomstring1.gen() + randomstring2.gen();
+        user.password = bcrypt.hashSync(randomstring, bcrypt.genSaltSync(8), null);
+        alreadyuser.update(user).then(data => {
+            appUtil.resetedPassword(alreadyuser, randomstring);
+            res.status(200).send({ message: 'Password hasbeen reseted' });
+        }, (err) => {
+            res.status(500).send({ message: 'User Update Error' });
+        });
+    } else {
+        res.status(500).send('User not found');
+    }
+}
 
 
 
