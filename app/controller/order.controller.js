@@ -1572,7 +1572,7 @@ exports.myWallet = function (req, res) {
         include: [OrderHistoryModel],
     }).then(async (orders) => {
         let totalAmountPaid = orders && orders.reduce(function (a, b) {
-            return a + parseFloat(b.amountpaid);
+            return a + b.amountpaid &&parseFloat(b.amountpaid) || 0;
         }, 0);
         /** Remove cancel amount - which immedietly added in wallet */
         let cancelAmountWithInCheckoutDate = 0;
