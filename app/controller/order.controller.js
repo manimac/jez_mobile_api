@@ -1522,10 +1522,6 @@ exports.ordersForApp = function (req, res) {
             }, {
                 model: UserModel,
                 required: false
-            }, {
-                model: ScreenshotModel,
-                require: false
-
             }],
             order: [
                 ['createdAt', 'DESC']
