@@ -1517,7 +1517,12 @@ exports.ordersForApp = function (req, res) {
                         extra_id: {
                             [Op.not]: null
                         }
-                    }
+                    },
+                },
+                {
+                    model: ScreenshotModel,
+                    require: false
+
                 }]
             }, {
                 model: UserModel,
@@ -1572,7 +1577,7 @@ exports.myWallet = function (req, res) {
         include: [OrderHistoryModel],
     }).then(async (orders) => {
         let totalAmountPaid = orders && orders.reduce(function (a, b) {
-            return a + b.amountpaid &&parseFloat(b.amountpaid) || 0;
+            return a + parseFloat(b.amountpaid);
         }, 0);
         /** Remove cancel amount - which immedietly added in wallet */
         let cancelAmountWithInCheckoutDate = 0;
@@ -1636,7 +1641,8 @@ exports.myWallet = function (req, res) {
             }
             wCallback();
         })
-        totalWallet += currentInterest;
+        //commented on April 16 2023
+        // totalWallet += currentInterest;
 
         let whereeWallet = {
             status: 1,
