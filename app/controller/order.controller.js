@@ -1518,15 +1518,14 @@ exports.ordersForApp = function (req, res) {
                             [Op.not]: null
                         }
                     },
-                },
-                {
-                    model: ScreenshotModel,
-                    require: false
-
                 }]
             }, {
                 model: UserModel,
                 required: false
+            }, {
+                model: ScreenshotModel,
+                require: false
+
             }],
             order: [
                 ['createdAt', 'DESC']
