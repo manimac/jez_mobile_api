@@ -55,6 +55,7 @@ router.post("/payment-sheet", employee.stripePaymentSheet);
 router.use(authMiddware);
 router.post("/invers/devices-list", invers.deviceList);
 router.post("/invers/lock-unlock", invers.lockUnlock);
+router.post("/invers/getStatus", invers.getStatus);
 
 router.post("/order/staff-transport-requests", order.staffOrTransportRequests);
 router.post(
@@ -87,4 +88,5 @@ router.post("/payment/ideal", order.productIdeal);
 
 router.post("/reset/password", common.resetPassword);
 router.post("/withdraw/create", common.createWithdrawRequest);
+router.post('/order/cancel-order', order.cancelOrderHistory);
 module.exports = router;

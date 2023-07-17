@@ -6,7 +6,24 @@ exports.deviceList = function (req, res) {
     let qString = `?query=in nulla&active=true&limit=20&offset=0&sort=serial_number,erp_delivery_number`;
     let headers = { 'X-CloudBoxx-ApiKey': 'dSAqwwfQL6qSfmkYS0X2FDjPxyZC7ZjnQ4rxGHpDpGH27Lt8mWD6JpnSeUOIR10F', 'Accept': `application/json` };
     const cOptions = {
-        url: 'https://api.cloudboxx.invers.com/api/devices' + qString,
+        url: 'https://api.cloudboxx.invers.com/api/devices',
+        method: 'GET',
+        headers: headers
+    };
+    request(cOptions, function (err, resp) {
+        if (err) {
+            console.log(err);
+            res.status(500).send(err);
+        } else
+            res.send(resp);
+    });
+}
+
+exports.getStatus = function (req, res) {
+    let qString = `?query=in nulla&active=true&limit=20&offset=0&sort=serial_number,erp_delivery_number`;
+    let headers = { 'X-CloudBoxx-ApiKey': 'dSAqwwfQL6qSfmkYS0X2FDjPxyZC7ZjnQ4rxGHpDpGH27Lt8mWD6JpnSeUOIR10F', 'Accept': `application/json` };
+    const cOptions = {
+        url: 'https://api.cloudboxx.invers.com/api/devices/' + `${req.body.qnr}` + '/status?fallback=true',
         method: 'GET',
         headers: headers
     };
@@ -23,8 +40,8 @@ exports.lockUnlock = function (req, res) {
     let qString = `/${req.body.qnr}/central-lock?fallback=true`;
     let headers = { 'X-CloudBoxx-ApiKey': 'dSAqwwfQL6qSfmkYS0X2FDjPxyZC7ZjnQ4rxGHpDpGH27Lt8mWD6JpnSeUOIR10F', 'Accept': `application/json` };
     const cOptions = {
-        url: 'https://api.cloudboxx.invers.com/api/devices' + qString,
-        method: 'POST',
+        url: 'https://api.cloudboxx.invers.com/api/devices/' + `${req.body.qnr}` + '/central-lock?fallback=true',
+        method: 'PUT',
         headers: headers,
         body: {
             // add the data you want to send here
