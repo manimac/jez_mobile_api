@@ -19,6 +19,8 @@ const OrderhistoryModel = (sequelize, Sequelize) => {
         mail: { type: Sequelize.BOOLEAN, allowNull: true },
         invoiceid: { type: Sequelize.STRING, allowNull: true },
         invoice: { type: Sequelize.BOOLEAN, allowNull: true },
+        endbooking: { type: Sequelize.BOOLEAN, allowNull: true },
+        endbookingtime: { type: 'Timestamp', allowNull: true },
         screenshotupdated: { type: Sequelize.INTEGER, defaultValue: 0 },
         minutes_diff: {
             type: Sequelize.VIRTUAL,

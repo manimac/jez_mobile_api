@@ -176,4 +176,38 @@ module.exports = function (passport) {
             });
         }));
 
+    passport.use('local-login-admin', new LocalStrategy({
+        // by default, local strategy uses username and password, we will override with email
+        usernameField: 'email',
+        passwordField: 'password',
+        passReqToCallback: true // allows us to pass back the entire request to the callback
+    },
+        function (req, email, password, done) { // callback with email and password from our form
+
+            User.findOne({
+                where: {
+                    [Op.or]: [{ 'email': email }, { 'phone': email }]
+                }
+            }).then(function (rows) {
+                if (!rows) {
+                    return done(null, false); // req.flash is the way to set flashdata using connect-flash
+                }
+
+                // if the user is found but the password is wrong
+                if (!bcrypt.compareSync(password, rows.password))
+                    return done(null, false); // create the loginMessage and save it to session as flashdata
+
+                // all is well, return successful user
+                if (rows && rows.is_admin) {
+                    return done(null, rows);
+                } else {
+                    return done(null, false);
+                }
+
+
+            }).then(function (err) {
+                return done(err, null);
+            });
+        }));
+
 };

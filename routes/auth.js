@@ -66,6 +66,30 @@ router.post('/login', function(req, res, next) {
     })(req, res, next);
 });
 
+router.post('/login-admin', function(req, res, next) {
+    passport.authenticate('local-login-admin', function(err, user, info) {
+        if (err) {
+            console.log(err);
+            return next(err)
+        }
+        if (!user) {
+            // *** Display message without using flash option
+            // re-render the login form with a message
+            return res.status(401).send();
+        }
+        user = user.toJSON();
+        delete user.password;
+        delete user.status;
+        delete user.verification_token;
+        delete user.is_verified;
+        delete user.createdAt;
+        delete user.updatedAt;
+        const token = jwt.sign(user, appUtil.jwtSecret);
+        user.token = token;
+        return res.json(user);
+    })(req, res, next);
+});
+
 router.get('/profile', isLoggedIn, (req, res) => {
     res.status(200).json(req.user);
 });

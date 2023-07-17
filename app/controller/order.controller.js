@@ -1522,6 +1522,9 @@ exports.ordersForApp = function (req, res) {
             }, {
                 model: UserModel,
                 required: false
+            }, {
+                model: ScreenshotModel,
+                required: false
             }],
             order: [
                 ['createdAt', 'DESC']
@@ -2152,7 +2155,14 @@ exports.upsertScreenshots = function (req, res) {
     }, {
         name: 'completedimage4',
         maxCount: 1
-    }]);
+    }, {
+        name: 'additionstartimage',
+        maxCount: 1
+    }, {
+        name: 'additionendimage',
+        maxCount: 1
+    }
+    ]);
     upload(req, res, function (err) {
         if (err) {
             res.status(500).send(err)
@@ -2169,6 +2179,8 @@ exports.upsertScreenshots = function (req, res) {
                 req.body.completedimage2 = res.req.files && (res.req.files.completedimage2 && res.req.files.completedimage2[0].filename) || resp.completedimage2;
                 req.body.completedimage3 = res.req.files && (res.req.files.completedimage3 && res.req.files.completedimage3[0].filename) || resp.completedimage3;
                 req.body.completedimage4 = res.req.files && (res.req.files.completedimage4 && res.req.files.completedimage4[0].filename) || resp.completedimage4;
+                req.body.additionstartimage = res.req.files && (res.req.files.additionstartimage && res.req.files.additionstartimage[0].filename) || resp.additionstartimage;
+                req.body.additionendimage = res.req.files && (res.req.files.additionendimage && res.req.files.additionendimage[0].filename) || resp.additionendimage;
                 resp.update(req.body).then(function (result) {
                     res.send(result);
                 }).catch((err) => {
@@ -2183,6 +2195,8 @@ exports.upsertScreenshots = function (req, res) {
                 req.body.completedimage2 = res.req.files && (res.req.files.completedimage2 && res.req.files.completedimage2[0].filename) || null;
                 req.body.completedimage3 = res.req.files && (res.req.files.completedimage3 && res.req.files.completedimage3[0].filename) || null;
                 req.body.completedimage4 = res.req.files && (res.req.files.completedimage4 && res.req.files.completedimage4[0].filename) || null;
+                req.body.additionstartimage = res.req.files && (res.req.files.additionstartimage && res.req.files.additionstartimage[0].filename) || null;
+                req.body.additionendimage = res.req.files && (res.req.files.additionendimage && res.req.files.additionendimage[0].filename) || null;
                 ScreenshotModel.create(req.body).then(function (respp) {
                     res.send(respp);
                 }).catch((err) => {
@@ -2190,6 +2204,15 @@ exports.upsertScreenshots = function (req, res) {
                 })
             }
         });
+    })
+}
+exports.orderHistoryUpdate = function (req, res) {
+    OrderHistoryModel.findByPk(order.id).then(function (resp1) {
+        resp1.update(req.body).then(function (result) {
+            res.send(result);
+        }).catch((err) => {
+            res.status(500).send(err)
+        })
     })
 }
 

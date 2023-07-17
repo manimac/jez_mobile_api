@@ -4,6 +4,7 @@ const ProductModel = (sequelize, Sequelize) => {
         name: { type: Sequelize.STRING, allowNull: true },
         route: { type: Sequelize.STRING, allowNull: true },
         type: { type: Sequelize.STRING, allowNull: true },
+        vehicletype: { type: Sequelize.STRING, allowNull: true }, // Car, Van, Truck
         thumbnail: { type: Sequelize.STRING, allowNull: true },
         priceperhr: { type: Sequelize.STRING, allowNull: true },
         priceperday: { type: Sequelize.STRING, allowNull: true },

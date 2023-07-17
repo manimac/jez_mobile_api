@@ -32,6 +32,7 @@ router.delete("/order/image/delete/:id", order.deleteProductImage);
 router.post("/order/make-order", order.makeOrder);
 router.post("/order/update-status", order.updateOrder);
 router.post("/order/availability", order.checkAvailability);
+router.post("/order-history/update", order.orderHistoryUpdate);
 
 router.post("/products", product.products);
 router.get("/productfind/:id", product.getProductFind);

@@ -64,6 +64,9 @@ exports.products = function (req, res) {
                 [Op.not]: appUtil.getUser(req.headers.authorization).id
             }
         }
+        if (req.body.vehicletype) {
+            where.vehicletype = req.body.vehicletype;
+        }
 
         OrderHistoryModel.findAll({ where: where }).then((resp) => {
             bookedVehicle = resp.map((x, i) => {
@@ -273,7 +276,7 @@ exports.getProductFind = function (req, res) {
         }, {
             model: ExtraModel,
             attributes: ['id', 'type', 'description', 'price', 'isGroup']
-        },{
+        }, {
             model: ProductSpecificationModel,
             include: [SpecificationModel],
             required: false
