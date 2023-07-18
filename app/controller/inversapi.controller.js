@@ -54,8 +54,27 @@ exports.lockUnlock = function (req, res) {
         if (err) {
             console.log(err);
             res.status(500).send(err);
-        } else
-            res.send(resp);
+        } else {
+            const cOptions = {
+                url: 'https://api.cloudboxx.invers.com/api/devices/' + `${req.body.qnr}` + '/immobilizer?fallback=true',
+                method: 'PUT',
+                headers: headers,
+                body: {
+                    // add the data you want to send here
+                    state: req.body.state,    // locked / unlocked
+
+                },
+                json: true
+            };
+            request(cOptions, function (err, resp) {
+                if (err) {
+                    console.log(err);
+                    res.status(500).send(err);
+                } else {
+                    res.send(resp);
+                }
+            });
+        }
     });
 }
 

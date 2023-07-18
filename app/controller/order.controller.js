@@ -2207,7 +2207,7 @@ exports.upsertScreenshots = function (req, res) {
     })
 }
 exports.orderHistoryUpdate = function (req, res) {
-    OrderHistoryModel.findByPk(order.id).then(function (resp1) {
+    OrderHistoryModel.findByPk(req.body.id).then(function (resp1) {
         resp1.update(req.body).then(function (result) {
             res.send(result);
         }).catch((err) => {
