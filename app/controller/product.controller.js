@@ -64,9 +64,7 @@ exports.products = function (req, res) {
                 [Op.not]: appUtil.getUser(req.headers.authorization).id
             }
         }
-        if (req.body.vehicletype) {
-            where.vehicletype = req.body.vehicletype;
-        }
+        
 
         OrderHistoryModel.findAll({ where: where }).then((resp) => {
             bookedVehicle = resp.map((x, i) => {
@@ -128,6 +126,9 @@ exports.products = function (req, res) {
         let where = {};
         if (req.body.status) {
             where.status = req.body.status;
+        }
+        if (req.body.vehicletype) {
+            where.vehicletype = req.body.vehicletype;
         }
         if (req.body.type) {
             where.type = req.body.type;
@@ -220,6 +221,7 @@ exports.products = function (req, res) {
         if (filter.length) {
             where[Op.and] = filter
         }
+        
 
         ProductModel.findAndCountAll({
             where
