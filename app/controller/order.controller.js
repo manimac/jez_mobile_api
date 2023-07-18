@@ -1484,11 +1484,11 @@ exports.ordersForApp = function (req, res) {
     let limit = req.body.limit || 1000;
     let orderHistoryWhere = { status: 1 };
     let where = {};
-    let invoice = 0;
+    let endbooking = 0;
     if (req.body.past) {
-        invoice = 1;
+        endbooking = 1;
     }
-    orderHistoryWhere.invoice = invoice;
+    orderHistoryWhere.endbooking = endbooking;
     if (req.body.status) {
         orderHistoryWhere.status = req.body.status;
     }
