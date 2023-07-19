@@ -1518,6 +1518,7 @@ exports.ordersForApp = function (req, res) {
                             [Op.not]: null
                         }
                     },
+                    required: false
                 }]
             }, {
                 model: UserModel,
