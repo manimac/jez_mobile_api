@@ -19,6 +19,11 @@ db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 
 db.users = require("./user.model")(sequelize, Sequelize);
+db.employeruser = require("./employeruser.model")(sequelize, Sequelize);
+db.category = require("./category.model")(sequelize, Sequelize);
+db.employeecategory = require("./employeecategory.model")(sequelize, Sequelize);
+db.employeenotification = require("./employeenotification.model")(sequelize, Sequelize);
+db.employeeexperiense = require("./employeeexperiense.model")(sequelize, Sequelize);
 // db.userDetails = require("./userdetail.model")(sequelize, Sequelize);
 
 db.home = require("./home.model")(sequelize, Sequelize);
@@ -86,6 +91,15 @@ db.employee.belongsTo(db.users, { foreignKey: 'user_id', targetKey: 'id' });
 db.employer.belongsTo(db.users, { foreignKey: 'user_id', targetKey: 'id' });
 db.staffOrTransportRequest.belongsTo(db.users, { foreignKey: 'user_id', targetKey: 'id' });
 db.staffOrTransportInterest.belongsTo(db.users, { foreignKey: 'user_id', targetKey: 'id' });
+
+db.employee.hasMany(db.employeecategory, { foreignKey: 'employee_id', targetKey: 'id' });
+db.employeecategory.belongsTo(db.employee, { foreignKey: 'employee_id', targetKey: 'id' });
+db.category.hasMany(db.employeecategory, { foreignKey: 'category_id', targetKey: 'id' });
+db.employeecategory.belongsTo(db.category, { foreignKey: 'category_id', targetKey: 'id' });
+db.employee.hasMany(db.employeenotification, { foreignKey: 'employee_id', targetKey: 'id' });
+db.employeenotification.belongsTo(db.employee, { foreignKey: 'employee_id', targetKey: 'id' });
+db.employee.hasMany(db.employeeexperiense, { foreignKey: 'employee_id', targetKey: 'id' });
+db.employeeexperiense.belongsTo(db.employee, { foreignKey: 'employee_id', targetKey: 'id' });
 
 db.home.belongsTo(db.users, { foreignKey: 'created_by', targetKey: 'id' });
 db.home.belongsTo(db.users, { foreignKey: 'updated_by', targetKey: 'id' });
