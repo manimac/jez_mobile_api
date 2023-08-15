@@ -9,6 +9,7 @@ const Op = Sequelize.Op;
 var appUtil = require('../app/apputil');
 const MODELS = require("../app/models");
 const User = MODELS.users;
+const EmployerUser = MODELS.employeruser;
 
 
 
@@ -138,6 +139,74 @@ module.exports = function (passport) {
 
     }));
 
+    //SIGNUP EMPLOYER
+    passport.use('local-signup-employer', new LocalStrategy({
+        // by default, local strategy uses username and password, we will override with email
+        usernameField: 'email',
+        passwordField: 'password',
+        passReqToCallback: true // allows us to pass back the entire request to the callback
+    }, async function (req, email, password, done) {
+        if (req.body.employee) {
+            password = Math.random().toString().slice(2, 11);
+        }
+
+        // find a user whose email is the same as the forms email
+        // we are checking to see if the user trying to login already exists
+        if (!req.body.phone) {
+            const err = { status: 0, message: 'Voer uw 10 cijferig telefoonnummer in' };
+            return done(err, false);
+        }
+        const alreadyuser = await EmployerUser.findOne({
+            where: {
+                [Op.or]: [{ 'email': email }, { 'phone': req.body.phone }]
+            }
+        });
+        if (alreadyuser) {
+            const err = { status: 0, message: 'E-mail/ telefoonnummer bestaat al' };
+            return done(err, false);
+        } else {
+
+
+            let USER = {
+                email: email,
+                firstname: req.body.firstname,
+                lastname: req.body.lastname,
+                insertion: req.body.insertion,
+                phone: req.body.phone,
+                newsletter: req.body.newsletter,
+                team_id: req.body.team_id || null,
+                termsandcondition: req.body.termsandcondition,
+                password: bcrypt.hashSync(password, bcrypt.genSaltSync(8), null),
+                verification_token: appUtil.makeRandomText(25),
+                userimage: req.body.userimage || '',
+                deviceId: req.body.deviceId || '',
+                userimage: req.body.userimage || '',
+            }
+            if (req.body.employee) {
+                USER.reset_password = 0;
+            }
+            EmployerUser.create(USER).then(data => {
+                const baseUrl = process.env.baseUrl;
+                data.baseUrl = baseUrl;
+                if (req.body.employee) {
+                    appUtil.sendVerificationMail(data, password);
+                } else {
+                    appUtil.sendVerificationMail(data);
+                }
+                req.body.user_id = data.id
+                // appUtil.makeUserDetail(req.body).then(function(resp) {
+                return done(null, data);
+                // }, (err) => {
+                //     return done(err, null);
+                // })
+
+            }).catch(err => {
+                return done(err, null);
+            });
+        }
+
+    }));
+
     // =========================================================================
     // LOCAL LOGIN =============================================================
     // =========================================================================
@@ -199,6 +268,40 @@ module.exports = function (passport) {
 
                 // all is well, return successful user
                 if (rows && rows.is_admin) {
+                    return done(null, rows);
+                } else {
+                    return done(null, false);
+                }
+
+
+            }).then(function (err) {
+                return done(err, null);
+            });
+        }));
+
+    passport.use('local-login-employer', new LocalStrategy({
+        // by default, local strategy uses username and password, we will override with email
+        usernameField: 'email',
+        passwordField: 'password',
+        passReqToCallback: true // allows us to pass back the entire request to the callback
+    },
+        function (req, email, password, done) { // callback with email and password from our form
+
+            EmployerUser.findOne({
+                where: {
+                    [Op.or]: [{ 'email': email }, { 'phone': email }]
+                }
+            }).then(function (rows) {
+                if (!rows) {
+                    return done(null, false); // req.flash is the way to set flashdata using connect-flash
+                }
+
+                // if the user is found but the password is wrong
+                if (!bcrypt.compareSync(password, rows.password))
+                    return done(null, false); // create the loginMessage and save it to session as flashdata
+
+                // all is well, return successful user
+                if (rows) {
                     return done(null, rows);
                 } else {
                     return done(null, false);

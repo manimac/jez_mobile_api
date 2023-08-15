@@ -90,6 +90,46 @@ router.post('/login-admin', function(req, res, next) {
     })(req, res, next);
 });
 
+router.post('/employer/signup', function(req, res, next) {
+    // var upload = multer({ storage: storage }).single('userimage');
+    // upload(req, res, function (err) {
+    //     req.body.userimage = res.req.file && res.req.file.filename || '';
+    passport.authenticate('local-signup-employer', function(err, user, info) {
+        if (err) {
+            return res.status(500).send({ message: err.message });
+        }
+        if (!user) {
+            return res.status(401).send();
+        }
+        return res.json({ status: 1, userid: user.id, message: 'Employer Created' });
+        // return res.json(user);
+    })(req, res, next);
+    // })
+});
+router.post('/employer/login', function(req, res, next) {
+    passport.authenticate('local-login-employer', function(err, user, info) {
+        if (err) {
+            console.log(err);
+            return next(err)
+        }
+        if (!user) {
+            // *** Display message without using flash option
+            // re-render the login form with a message
+            return res.status(401).send();
+        }
+        user = user.toJSON();
+        delete user.password;
+        delete user.status;
+        delete user.verification_token;
+        delete user.is_verified;
+        delete user.createdAt;
+        delete user.updatedAt;
+        const token = jwt.sign(user, appUtil.jwtSecret);
+        user.token = token;
+        return res.json(user);
+    })(req, res, next);
+});
+
 router.get('/profile', isLoggedIn, (req, res) => {
     res.status(200).json(req.user);
 });
