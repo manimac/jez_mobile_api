@@ -51,6 +51,9 @@ router.get("/userfindinvoice/:id", order.userfindinvoice);
 /** Stripe APP payment */
 router.post("/payment-sheet", employee.stripePaymentSheet);
 
+
+router.post("/employer/create", employer.createEmployer);
+
 /** For auth enabled */
 router.use(authMiddware);
 router.post("/invers/devices-list", invers.deviceList);
@@ -81,7 +84,6 @@ router.post("/employee/get", employee.getEmployee);
 router.post("/employee/create", employee.createEmployee);
 router.post("/employee/update", employee.updateEmployee);
 router.post("/employer/get", employer.getEmployer);
-router.post("/employer/create", employer.createEmployer);
 router.post("/employer/update", employer.updateEmployer);
 
 router.post("/payment/ideal", order.productIdeal);
