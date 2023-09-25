@@ -83,9 +83,9 @@ app.listen(process.env.PORT || port, (err) => {
 const orderController = require('./app/controller/order.controller');
 var rule = new schedule.RecurrenceRule();
 rule.minute = new schedule.Range(0, 59, 1);
-job = schedule.scheduleJob(rule, function() {
-    console.log('Hi..............');
-    console.error(rule);
-    orderController.findOrderExpireNotification();
-    orderController.findExpiredOrderForInvoice();
-});
+// job = schedule.scheduleJob(rule, function() {
+    // console.log('Hi..............');
+    // console.error(rule);
+    // orderController.findOrderExpireNotification();
+    // orderController.findExpiredOrderForInvoice();
+// });

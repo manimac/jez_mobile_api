@@ -13,7 +13,9 @@ const staffOrTransportRequest = (sequelize, Sequelize) => {
         location: { type: Sequelize.STRING, allowNull: true }, 
         contact: { type: Sequelize.STRING, allowNull: true }, 
         from: { type: Sequelize.STRING, allowNull: true }, 
+        fromtime: { type: Sequelize.STRING, allowNull: true }, 
         to: { type: Sequelize.STRING, allowNull: true }, 
+        totime: { type: Sequelize.STRING, allowNull: true }, 
         loadingdate: { type: 'Timestamp', allowNull: true }, 
         unloadingdate: { type: 'Timestamp', allowNull: true }, 
         typeofgoods: { type: Sequelize.STRING, allowNull: true },
@@ -23,7 +25,15 @@ const staffOrTransportRequest = (sequelize, Sequelize) => {
         packaging: { type: Sequelize.STRING, allowNull: true },
         certificate: { type: Sequelize.STRING, allowNull: true },
         equipment: { type: Sequelize.STRING, allowNull: true },
+        staffneeded: { type: Sequelize.STRING, allowNull: true },
         status: { type: Sequelize.INTEGER, defaultValue: 1 },
+        image: { type: Sequelize.STRING, allowNull: true },
+        path: {
+            type: Sequelize.VIRTUAL,
+            get() {
+                return `${process.env.baseUrl}uploads/employer/`
+            }
+        }
     })
 
     return employeerequest

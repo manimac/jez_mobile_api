@@ -12,6 +12,7 @@ const EmployeeModel = (sequelize, Sequelize) => {
         btw: { type: Sequelize.STRING, allowNull: true },
         bsn: { type: Sequelize.STRING, allowNull: true },
         profileimage: { type: Sequelize.STRING, allowNull: true },
+        step: { type: Sequelize.STRING, allowNull: true },
         status: { type: Sequelize.INTEGER, defaultValue: 1 },
     })
 

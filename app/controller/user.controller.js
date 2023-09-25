@@ -78,6 +78,55 @@ exports.verifyUser = function (req, res) {
     });
 }
 
+
+exports.allUsers = function(req, res) {
+    let result = { count: 0, data: [] };
+    let offset = req.body.offset || 0;
+    let limit = req.body.limit || 1000;
+    let where = {};
+
+    if (req.body.status) {
+        where.status = req.body.status;
+    }
+    if (req.body.is_admin) {
+        where.is_admin = 1;
+    }
+    if (req.body.fromdate) {
+        const from = moment(req.body.fromdate).startOf('day').format('YYYY-MM-DD HH:mm:ss');
+        const to = req.body.todate && moment(req.body.todate).endOf('day').format('YYYY-MM-DD HH:mm:ss') || moment().endOf('day').format('YYYY-MM-DD HH:mm:ss');
+        where.createdAt = {
+            [Op.between]: [new Date(from), new Date(to)]
+        }
+    }
+
+    UserModel.findAndCountAll({
+        where
+    }).then((output) => {
+        result.count = output.count;
+        UserModel.findAll({
+            where,
+            // include: [UserDetailModel],
+            order: [
+                ['createdAt', 'DESC']
+            ],
+            offset: offset,
+            limit: limit
+        }).then((registered) => {
+            let revised = registered.map((x, i) => {
+                let temp = x && x.toJSON();
+                temp.sno = offset + (i + 1);
+                return temp;
+            })
+            result.data = revised;
+            res.send(result);
+        }).catch((err) => {
+            res.status(500).send(err)
+        })
+    }).catch((err) => {
+        res.status(500).send(err)
+    })
+}
+
 exports.getUser = function (req, res) {
     UserModel.findByPk(req.params.id).then(function (result) {
         res.send(result)

@@ -115,7 +115,16 @@ router.post('/employer/login', function(req, res, next) {
         if (!user) {
             // *** Display message without using flash option
             // re-render the login form with a message
-            return res.status(401).send();
+            if(err){
+                return res.status(401).send(err);
+            }
+            else{
+                return res.status(401).send();
+            }
+        }
+        if(user && user.status == 0){
+            const err = { status: 0, message: 'Please wait for some time. Verification is in progress.' };
+            return res.status(401).send(err);
         }
         user = user.toJSON();
         delete user.password;

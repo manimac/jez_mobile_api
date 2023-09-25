@@ -4,7 +4,13 @@ const CategoryModel = (sequelize, Sequelize) => {
          icon1: { type: Sequelize.STRING, allowNull: true },
          icon2: { type: Sequelize.STRING, allowNull: true },
          title: { type: Sequelize.STRING, allowNull: true },
-         status: { type: Sequelize.INTEGER, defaultValue: 1 }
+         status: { type: Sequelize.INTEGER, defaultValue: 1 },
+         path: {
+               type: Sequelize.VIRTUAL,
+               get() {
+                   return `${process.env.baseUrl}uploads/category/`
+               }
+           }
      })
  
      return Category

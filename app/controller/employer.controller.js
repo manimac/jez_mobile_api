@@ -7,8 +7,14 @@ const stripe = require('stripe')(process.env.stripe_sk);
 const fs = require('fs');
 const appUtil = require('../apputil');
 const MODELS = require("../models");
+const EmployeeModel = MODELS.employee;
 const EmployerModel = MODELS.employer;
-
+const EmployerUser = MODELS.employeruser;
+const EmployeeCategoryModel = MODELS.employeecategory;
+const EmployeeExperienceModel = MODELS.employeeexperiense;
+const StaffOrTransportRequestModel = MODELS.staffOrTransportRequest;
+const StaffOrTransportInterestModel = MODELS.staffOrTransportInterest;
+const CategoryModel = MODELS.category;
 
 // SET STORAGE
 var storage = multer.diskStorage({
@@ -81,4 +87,205 @@ exports.updateEmployer = function (req, res) {
             res.status(500).send(err);
         })
     });
+}
+
+exports.updateEmployerUser = function (req, res) {
+    var upload = multer({ storage: storage }).fields([{
+        name: 'companylogo',
+        maxCount: 3
+    }, {
+        name: 'coverphoto',
+        maxCount: 3
+    }]);
+    upload(req, res, function (err) {
+        EmployerUser.findByPk(req.body.id).then(function (result) {
+            req.body.companylogo = res.req.files && (res.req.files.companylogo && res.req.files.companylogo[0].filename || result.companylogo);
+            req.body.coverphoto = res.req.files && (res.req.files.coverphoto && res.req.files.coverphoto[0].filename || result.coverphoto);
+            result.update(req.body).then((resp) => {
+                res.send(resp);
+            })
+        }, function (err) {
+            res.status(500).send(err);
+        })
+    });
+}
+
+exports.pendingStaffOrTransportInterest = function (req, res) {
+    const USER = appUtil.getUser(req.headers.authorization);
+    let where = {};
+    where.status = 1;
+    StaffOrTransportInterestModel.findAll(
+        {
+            where: where,
+            order: [
+                ['updatedAt', 'DESC']
+            ],
+            include: [
+                {
+                    model: StaffOrTransportRequestModel,
+                    where: {
+                        employer_id: USER.id,
+                    },
+                    include: [
+                        {
+                            model: CategoryModel
+                        }
+                    ]
+                },
+                {
+                    model: EmployeeModel,
+                    include: [
+                        {
+                            model: EmployeeExperienceModel
+                        }
+                    ]
+                }                
+            ]
+        },
+    ).then((resp) => {
+        res.send(resp);
+    }, function (err) {
+        res.status(500).send(err);
+    })
+}
+
+exports.inprogressStaffOrTransportInterest = function (req, res) {
+    const USER = appUtil.getUser(req.headers.authorization);
+    let where = {};
+    where.status = 2;
+    StaffOrTransportInterestModel.findAll(
+        {
+            where: where,
+            order: [
+                ['updatedAt', 'DESC']
+            ],
+            include: [
+                {
+                    model: StaffOrTransportRequestModel,
+                    where: {
+                        employer_id: USER.id,
+                    },
+                    include: [
+                        {
+                            model: CategoryModel
+                        }
+                    ]
+                },
+                EmployeeModel
+            ]
+        },
+    ).then((resp) => {
+        res.send(resp);
+    }, function (err) {
+        res.status(500).send(err);
+    })
+}
+
+exports.rejectedStaffOrTransportInterest = function (req, res) {
+    const USER = appUtil.getUser(req.headers.authorization);
+    let where = {};
+    where.status = 0;
+    StaffOrTransportInterestModel.findAll(
+        {
+            where: where,
+            order: [
+                ['updatedAt', 'DESC']
+            ],
+            include: [
+                {
+                    model: StaffOrTransportRequestModel,
+                    where: {
+                        employer_id: USER.id,
+                    },
+                    include: [
+                        {
+                            model: CategoryModel
+                        }
+                    ]
+                },
+                EmployeeModel
+            ]
+        },
+    ).then((resp) => {
+        res.send(resp);
+    }, function (err) {
+        res.status(500).send(err);
+    })
+}
+
+exports.completedStaffOrTransportInterest = function (req, res) {
+    const USER = appUtil.getUser(req.headers.authorization);
+    let where = {};
+    where.status = 3;
+    StaffOrTransportInterestModel.findAll(
+        {
+            where: where,
+            order: [
+                ['updatedAt', 'DESC']
+            ],
+            include: [
+                {
+                    model: StaffOrTransportRequestModel,
+                    where: {
+                        employer_id: USER.id,
+                    },
+                    include: [
+                        {
+                            model: CategoryModel
+                        }
+                    ]
+                },
+                EmployeeModel
+            ]
+        },
+    ).then((resp) => {
+        res.send(resp);
+    }, function (err) {
+        res.status(500).send(err);
+    })
+}
+
+exports.assignmentUpdate = function (req, res) {
+    let reqStatus = req.body.status;
+
+    StaffOrTransportInterestModel.findByPk(req.body.interestId).then(function (result) {
+        result.update({status: reqStatus}).then((resp) => {
+            if(reqStatus == 2){
+                StaffOrTransportRequestModel.findByPk(req.body.requestId).then(function (result) {
+                    result.update({status: reqStatus, employee_id: req.body.employee_id}).then((resp) => {
+                        res.send(resp);
+                    })
+                }, function (err) {
+                    res.status(500).send(err);
+                })
+            }
+        })
+    }, function (err) {
+        res.status(500).send(err);
+    })
+}
+
+exports.listEmployer = function (req, res) {
+    const USER = appUtil.getUser(req.headers.authorization);
+    if (USER) {
+        EmployerUser.findAll({order: [
+                ['updatedAt', 'DESC']
+            ]}).then((resp) => {
+            res.send(resp);
+        }).catch((err) => {
+            res.status(500).send(err);
+        })
+    } else {
+        res.status(500).send("Required Login");
+    }
+}
+
+exports.updateEmployerStatus = function (req, res) {
+    EmployerUser.findByPk(req.body.id).then(function (result) {
+        result.update({status: req.body.status}).then((resp) => {
+            res.send(resp);
+        })
+    }, function (err) {
+        res.status(500).send(err);
+    })
 }

@@ -61,6 +61,7 @@ db.staffOrTransportInterest = require("./staffortransportinterest.model")(sequel
 db.screenshot = require("./screenshot.model")(sequelize, Sequelize);
 db.specification = require("./specification.model")(sequelize, Sequelize);
 db.productspecification = require("./productspecification.model")(sequelize, Sequelize);
+db.category = require("./category.model")(sequelize, Sequelize);
 
 // db.transportmenu = require("./transportmenu.model")(sequelize, Sequelize);
 // db.transport = require("./transport.model")(sequelize, Sequelize);
@@ -82,15 +83,16 @@ db.product.hasMany(db.extra, { foreignKey: 'type', sourceKey: 'type' });
 db.order.hasMany(db.orderhistory, { foreignKey: 'order_id', targetKey: 'id' });
 
 db.order.hasMany(db.staffOrTransportRequest, { foreignKey: 'order_id', targetKey: 'id' });
-db.employer.hasMany(db.staffOrTransportRequest, { foreignKey: 'employer_id', targetKey: 'id' });
+db.employeruser.hasMany(db.staffOrTransportRequest, { foreignKey: 'employer_id', targetKey: 'id' });
 db.staffOrTransportRequest.belongsTo(db.order, { foreignKey: 'order_id', targetKey: 'id' });
-db.staffOrTransportRequest.belongsTo(db.employer, { foreignKey: 'employer_id', targetKey: 'id' });
+db.staffOrTransportRequest.belongsTo(db.employeruser, { foreignKey: 'employer_id', targetKey: 'id' });
 db.staffOrTransportRequest.belongsTo(db.employee, { foreignKey: 'employee_id', targetKey: 'id' });
 db.staffOrTransportInterest.belongsTo(db.staffOrTransportRequest, { foreignKey: 'staffortransportrequest_id', targetKey: 'id' });
 db.employee.belongsTo(db.users, { foreignKey: 'user_id', targetKey: 'id' });
 db.employer.belongsTo(db.users, { foreignKey: 'user_id', targetKey: 'id' });
 db.staffOrTransportRequest.belongsTo(db.users, { foreignKey: 'user_id', targetKey: 'id' });
 db.staffOrTransportInterest.belongsTo(db.users, { foreignKey: 'user_id', targetKey: 'id' });
+db.staffOrTransportInterest.belongsTo(db.employee, { foreignKey: 'employee_id', targetKey: 'id' });
 
 db.employee.hasMany(db.employeecategory, { foreignKey: 'employee_id', targetKey: 'id' });
 db.employeecategory.belongsTo(db.employee, { foreignKey: 'employee_id', targetKey: 'id' });
@@ -117,6 +119,12 @@ db.orderhistory.belongsTo(db.order, { foreignKey: 'order_id', targetKey: 'id' })
 db.orderhistory.belongsTo(db.users, { foreignKey: 'user_id', targetKey: 'id' });
 db.orderhistory.hasOne(db.screenshot, { foreignKey: 'orderhistory_id', targetKey: 'id' })
 db.screenshot.belongsTo(db.orderhistory, { foreignKey: 'orderhistory_id', targetKey: 'id' })
+
+// db.category.belongsTo(db.employeruser, { foreignKey: 'employer_id', targetKey: 'id' });
+
+db.staffOrTransportRequest.belongsTo(db.category, { foreignKey: 'category_id', targetKey: 'id' });
+
+db.staffOrTransportRequest.hasMany(db.staffOrTransportInterest, { foreignKey: 'staffortransportrequest_id', targetKey: 'id' });
 // db.transportregister.belongsTo(db.users, { foreignKey: 'created_by', targetKey: 'id' });
 // db.transportregister.belongsTo(db.users, { foreignKey: 'updated_by', targetKey: 'id' });
 

@@ -8,6 +8,7 @@ const Op = Sequelize.Op;
 
 var appUtil = require('../app/apputil');
 const MODELS = require("../app/models");
+const EmployeeModel = MODELS.employee;
 const User = MODELS.users;
 const EmployerUser = MODELS.employeruser;
 
@@ -169,18 +170,14 @@ module.exports = function (passport) {
 
             let USER = {
                 email: email,
-                firstname: req.body.firstname,
-                lastname: req.body.lastname,
-                insertion: req.body.insertion,
+                companyname: req.body.companyname,
+                description: req.body.description,
                 phone: req.body.phone,
-                newsletter: req.body.newsletter,
-                team_id: req.body.team_id || null,
-                termsandcondition: req.body.termsandcondition,
+                website: req.body.website,
+                kvk: req.body.kvk,
+                btw: req.body.btw,
                 password: bcrypt.hashSync(password, bcrypt.genSaltSync(8), null),
-                verification_token: appUtil.makeRandomText(25),
-                userimage: req.body.userimage || '',
-                deviceId: req.body.deviceId || '',
-                userimage: req.body.userimage || '',
+                verification_token: appUtil.makeRandomText(25)
             }
             if (req.body.employee) {
                 USER.reset_password = 0;
@@ -295,6 +292,7 @@ module.exports = function (passport) {
                 if (!rows) {
                     return done(null, false); // req.flash is the way to set flashdata using connect-flash
                 }
+                
 
                 // if the user is found but the password is wrong
                 if (!bcrypt.compareSync(password, rows.password))

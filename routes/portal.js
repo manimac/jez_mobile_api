@@ -8,6 +8,7 @@ const product = require("../app/controller/product.controller");
 const invers = require("../app/controller/inversapi.controller");
 const employee = require("../app/controller/employee.controller");
 const employer = require("../app/controller/employer.controller");
+const category = require("../app/controller/category.controller");
 const authMiddware = passport.authenticate("jwt", { session: false });
 
 router.get("/terms-and-condition", common.getTermAndCondition);
@@ -53,6 +54,7 @@ router.post("/payment-sheet", employee.stripePaymentSheet);
 
 
 router.post("/employer/create", employer.createEmployer);
+router.post("/employeruser/update", employer.updateEmployerUser);
 
 /** For auth enabled */
 router.use(authMiddware);
@@ -69,6 +71,10 @@ router.post(
   "/order/staff-transport-request/update",
   order.updateStaffOrTransportRequest
 );
+router.delete(
+  "/order/staff-transport-request/delete/:id",
+  order.deleteStaffOrTransportRequest
+);
 router.post(
   "/order/staff-transport-interest/create",
   order.makeStaffOrTransportInterest
@@ -77,6 +83,7 @@ router.post(
   "/order/staff-transport-interest/update",
   order.updateStaffOrTransportInterest
 );
+
 /** Screenshots update */
 router.post("/screenshot/upsert", order.upsertScreenshots);
 
@@ -85,10 +92,73 @@ router.post("/employee/create", employee.createEmployee);
 router.post("/employee/update", employee.updateEmployee);
 router.post("/employer/get", employer.getEmployer);
 router.post("/employer/update", employer.updateEmployer);
+router.post("/employee/createCategories", employee.createCategories);
+router.post("/employee/createExperience", employee.createExperience);
+router.post("/employee/getExperience", employee.getExperience);
+router.post("/employee/getAssignments", employee.getAssignments);
+router.post("/employee/successAssignments", employee.successAssignments);
+router.post("/employee/pendingAssignments", employee.pendingAssignments);
+router.post("/employee/confirmAssignments", employee.confirmAssignments);
+router.post("/employer/listEmployer", employer.listEmployer);
+router.post("/employer/updateEmployerStatus", employer.updateEmployerStatus);
 
 router.post("/payment/ideal", order.productIdeal);
 
 router.post("/reset/password", common.resetPassword);
 router.post("/withdraw/create", common.createWithdrawRequest);
 router.post('/order/cancel-order', order.cancelOrderHistory);
+
+//categories
+router.post("/category/get", category.getCategory);
+router.post("/category/create", category.createCategory);
+router.post("/category/update", category.updateCategory);
+router.delete("/category/delete/:id", category.deleteCategory);
+
+router.post("/pendingStaffOrTransportInterest", employer.pendingStaffOrTransportInterest);
+router.post("/inprogressStaffOrTransportInterest", employer.inprogressStaffOrTransportInterest);
+router.post("/rejectedStaffOrTransportInterest", employer.rejectedStaffOrTransportInterest);
+router.post("/completedStaffOrTransportInterest", employer.completedStaffOrTransportInterest);
+router.post("/assignmentUpdate", employer.assignmentUpdate);
+
+
+//backup
+router.get('/filter/locations', common.allFilterLocations);
+router.get('/filtersOptions', common.filtersOptions);
+router.post('/home/update', common.updateHome);
+router.post('/home/peek', common.updatePeekHour);
+router.post('/aboutus', common.updateAboutUs);
+router.post('/update-term-and-cond', common.updateTermAndCond);
+router.post('/location', common.updateLocation);
+router.get('/location', common.location);
+/** FAQ */
+router.post('/faq/create', common.createFaq);
+router.post('/faq/update', common.updateFaq);
+router.delete('/faq/delete/:id', common.deleteFaq);
+router.post('/location/create', common.createlocation);
+router.post('/location/update', common.updatelocation);
+router.delete('/location/delete/:id', common.deletelocation);
+router.get('/enquiries', common.enquiries);
+/** user */
+router.post('/users', user.allUsers);
+router.get('/user/get/:id', user.getUser);
+/** Coupons */
+router.post('/coupons', common.coupons);
+router.post('/check-coupon-used', common.checkCouponUsed);
+router.post('/coupon/create', common.createCoupon);
+router.post('/coupon/update', common.updateCoupon);
+router.delete('/coupon/delete/:id', common.deleteCoupon);
+
+
+router.get('/advertisement', common.advertisement);
+router.post('/advertisement/create', common.createadvertisement);
+router.post('/advertisement/update', common.updateadvertisement);
+router.delete('/advertisement/delete/:id', common.deleteadvertisement);
+
+
+//backupwithout middleware
+router.get('/home', common.getHome);
+router.get('/aboutus', common.getAboutUs);
+router.get('/certificate', common.getcertificate);
+router.get('/contactus', common.contactus);
+router.get('/faqs', common.faqs);
 module.exports = router;

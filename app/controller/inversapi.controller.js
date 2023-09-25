@@ -4,7 +4,7 @@ const appUtil = require('../apputil');
 
 exports.deviceList = function (req, res) {
     let qString = `?query=in nulla&active=true&limit=20&offset=0&sort=serial_number,erp_delivery_number`;
-    let headers = { 'X-CloudBoxx-ApiKey': 'dSAqwwfQL6qSfmkYS0X2FDjPxyZC7ZjnQ4rxGHpDpGH27Lt8mWD6JpnSeUOIR10F', 'Accept': `application/json` };
+    let headers = { 'X-CloudBoxx-ApiKey': 'WYMHoJDEO2xY37aHVXkZ4R2AyUtF5Lr0DI7B/FKa0crmah5IMj6fywGvIFSiyy+n', 'Accept': `application/json` };
     const cOptions = {
         url: 'https://api.cloudboxx.invers.com/api/devices',
         method: 'GET',
@@ -21,7 +21,7 @@ exports.deviceList = function (req, res) {
 
 exports.getStatus = function (req, res) {
     let qString = `?query=in nulla&active=true&limit=20&offset=0&sort=serial_number,erp_delivery_number`;
-    let headers = { 'X-CloudBoxx-ApiKey': 'dSAqwwfQL6qSfmkYS0X2FDjPxyZC7ZjnQ4rxGHpDpGH27Lt8mWD6JpnSeUOIR10F', 'Accept': `application/json` };
+    let headers = { 'X-CloudBoxx-ApiKey': 'WYMHoJDEO2xY37aHVXkZ4R2AyUtF5Lr0DI7B/FKa0crmah5IMj6fywGvIFSiyy+n', 'Accept': `application/json` };
     const cOptions = {
         url: 'https://api.cloudboxx.invers.com/api/devices/' + `${req.body.qnr}` + '/status?fallback=true',
         method: 'GET',
@@ -38,7 +38,7 @@ exports.getStatus = function (req, res) {
 
 exports.lockUnlock = function (req, res) {
     let qString = `/${req.body.qnr}/central-lock?fallback=true`;
-    let headers = { 'X-CloudBoxx-ApiKey': 'dSAqwwfQL6qSfmkYS0X2FDjPxyZC7ZjnQ4rxGHpDpGH27Lt8mWD6JpnSeUOIR10F', 'Accept': `application/json` };
+    let headers = { 'X-CloudBoxx-ApiKey': 'WYMHoJDEO2xY37aHVXkZ4R2AyUtF5Lr0DI7B/FKa0crmah5IMj6fywGvIFSiyy+n', 'Accept': `application/json` };
     const cOptions = {
         url: 'https://api.cloudboxx.invers.com/api/devices/' + `${req.body.qnr}` + '/central-lock?fallback=true',
         method: 'PUT',
