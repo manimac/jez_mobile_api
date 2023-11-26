@@ -47,7 +47,7 @@ exports.lockUnlock = function (req, res) {
             // add the data you want to send here
             state: req.body.state,    // locked / unlocked
 
-        },
+    },
         json: true
     };
     request(cOptions, function (err, resp) {

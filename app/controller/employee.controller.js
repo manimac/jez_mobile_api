@@ -179,8 +179,8 @@ exports.getAssignments = async (req, res) => {
         if (search && search.checkindate && search.checkintime && search.checkoutdate && search.checkouttime) {
           where.from = {
             [Op.and]: [
-              Sequelize.where(Sequelize.col('from'), '>=', checkindate),
-              Sequelize.where(Sequelize.col('from'), '<=', checkoutdate),
+              Sequelize.where(Sequelize.col('workstartdate'), '>=', checkindate),
+              Sequelize.where(Sequelize.col('workstartdate'), '<=', checkoutdate),
             ],
           };
         }

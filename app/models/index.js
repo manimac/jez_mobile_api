@@ -62,6 +62,7 @@ db.screenshot = require("./screenshot.model")(sequelize, Sequelize);
 db.specification = require("./specification.model")(sequelize, Sequelize);
 db.productspecification = require("./productspecification.model")(sequelize, Sequelize);
 db.category = require("./category.model")(sequelize, Sequelize);
+db.staffOrTransportWorkingHistory = require("./staffrortransportworkinghistory.model")(sequelize, Sequelize);
 
 // db.transportmenu = require("./transportmenu.model")(sequelize, Sequelize);
 // db.transport = require("./transport.model")(sequelize, Sequelize);
@@ -125,6 +126,11 @@ db.screenshot.belongsTo(db.orderhistory, { foreignKey: 'orderhistory_id', target
 db.staffOrTransportRequest.belongsTo(db.category, { foreignKey: 'category_id', targetKey: 'id' });
 
 db.staffOrTransportRequest.hasMany(db.staffOrTransportInterest, { foreignKey: 'staffortransportrequest_id', targetKey: 'id' });
+
+
+db.staffOrTransportWorkingHistory.belongsTo(db.employeruser, { foreignKey: 'employer_id', targetKey: 'id' });
+db.staffOrTransportWorkingHistory.belongsTo(db.employee, { foreignKey: 'employee_id', targetKey: 'id' });
+db.staffOrTransportWorkingHistory.belongsTo(db.staffOrTransportRequest, { foreignKey: 'staffortransportrequest_id', targetKey: 'id' });
 // db.transportregister.belongsTo(db.users, { foreignKey: 'created_by', targetKey: 'id' });
 // db.transportregister.belongsTo(db.users, { foreignKey: 'updated_by', targetKey: 'id' });
 

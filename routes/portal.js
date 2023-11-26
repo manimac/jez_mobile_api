@@ -54,6 +54,7 @@ router.post("/payment-sheet", employee.stripePaymentSheet);
 
 
 router.post("/employer/create", employer.createEmployer);
+router.post("/employeruser/get", employer.getEmployerUser);
 router.post("/employeruser/update", employer.updateEmployerUser);
 
 /** For auth enabled */

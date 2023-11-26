@@ -15,6 +15,7 @@ const EmployeeExperienceModel = MODELS.employeeexperiense;
 const StaffOrTransportRequestModel = MODELS.staffOrTransportRequest;
 const StaffOrTransportInterestModel = MODELS.staffOrTransportInterest;
 const CategoryModel = MODELS.category;
+const staffOrTransportWorkingHistoryModel = MODELS.staffOrTransportWorkingHistory;
 
 // SET STORAGE
 var storage = multer.diskStorage({
@@ -110,6 +111,14 @@ exports.updateEmployerUser = function (req, res) {
     });
 }
 
+exports.getEmployerUser = function (req, res) {
+    EmployerUser.findOne({ where: { id: req.body.id, status: 1 } }).then((resp) => {
+        res.send(resp);
+    }).catch((err) => {
+        res.status(500).send(err);
+    })
+}
+
 exports.pendingStaffOrTransportInterest = function (req, res) {
     const USER = appUtil.getUser(req.headers.authorization);
     let where = {};
@@ -139,7 +148,7 @@ exports.pendingStaffOrTransportInterest = function (req, res) {
                             model: EmployeeExperienceModel
                         }
                     ]
-                }                
+                }
             ]
         },
     ).then((resp) => {
@@ -245,15 +254,63 @@ exports.completedStaffOrTransportInterest = function (req, res) {
     })
 }
 
+function getDates(startDate, endDate) {
+    let dateArray = [];
+    let currentDate = new Date(startDate);
+
+    while (currentDate <= endDate) {
+        dateArray.push(formatDate(currentDate));
+        currentDate = new Date(currentDate)
+        currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    return dateArray;
+}
+
+function formatDate(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+}
+
 exports.assignmentUpdate = function (req, res) {
     let reqStatus = req.body.status;
 
     StaffOrTransportInterestModel.findByPk(req.body.interestId).then(function (result) {
-        result.update({status: reqStatus}).then((resp) => {
-            if(reqStatus == 2){
+        result.update({ status: reqStatus }).then((resp) => {
+            if (reqStatus == 2) {
                 StaffOrTransportRequestModel.findByPk(req.body.requestId).then(function (result) {
-                    result.update({status: reqStatus, employee_id: req.body.employee_id}).then((resp) => {
-                        res.send(resp);
+                    result.update({ status: reqStatus, employee_id: req.body.employee_id }).then((resp) => {
+                        const startDate = new Date(req.order.workstartdate);
+                        const endDate = new Date(req.order.workenddate);
+                        const result = getDates(startDate, endDate);
+
+                        console.log(result);
+                        if (result && Array.isArray(result) && result.length > 0) {
+                            for (var i = 0; i < result.length; i++) {
+                                let obj = {
+                                    date: result[i],
+                                    hoursWorked: "",
+                                    breakhours: "",
+                                    comments: "",
+                                    employer_id: req.order.employer_id,
+                                    employee_id: req.body.employee_id,
+                                    staffortransportrequest_id: req.order.id,
+                                }
+                                staffOrTransportWorkingHistoryModel.create(obj).then(function () {
+                                    res.send(resp);
+                                }, function (err) {
+                                    res.status(500).send(err);
+                                })
+                            }
+                        }
+                        else {
+                            res.send(resp);
+                        }
+
+
                     })
                 }, function (err) {
                     res.status(500).send(err);
@@ -265,12 +322,78 @@ exports.assignmentUpdate = function (req, res) {
     })
 }
 
+exports.assignmentUpdate = async function (req, res) {
+    try {
+        const reqStatus = req.body.status;
+        const interestResult = await StaffOrTransportInterestModel.findByPk(req.body.interestId);
+        await interestResult.update({ status: reqStatus });
+
+        if (reqStatus === 2) {
+            const requestResult = await StaffOrTransportRequestModel.findByPk(req.body.requestId);
+            await requestResult.update({ status: reqStatus, employee_id: req.body.employee_id });
+
+            const startDate = new Date(req.order.workstartdate);
+            const endDate = new Date(req.order.workenddate);
+            const dateArray = getDates(startDate, endDate);
+
+            if (Array.isArray(dateArray) && dateArray.length > 0) {
+                for (const date of dateArray) {
+                    const obj = {
+                        date,
+                        hoursWorked: "",
+                        breakhours: "",
+                        comments: "",
+                        employer_id: req.order.employer_id,
+                        employee_id: req.body.employee_id,
+                        staffortransportrequest_id: req.order.id,
+                    };
+
+                    await staffOrTransportWorkingHistoryModel.create(obj);
+                }
+            }
+
+            res.send({ success: true });
+        } else {
+            res.send({ success: true });
+        }
+    } catch (err) {
+        res.status(500).send(err);
+    }
+};
+
+exports.hoursUpdate = async function (req, res) {
+    try {
+        for (const task of req.task) {
+            const result = await staffOrTransportWorkingHistoryModel.findByPk(task.id);
+            await result.update({
+                hoursWorked: task.hoursWorked,
+                breakhours: task.breakhours,
+                comments: task.comments,
+            });
+        }
+        res.send({ success: true });
+    } catch (err) {
+        res.status(500).send(err);
+    }
+};
+
+// exports.filterHoursemployee = async function (req, res) {
+//     try {
+//         const result = await staffOrTransportWorkingHistoryModel.findAll({task.id});
+//         res.send({ success: true });
+//     } catch (err) {
+//         res.status(500).send(err);
+//     }
+// };
+
 exports.listEmployer = function (req, res) {
     const USER = appUtil.getUser(req.headers.authorization);
     if (USER) {
-        EmployerUser.findAll({order: [
+        EmployerUser.findAll({
+            order: [
                 ['updatedAt', 'DESC']
-            ]}).then((resp) => {
+            ]
+        }).then((resp) => {
             res.send(resp);
         }).catch((err) => {
             res.status(500).send(err);
@@ -282,7 +405,7 @@ exports.listEmployer = function (req, res) {
 
 exports.updateEmployerStatus = function (req, res) {
     EmployerUser.findByPk(req.body.id).then(function (result) {
-        result.update({status: req.body.status}).then((resp) => {
+        result.update({ status: req.body.status }).then((resp) => {
             res.send(resp);
         })
     }, function (err) {
