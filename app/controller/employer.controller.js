@@ -138,6 +138,9 @@ exports.pendingStaffOrTransportInterest = function (req, res) {
                     include: [
                         {
                             model: CategoryModel
+                        },
+                        {
+                            model: staffOrTransportWorkingHistoryModel
                         }
                     ]
                 },
@@ -177,6 +180,9 @@ exports.inprogressStaffOrTransportInterest = function (req, res) {
                     include: [
                         {
                             model: CategoryModel
+                        },
+                        {
+                            model: staffOrTransportWorkingHistoryModel
                         }
                     ]
                 },
@@ -209,6 +215,9 @@ exports.rejectedStaffOrTransportInterest = function (req, res) {
                     include: [
                         {
                             model: CategoryModel
+                        },
+                        {
+                            model: staffOrTransportWorkingHistoryModel
                         }
                     ]
                 },
@@ -241,6 +250,9 @@ exports.completedStaffOrTransportInterest = function (req, res) {
                     include: [
                         {
                             model: CategoryModel
+                        },
+                        {
+                            model: staffOrTransportWorkingHistoryModel
                         }
                     ]
                 },
@@ -275,52 +287,52 @@ function formatDate(date) {
     return `${year}-${month}-${day}`;
 }
 
-exports.assignmentUpdate = function (req, res) {
-    let reqStatus = req.body.status;
+// exports.assignmentUpdate = function (req, res) {
+//     let reqStatus = req.body.status;
 
-    StaffOrTransportInterestModel.findByPk(req.body.interestId).then(function (result) {
-        result.update({ status: reqStatus }).then((resp) => {
-            if (reqStatus == 2) {
-                StaffOrTransportRequestModel.findByPk(req.body.requestId).then(function (result) {
-                    result.update({ status: reqStatus, employee_id: req.body.employee_id }).then((resp) => {
-                        const startDate = new Date(req.order.workstartdate);
-                        const endDate = new Date(req.order.workenddate);
-                        const result = getDates(startDate, endDate);
+//     StaffOrTransportInterestModel.findByPk(req.body.interestId).then(function (result) {
+//         result.update({ status: reqStatus }).then((resp) => {
+//             if (reqStatus == 2) {
+//                 StaffOrTransportRequestModel.findByPk(req.body.requestId).then(function (result) {
+//                     result.update({ status: reqStatus, employee_id: req.body.employee_id }).then((resp) => {
+//                         const startDate = new Date(req.order.workstartdate);
+//                         const endDate = new Date(req.order.workenddate);
+//                         const result = getDates(startDate, endDate);
 
-                        console.log(result);
-                        if (result && Array.isArray(result) && result.length > 0) {
-                            for (var i = 0; i < result.length; i++) {
-                                let obj = {
-                                    date: result[i],
-                                    hoursWorked: "",
-                                    breakhours: "",
-                                    comments: "",
-                                    employer_id: req.order.employer_id,
-                                    employee_id: req.body.employee_id,
-                                    staffortransportrequest_id: req.order.id,
-                                }
-                                staffOrTransportWorkingHistoryModel.create(obj).then(function () {
-                                    res.send(resp);
-                                }, function (err) {
-                                    res.status(500).send(err);
-                                })
-                            }
-                        }
-                        else {
-                            res.send(resp);
-                        }
+//                         console.log(result);
+//                         if (result && Array.isArray(result) && result.length > 0) {
+//                             for (var i = 0; i < result.length; i++) {
+//                                 let obj = {
+//                                     date: result[i],
+//                                     hoursWorked: "",
+//                                     breakhours: "",
+//                                     comments: "",
+//                                     employer_id: req.order.employer_id,
+//                                     employee_id: req.body.employee_id,
+//                                     staffortransportrequest_id: req.order.id,
+//                                 }
+//                                 staffOrTransportWorkingHistoryModel.create(obj).then(function () {
+//                                     res.send(resp);
+//                                 }, function (err) {
+//                                     res.status(500).send(err);
+//                                 })
+//                             }
+//                         }
+//                         else {
+//                             res.send(resp);
+//                         }
 
 
-                    })
-                }, function (err) {
-                    res.status(500).send(err);
-                })
-            }
-        })
-    }, function (err) {
-        res.status(500).send(err);
-    })
-}
+//                     })
+//                 }, function (err) {
+//                     res.status(500).send(err);
+//                 })
+//             }
+//         })
+//     }, function (err) {
+//         res.status(500).send(err);
+//     })
+// }
 
 exports.assignmentUpdate = async function (req, res) {
     try {
@@ -328,29 +340,34 @@ exports.assignmentUpdate = async function (req, res) {
         const interestResult = await StaffOrTransportInterestModel.findByPk(req.body.interestId);
         await interestResult.update({ status: reqStatus });
 
-        if (reqStatus === 2) {
+        if (reqStatus == 2 || reqStatus == 3) {
             const requestResult = await StaffOrTransportRequestModel.findByPk(req.body.requestId);
             await requestResult.update({ status: reqStatus, employee_id: req.body.employee_id });
 
-            const startDate = new Date(req.order.workstartdate);
-            const endDate = new Date(req.order.workenddate);
+            const workstartdate = req.body.order.workstartdate.split('-').reverse().join('-');
+            const workenddate = req.body.order.workenddate.split('-').reverse().join('-');
+            const startDate = new Date(workstartdate);
+            const endDate = new Date(workenddate);
             const dateArray = getDates(startDate, endDate);
 
-            if (Array.isArray(dateArray) && dateArray.length > 0) {
-                for (const date of dateArray) {
-                    const obj = {
-                        date,
-                        hoursWorked: "",
-                        breakhours: "",
-                        comments: "",
-                        employer_id: req.order.employer_id,
-                        employee_id: req.body.employee_id,
-                        staffortransportrequest_id: req.order.id,
-                    };
-
-                    await staffOrTransportWorkingHistoryModel.create(obj);
+            if(reqStatus == 2){
+                if (Array.isArray(dateArray) && dateArray.length > 0) {
+                    await staffOrTransportWorkingHistoryModel.destroy({ where: { staffortransportrequest_id: req.body.order.id } });
+                    for (const date of dateArray) {
+                        const obj = {
+                            date,
+                            hoursWorked: "",
+                            breakhours: "",
+                            comments: "",
+                            employer_id: req.body.order.employer_id,
+                            employee_id: req.body.employee_id,
+                            staffortransportrequest_id: req.body.order.id,
+                        };
+    
+                        await staffOrTransportWorkingHistoryModel.create(obj);
+                    }
                 }
-            }
+            }            
 
             res.send({ success: true });
         } else {
@@ -363,7 +380,7 @@ exports.assignmentUpdate = async function (req, res) {
 
 exports.hoursUpdate = async function (req, res) {
     try {
-        for (const task of req.task) {
+        for (const task of req.body.task) {
             const result = await staffOrTransportWorkingHistoryModel.findByPk(task.id);
             await result.update({
                 hoursWorked: task.hoursWorked,

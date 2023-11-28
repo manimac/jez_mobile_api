@@ -120,6 +120,7 @@ router.post("/inprogressStaffOrTransportInterest", employer.inprogressStaffOrTra
 router.post("/rejectedStaffOrTransportInterest", employer.rejectedStaffOrTransportInterest);
 router.post("/completedStaffOrTransportInterest", employer.completedStaffOrTransportInterest);
 router.post("/assignmentUpdate", employer.assignmentUpdate);
+router.post("/hoursUpdate", employer.hoursUpdate);
 
 
 //backup

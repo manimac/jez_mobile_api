@@ -20,6 +20,7 @@ const StaffOrTransportInterestModel = MODELS.staffOrTransportInterest;
 const WithdrawRequestModel = MODELS.withdrawrequest;
 const ScreenshotModel = MODELS.screenshot;
 const ProductSpecificationModel = MODELS.productspecification;
+const CategoryModel = MODELS.category;
 
 // SET STORAGE
 var storage = multer.diskStorage({
@@ -1095,6 +1096,7 @@ exports.staffOrTransportRequests = function (req, res) {
             order: [
                 ['updatedAt', 'DESC']
             ],
+            include: [CategoryModel]
         },
     ).then((resp) => {
         res.send(resp);

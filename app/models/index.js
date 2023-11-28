@@ -94,7 +94,6 @@ db.employer.belongsTo(db.users, { foreignKey: 'user_id', targetKey: 'id' });
 db.staffOrTransportRequest.belongsTo(db.users, { foreignKey: 'user_id', targetKey: 'id' });
 db.staffOrTransportInterest.belongsTo(db.users, { foreignKey: 'user_id', targetKey: 'id' });
 db.staffOrTransportInterest.belongsTo(db.employee, { foreignKey: 'employee_id', targetKey: 'id' });
-
 db.employee.hasMany(db.employeecategory, { foreignKey: 'employee_id', targetKey: 'id' });
 db.employeecategory.belongsTo(db.employee, { foreignKey: 'employee_id', targetKey: 'id' });
 db.category.hasMany(db.employeecategory, { foreignKey: 'category_id', targetKey: 'id' });
@@ -131,6 +130,7 @@ db.staffOrTransportRequest.hasMany(db.staffOrTransportInterest, { foreignKey: 's
 db.staffOrTransportWorkingHistory.belongsTo(db.employeruser, { foreignKey: 'employer_id', targetKey: 'id' });
 db.staffOrTransportWorkingHistory.belongsTo(db.employee, { foreignKey: 'employee_id', targetKey: 'id' });
 db.staffOrTransportWorkingHistory.belongsTo(db.staffOrTransportRequest, { foreignKey: 'staffortransportrequest_id', targetKey: 'id' });
+db.staffOrTransportRequest.hasMany(db.staffOrTransportWorkingHistory, { foreignKey: 'staffortransportrequest_id', targetKey: 'id' });
 // db.transportregister.belongsTo(db.users, { foreignKey: 'created_by', targetKey: 'id' });
 // db.transportregister.belongsTo(db.users, { foreignKey: 'updated_by', targetKey: 'id' });
 
