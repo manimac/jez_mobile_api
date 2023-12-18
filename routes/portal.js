@@ -96,10 +96,14 @@ router.post("/employer/update", employer.updateEmployer);
 router.post("/employee/createCategories", employee.createCategories);
 router.post("/employee/createExperience", employee.createExperience);
 router.post("/employee/getExperience", employee.getExperience);
+
+
 router.post("/employee/getAssignments", employee.getAssignments);
 router.post("/employee/successAssignments", employee.successAssignments);
 router.post("/employee/pendingAssignments", employee.pendingAssignments);
 router.post("/employee/confirmAssignments", employee.confirmAssignments);
+
+
 router.post("/employer/listEmployer", employer.listEmployer);
 router.post("/employer/updateEmployerStatus", employer.updateEmployerStatus);
 

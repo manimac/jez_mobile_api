@@ -38,7 +38,7 @@ exports.getEmployee = function (req, res) {
         user_id = req.body.user_id;
     }
     if (USER) {
-        EmployeeModel.findOne({ where: { user_id: user_id, status: 1 } }).then((resp) => {
+        EmployeeModel.findOne({ where: { user_id: user_id, status: 1, type: req.body.type } }).then((resp) => {
             res.send(resp);
         }).catch((err) => {
             res.status(500).send(err);
@@ -254,7 +254,7 @@ exports.getAssignments = async (req, res) => {
                     [Op.notIn]: excludedIds,
                 };
             }
-
+            where['type'] = search.type;
             const staffOrTransportRequests = await StaffOrTransportRequestModel.findAll({
                 where,
             });
@@ -294,6 +294,7 @@ exports.successAssignments = async (req, res) => {
         }
         where.employee_id = req.body.employee_id;
         where.status = 3;
+        where.type = search.type;
         const staffOrTransportRequests = await StaffOrTransportRequestModel.findAll({
             where: where,
         });
@@ -325,6 +326,7 @@ exports.confirmAssignments = async (req, res) => {
             };
         }
 
+        where.type = search.type;
         const staffOrTransportRequests = await StaffOrTransportRequestModel.findAll({
             where,
             include: [staffOrTransportWorkingHistoryModel]
@@ -364,6 +366,7 @@ exports.pendingAssignments = async (req, res) => {
                     ],
                 };
             }
+            where.type = search.type;
 
             const staffOrTransportRequests = await StaffOrTransportRequestModel.findAll({
                 where,

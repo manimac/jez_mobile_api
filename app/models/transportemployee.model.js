@@ -1,7 +1,6 @@
-const EmployeeModel = (sequelize, Sequelize) => {
-    const Employee = sequelize.define('Employee', {
+const TransportEmployeeModel = (sequelize, Sequelize) => {
+    const TransportEmployee = sequelize.define('TransportEmployee', {
         id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
-        status: { type: Sequelize.INTEGER, defaultValue: 1 },
         firstname: { type: Sequelize.STRING, allowNull: true },
         lastname: { type: Sequelize.STRING, allowNull: true },
         phone: { type: Sequelize.STRING, allowNull: true },
@@ -14,10 +13,10 @@ const EmployeeModel = (sequelize, Sequelize) => {
         bsn: { type: Sequelize.STRING, allowNull: true },
         profileimage: { type: Sequelize.STRING, allowNull: true },
         step: { type: Sequelize.STRING, allowNull: true },
-        type: { type: Sequelize.STRING, allowNull: true },
+        status: { type: Sequelize.INTEGER, defaultValue: 1 },
     })
 
-    return Employee
+    return TransportEmployee
 }
 
-module.exports = EmployeeModel
+module.exports = TransportEmployeeModel
