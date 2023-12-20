@@ -214,63 +214,82 @@ exports.getAssignments = async (req, res) => {
     try {
         const { employee_id, search } = req.body;
         const status = 1;
-
-        // const checkindate = search.checkindate?.split('-').reverse().join('-');
-        // const checkoutdate = search.checkoutdate?.split('-').reverse().join('-');
-        const checkindate = search.checkindate;
-        const checkoutdate = search.checkoutdate;
-
-        const employeeCategories = await EmployeeCategoryModel.findAll({
-            where: { employee_id, status },
-        });
+        const { checkindate, checkoutdate, type } = search;
 
         const interests = await StaffOrTransportInterestModel.findAll({
             where: { employee_id, status },
         });
 
-        if (employeeCategories.length === 0) {
-            return res.json([]);
+        const excludedIds = interests.map(({ staffortransportrequest_id }) => staffortransportrequest_id);
+
+        const where = {
+            status,
+            from: {
+                [Op.and]: [
+                    Sequelize.where(Sequelize.col('workstartdate'), '>=', checkindate),
+                    Sequelize.where(Sequelize.col('workstartdate'), '<=', checkoutdate),
+                ],
+            },
+            type,
+        };
+
+        if (excludedIds.length > 0) {
+            where.id = { [Op.notIn]: excludedIds };
         }
 
-        const assignmentPromises = employeeCategories.map(async (category) => {
-            const where = {
-                category_id: category.category_id,
-                status: 1,
-            };
+        let staffOrTransportRequests;
 
-            // if (search?.checkindate && search?.checkintime && search?.checkoutdate && search?.checkouttime) {
-                where.from = {
-                    [Op.and]: [
-                        Sequelize.where(Sequelize.col('workstartdate'), '>=', checkindate),
-                        Sequelize.where(Sequelize.col('workstartdate'), '<=', checkoutdate),
-                    ],
-                };
-            // }
-
-            const excludedIds = interests.map((interest) => interest.staffortransportrequest_id);
-
-            if (excludedIds.length > 0) {
-                where.id = {
-                    [Op.notIn]: excludedIds,
-                };
-            }
-            where['type'] = search.type;
-            const staffOrTransportRequests = await StaffOrTransportRequestModel.findAll({
-                where,
+        if (search.type === 'transport') {
+            staffOrTransportRequests = await StaffOrTransportRequestModel.findAll({ where });
+        } else {
+            const employeeCategories = await EmployeeCategoryModel.findAll({
+                where: { employee_id, status },
             });
 
-            return staffOrTransportRequests;
-        });
+            if (employeeCategories.length === 0) {
+                return res.json([]);
+            }
 
-        const assignmentResults = await Promise.all(assignmentPromises);
-        const assignments = assignmentResults.flat();
+            const assignmentPromises = employeeCategories.map(async (category) => {
+                const categoryWhere = {
+                    category_id: category.category_id,
+                    status: 1,
+                    from: {
+                        [Op.and]: [
+                            Sequelize.where(Sequelize.col('workstartdate'), '>=', checkindate),
+                            Sequelize.where(Sequelize.col('workstartdate'), '<=', checkoutdate),
+                        ],
+                    },
+                };
 
+                const categoryExcludedIds = interests.map((interest) => interest.staffortransportrequest_id);
+
+                if (categoryExcludedIds.length > 0) {
+                    categoryWhere.id = { [Op.notIn]: categoryExcludedIds };
+                }
+
+                categoryWhere['type'] = search.type;
+
+                const categoryRequests = await StaffOrTransportRequestModel.findAll({
+                    where: categoryWhere,
+                });
+
+                return categoryRequests;
+            });
+
+            const assignmentResults = await Promise.all(assignmentPromises);
+            staffOrTransportRequests = assignmentResults.flat();
+        }
+
+        const assignments = staffOrTransportRequests.flat();
         res.json(assignments);
+
     } catch (error) {
         console.error('Error fetching assignments:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 };
+
 
 
 exports.successAssignments = async (req, res) => {
