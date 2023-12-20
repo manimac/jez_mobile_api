@@ -13,6 +13,7 @@ const EmployeeExperienceModel = MODELS.employeeexperiense;
 const StaffOrTransportRequestModel = MODELS.staffOrTransportRequest;
 const StaffOrTransportInterestModel = MODELS.staffOrTransportInterest;
 const staffOrTransportWorkingHistoryModel = MODELS.staffOrTransportWorkingHistory;
+const CategoryModel = MODELS.category;
 
 
 // SET STORAGE
@@ -272,6 +273,7 @@ exports.getAssignments = async (req, res) => {
 
                 const categoryRequests = await StaffOrTransportRequestModel.findAll({
                     where: categoryWhere,
+                    include: [CategoryModel]
                 });
 
                 return categoryRequests;
@@ -316,6 +318,7 @@ exports.successAssignments = async (req, res) => {
         where.type = search.type;
         const staffOrTransportRequests = await StaffOrTransportRequestModel.findAll({
             where: where,
+            include: [CategoryModel]
         });
 
         res.json(staffOrTransportRequests);
@@ -348,7 +351,7 @@ exports.confirmAssignments = async (req, res) => {
         where.type = search.type;
         const staffOrTransportRequests = await StaffOrTransportRequestModel.findAll({
             where,
-            include: [staffOrTransportWorkingHistoryModel]
+            include: [staffOrTransportWorkingHistoryModel, CategoryModel]
         });
 
         res.json(staffOrTransportRequests);
@@ -389,6 +392,7 @@ exports.pendingAssignments = async (req, res) => {
 
             const staffOrTransportRequests = await StaffOrTransportRequestModel.findAll({
                 where,
+                include: [CategoryModel]
             });
 
             return staffOrTransportRequests;
