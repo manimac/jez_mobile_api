@@ -15,6 +15,7 @@ router.get("/terms-and-condition", common.getTermAndCondition);
 router.post("/forget", user.forget);
 router.get("/user/verification/:id/:token", user.verifyUser);
 router.post("/reset/password", user.resetPassword);
+router.get('/filter/locations', common.allFilterLocations);
 
 /** Profile Screen */
 router.get("/user/get/:id", user.getUser);
@@ -128,7 +129,6 @@ router.post("/hoursUpdate", employer.hoursUpdate);
 
 
 //backup
-router.get('/filter/locations', common.allFilterLocations);
 router.get('/filtersOptions', common.filtersOptions);
 router.post('/home/update', common.updateHome);
 router.post('/home/peek', common.updatePeekHour);
