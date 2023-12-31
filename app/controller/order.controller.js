@@ -2179,83 +2179,143 @@ exports.userfindinvoice = async function (req, res) {
 }
 
 /** Screenshots  */
+// exports.upsertScreenshots = function (req, res) {
+//     // var upload = multer({ storage: storage }).single('thumbnail');
+//     var upload = multer({ storage: screenShotStorage }).fields([{
+//         name: 'initialimage1',
+//         maxCount: 1
+//     }, {
+//         name: 'initialimage2',
+//         maxCount: 1
+//     }, {
+//         name: 'initialimage3',
+//         maxCount: 1
+//     }, {
+//         name: 'initialimage4',
+//         maxCount: 1
+//     }, {
+//         name: 'completedimage1',
+//         maxCount: 1
+//     }, {
+//         name: 'completedimage2',
+//         maxCount: 1
+//     }, {
+//         name: 'completedimage3',
+//         maxCount: 1
+//     }, {
+//         name: 'completedimage4',
+//         maxCount: 1
+//     }, {
+//         name: 'additionstartimage',
+//         maxCount: 1
+//     }, {
+//         name: 'additionendimage',
+//         maxCount: 1
+//     }
+//     ]);
+//     upload(req, res, function (err) {
+//         if (err) {
+//             res.status(500).send(err)
+//         }
+//         ScreenshotModel.findOne({
+//             where: { orderhistory_id: req.body.orderhistory_id, status: 1 },
+//         }).then(function (resp) {
+//             if (resp) {
+//                 req.body.initialimage1 = res.req.files && (res.req.files.initialimage1 && res.req.files.initialimage1[0].filename) || resp.initialimage1;
+//                 req.body.initialimage2 = res.req.files && (res.req.files.initialimage2 && res.req.files.initialimage2[0].filename) || resp.initialimage2;
+//                 req.body.initialimage3 = res.req.files && (res.req.files.initialimage3 && res.req.files.initialimage3[0].filename) || resp.initialimage3;
+//                 req.body.initialimage4 = res.req.files && (res.req.files.initialimage4 && res.req.files.initialimage4[0].filename) || resp.initialimage4;
+//                 req.body.completedimage1 = res.req.files && (res.req.files.completedimage1 && res.req.files.completedimage1[0].filename) || resp.completedimage1;
+//                 req.body.completedimage2 = res.req.files && (res.req.files.completedimage2 && res.req.files.completedimage2[0].filename) || resp.completedimage2;
+//                 req.body.completedimage3 = res.req.files && (res.req.files.completedimage3 && res.req.files.completedimage3[0].filename) || resp.completedimage3;
+//                 req.body.completedimage4 = res.req.files && (res.req.files.completedimage4 && res.req.files.completedimage4[0].filename) || resp.completedimage4;
+//                 req.body.additionstartimage = res.req.files && (res.req.files.additionstartimage && res.req.files.additionstartimage[0].filename) || resp.additionstartimage;
+//                 req.body.additionendimage = res.req.files && (res.req.files.additionendimage && res.req.files.additionendimage[0].filename) || resp.additionendimage;
+//                 resp.update(req.body).then(function (result) {
+//                     res.send(result);
+//                 }).catch((err) => {
+//                     res.status(500).send(err)
+//                 })
+//             } else {
+//                 req.body.initialimage1 = res.req.files && (res.req.files.initialimage1 && res.req.files.initialimage1[0].filename) || null;
+//                 req.body.initialimage2 = res.req.files && (res.req.files.initialimage2 && res.req.files.initialimage2[0].filename) || null;
+//                 req.body.initialimage3 = res.req.files && (res.req.files.initialimage3 && res.req.files.initialimage3[0].filename) || null;
+//                 req.body.initialimage4 = res.req.files && (res.req.files.initialimage4 && res.req.files.initialimage4[0].filename) || null;
+//                 req.body.completedimage1 = res.req.files && (res.req.files.completedimage1 && res.req.files.completedimage1[0].filename) || null;
+//                 req.body.completedimage2 = res.req.files && (res.req.files.completedimage2 && res.req.files.completedimage2[0].filename) || null;
+//                 req.body.completedimage3 = res.req.files && (res.req.files.completedimage3 && res.req.files.completedimage3[0].filename) || null;
+//                 req.body.completedimage4 = res.req.files && (res.req.files.completedimage4 && res.req.files.completedimage4[0].filename) || null;
+//                 req.body.additionstartimage = res.req.files && (res.req.files.additionstartimage && res.req.files.additionstartimage[0].filename) || null;
+//                 req.body.additionendimage = res.req.files && (res.req.files.additionendimage && res.req.files.additionendimage[0].filename) || null;
+//                 ScreenshotModel.create(req.body).then(function (respp) {
+//                     res.send(respp);
+//                 }).catch((err) => {
+//                     res.status(500).send(err)
+//                 })
+//             }
+//         });
+//     })
+// }
+
 exports.upsertScreenshots = function (req, res) {
-    // var upload = multer({ storage: storage }).single('thumbnail');
-    var upload = multer({ storage: screenShotStorage }).fields([{
-        name: 'initialimage1',
-        maxCount: 1
-    }, {
-        name: 'initialimage2',
-        maxCount: 1
-    }, {
-        name: 'initialimage3',
-        maxCount: 1
-    }, {
-        name: 'initialimage4',
-        maxCount: 1
-    }, {
-        name: 'completedimage1',
-        maxCount: 1
-    }, {
-        name: 'completedimage2',
-        maxCount: 1
-    }, {
-        name: 'completedimage3',
-        maxCount: 1
-    }, {
-        name: 'completedimage4',
-        maxCount: 1
-    }, {
-        name: 'additionstartimage',
-        maxCount: 1
-    }, {
-        name: 'additionendimage',
-        maxCount: 1
-    }
-    ]);
-    upload(req, res, function (err) {
-        if (err) {
-            res.status(500).send(err)
+    ScreenshotModel.findOne({
+        where: { orderhistory_id: req.body.orderhistory_id, status: 1 },
+    }).then(function (resp) {
+        if (resp) {
+            updateImages(req, res, resp);
+        } else {
+            createImages(req, res);
         }
-        ScreenshotModel.findOne({
-            where: { orderhistory_id: req.body.orderhistory_id, status: 1 },
-        }).then(function (resp) {
-            if (resp) {
-                req.body.initialimage1 = res.req.files && (res.req.files.initialimage1 && res.req.files.initialimage1[0].filename) || resp.initialimage1;
-                req.body.initialimage2 = res.req.files && (res.req.files.initialimage2 && res.req.files.initialimage2[0].filename) || resp.initialimage2;
-                req.body.initialimage3 = res.req.files && (res.req.files.initialimage3 && res.req.files.initialimage3[0].filename) || resp.initialimage3;
-                req.body.initialimage4 = res.req.files && (res.req.files.initialimage4 && res.req.files.initialimage4[0].filename) || resp.initialimage4;
-                req.body.completedimage1 = res.req.files && (res.req.files.completedimage1 && res.req.files.completedimage1[0].filename) || resp.completedimage1;
-                req.body.completedimage2 = res.req.files && (res.req.files.completedimage2 && res.req.files.completedimage2[0].filename) || resp.completedimage2;
-                req.body.completedimage3 = res.req.files && (res.req.files.completedimage3 && res.req.files.completedimage3[0].filename) || resp.completedimage3;
-                req.body.completedimage4 = res.req.files && (res.req.files.completedimage4 && res.req.files.completedimage4[0].filename) || resp.completedimage4;
-                req.body.additionstartimage = res.req.files && (res.req.files.additionstartimage && res.req.files.additionstartimage[0].filename) || resp.additionstartimage;
-                req.body.additionendimage = res.req.files && (res.req.files.additionendimage && res.req.files.additionendimage[0].filename) || resp.additionendimage;
-                resp.update(req.body).then(function (result) {
-                    res.send(result);
-                }).catch((err) => {
-                    res.status(500).send(err)
-                })
-            } else {
-                req.body.initialimage1 = res.req.files && (res.req.files.initialimage1 && res.req.files.initialimage1[0].filename) || null;
-                req.body.initialimage2 = res.req.files && (res.req.files.initialimage2 && res.req.files.initialimage2[0].filename) || null;
-                req.body.initialimage3 = res.req.files && (res.req.files.initialimage3 && res.req.files.initialimage3[0].filename) || null;
-                req.body.initialimage4 = res.req.files && (res.req.files.initialimage4 && res.req.files.initialimage4[0].filename) || null;
-                req.body.completedimage1 = res.req.files && (res.req.files.completedimage1 && res.req.files.completedimage1[0].filename) || null;
-                req.body.completedimage2 = res.req.files && (res.req.files.completedimage2 && res.req.files.completedimage2[0].filename) || null;
-                req.body.completedimage3 = res.req.files && (res.req.files.completedimage3 && res.req.files.completedimage3[0].filename) || null;
-                req.body.completedimage4 = res.req.files && (res.req.files.completedimage4 && res.req.files.completedimage4[0].filename) || null;
-                req.body.additionstartimage = res.req.files && (res.req.files.additionstartimage && res.req.files.additionstartimage[0].filename) || null;
-                req.body.additionendimage = res.req.files && (res.req.files.additionendimage && res.req.files.additionendimage[0].filename) || null;
-                ScreenshotModel.create(req.body).then(function (respp) {
-                    res.send(respp);
-                }).catch((err) => {
-                    res.status(500).send(err)
-                })
-            }
-        });
-    })
+    });
 }
+
+function updateImages(req, res, resp) {
+    const updateFields = ['initialimage1', 'initialimage2', 'initialimage3', 'initialimage4', 'completedimage1', 'completedimage2', 'completedimage3', 'completedimage4', 'additionstartimage', 'additionendimage'];
+
+    updateFields.forEach((fieldName) => {
+        let base64Data = req.body[fieldName];
+        if (base64Data) {
+            base64Data = base64Data.replace(/^data:image\/\w+;base64,/, '');
+            const buffer = Buffer.from(base64Data, 'base64');
+            let format = fieldName+"Format";
+            const filename = `${fieldName}-${Date.now()}.${req.body[format]}`; // Adjust the extension as needed
+
+            fs.writeFileSync(`./public/uploads/screenshot/${filename}`, buffer);
+
+            req.body[fieldName] = filename;
+        }
+    });
+
+    resp.update(req.body).then(function (result) {
+        res.send(result);
+    }).catch((err) => {
+        res.status(500).send(err);
+    });
+}
+
+function createImages(req, res) {
+    const createFields = ['initialimage1', 'initialimage2', 'initialimage3', 'initialimage4', 'completedimage1', 'completedimage2', 'completedimage3', 'completedimage4', 'additionstartimage', 'additionendimage'];
+
+    createFields.forEach((fieldName) => {
+        let base64Data = req.body[fieldName];
+        if (base64Data) {
+            base64Data = base64Data.replace(/^data:image\/\w+;base64,/, '');
+            const buffer = Buffer.from(base64Data, 'base64');
+            let format = fieldName+"Format";
+            const filename = `${fieldName}-${Date.now()}.${req.body[format]}`; // Adjust the extension as needed
+
+            fs.writeFileSync(`./public/uploads/screenshot/${filename}`, buffer);
+
+            req.body[fieldName] = filename;
+        }
+    });
+
+    ScreenshotModel.create(req.body).then(function (respp) {
+        res.send(respp);
+    }).catch((err) => {
+        res.status(500).send(err);
+    });
+};
 exports.orderHistoryUpdate = function (req, res) {
     OrderHistoryModel.findByPk(req.body.id).then(function (resp1) {
         resp1.update(req.body).then(function (result) {
