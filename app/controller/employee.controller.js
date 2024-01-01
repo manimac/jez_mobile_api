@@ -8,6 +8,7 @@ const fs = require('fs');
 const appUtil = require('../apputil');
 const MODELS = require("../models");
 const EmployeeModel = MODELS.employee;
+const UserModel = MODELS.users;
 const EmployeeCategoryModel = MODELS.employeecategory;
 const EmployeeExperienceModel = MODELS.employeeexperiense;
 const StaffOrTransportRequestModel = MODELS.staffOrTransportRequest;
@@ -262,6 +263,12 @@ exports.getAssignments = async (req, res) => {
                         ],
                     },
                 };
+                if(req.body.category_id){
+                    categoryWhere.category_id = [req.body.category_id];
+                }
+                if(req.body.title){
+                    categoryWhere.title = [req.body.title];
+                }
 
                 const categoryExcludedIds = interests.map((interest) => interest.staffortransportrequest_id);
 
@@ -404,5 +411,42 @@ exports.pendingAssignments = async (req, res) => {
     } catch (error) {
         console.error('Error fetching assignments:', error);
         res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+exports.userUpdate = async (req, res) => {
+    try {
+        var upload = multer({ storage: storage }).fields([{
+            name: 'profileimage',
+            maxCount: 2
+        }]);
+        upload(req, res, async function (err) {
+            if (err) {
+                throw err; 
+            }
+
+            const { id, userimage, username } = req.body;
+            const updatedUser = await UserModel.findByPk(id);
+
+            if (updatedUser && res.req && res.req.files && res.req.files.profileimage && Array.isArray(res.req.files.profileimage) && (res.req.files.profileimage.length>0)) {
+                updatedUser.userimage = res.req.files.profileimage[0] ? res.req.files.profileimage[0].filename : userimage;
+                await updatedUser.save();
+
+                const employee = await EmployeeModel.findOne({
+                    where: { user_id: id }
+                });
+
+                if (employee) {
+                    employee.profileimage = res.req.files.profileimage[0] ? res.req.files.profileimage[0].filename : userimage;
+                    await employee.save();
+                }
+
+                res.send(updatedUser);
+            } else {
+                res.status(404).send({ message: 'User not found' });
+            }
+        });
+    } catch (err) {
+        res.status(500).send(err.message || 'Internal Server Error');
     }
 };

@@ -58,6 +58,9 @@ router.post("/employer/create", employer.createEmployer);
 router.post("/employeruser/get", employer.getEmployerUser);
 router.post("/employeruser/update", employer.updateEmployerUser);
 
+router.post("/staffing/getFilterOptions", common.getFilterOptions);
+router.post("/employeeuser/update", employee.userUpdate);
+
 /** For auth enabled */
 router.use(authMiddware);
 router.post("/invers/devices-list", invers.deviceList);
