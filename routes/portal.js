@@ -9,6 +9,7 @@ const invers = require("../app/controller/inversapi.controller");
 const employee = require("../app/controller/employee.controller");
 const employer = require("../app/controller/employer.controller");
 const category = require("../app/controller/category.controller");
+const staffingModule = require("../app/controller/staffing-module.controller");
 const authMiddware = passport.authenticate("jwt", { session: false });
 
 router.get("/terms-and-condition", common.getTermAndCondition);
@@ -67,27 +68,24 @@ router.post("/invers/devices-list", invers.deviceList);
 router.post("/invers/lock-unlock", invers.lockUnlock);
 router.post("/invers/getStatus", invers.getStatus);
 
-router.post("/order/staff-transport-requests", order.staffOrTransportRequests);
-router.post(
-  "/order/staff-transport-request/create",
-  order.createStaffOrTransportRequest
-);
-router.post(
-  "/order/staff-transport-request/update",
-  order.updateStaffOrTransportRequest
-);
-router.delete(
-  "/order/staff-transport-request/delete/:id",
-  order.deleteStaffOrTransportRequest
-);
-router.post(
-  "/order/staff-transport-interest/create",
-  order.makeStaffOrTransportInterest
-);
-router.post(
-  "/order/staff-transport-interest/update",
-  order.updateStaffOrTransportInterest
-);
+
+//staffing module
+router.post("/staff-transport-request/create", staffingModule.createStaffOrTransportRequest);
+router.post("/staff-transport-request/assignmentUpdate", staffingModule.assignmentUpdate);
+router.post("/staff-transport-request/statusFilter", staffingModule.statusStaffOrTransportInterest);
+router.post("/staff-transport-request/get", staffingModule.staffOrTransportRequests);
+router.post("/staff-transport-request/update", staffingModule.updateStaffOrTransportRequest);
+router.delete("/staff-transport-request/delete/:id", staffingModule.deleteStaffOrTransportRequest);
+router.post("/staff-transport-interest/create", staffingModule.makeStaffOrTransportInterest);
+router.post("/staff-transport-interest/update",staffingModule.updateStaffOrTransportInterest);
+// router.post("/pendingStaffOrTransportInterest", staffingModule.pendingStaffOrTransportInterest);
+// router.post("/inprogressStaffOrTransportInterest", staffingModule.inprogressStaffOrTransportInterest);
+// router.post("/rejectedStaffOrTransportInterest", staffingModule.rejectedStaffOrTransportInterest);
+// router.post("/completedStaffOrTransportInterest", staffingModule.completedStaffOrTransportInterest);
+
+
+
+
 
 /** Screenshots update */
 router.post("/screenshot/upsert", order.upsertScreenshots);
@@ -123,11 +121,7 @@ router.post("/category/create", category.createCategory);
 router.post("/category/update", category.updateCategory);
 router.delete("/category/delete/:id", category.deleteCategory);
 
-router.post("/pendingStaffOrTransportInterest", employer.pendingStaffOrTransportInterest);
-router.post("/inprogressStaffOrTransportInterest", employer.inprogressStaffOrTransportInterest);
-router.post("/rejectedStaffOrTransportInterest", employer.rejectedStaffOrTransportInterest);
-router.post("/completedStaffOrTransportInterest", employer.completedStaffOrTransportInterest);
-router.post("/assignmentUpdate", employer.assignmentUpdate);
+
 router.post("/hoursUpdate", employer.hoursUpdate);
 
 

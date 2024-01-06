@@ -29,6 +29,7 @@ const staffOrTransportRequest = (sequelize, Sequelize) => {
         equipment: { type: Sequelize.STRING, allowNull: true },
         timecontroller: { type: Sequelize.STRING, allowNull: true },
         staffneeded: { type: Sequelize.STRING, allowNull: true },
+        staffaccepted: { type: Sequelize.STRING, allowNull: true },
         status: { type: Sequelize.INTEGER, defaultValue: 1 },
         image: { type: Sequelize.STRING, allowNull: true },
         path: {

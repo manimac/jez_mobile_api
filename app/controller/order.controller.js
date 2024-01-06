@@ -1082,28 +1082,7 @@ exports.makeOrder = function (req, res) {
     })
 }
 
-exports.staffOrTransportRequests = function (req, res) {
-    const USER = appUtil.getUser(req.headers.authorization);
-    let where = {};
-    where.employer_id = USER.id;
-    // where.status = 1;
-    if (req.body.status) {
-        where.status = req.body.status;
-    }
-    StaffOrTransportRequestModel.findAll(
-        {
-            where: where,
-            order: [
-                ['updatedAt', 'DESC']
-            ],
-            include: [CategoryModel]
-        },
-    ).then((resp) => {
-        res.send(resp);
-    }, function (err) {
-        res.status(500).send(err);
-    })
-}
+
 
 // exports.createStaffOrTransportRequest = function (req, res) {
 //     makeStaffOrTransportRequest(req.body).then((resp) => {
@@ -1147,46 +1126,7 @@ function makeStaffOrTransportRequest(body) {
 //     })
 // }
 
-exports.updateStaffOrTransportRequest = function (req, res) {
-    var upload = multer({ storage: assignmentStorage }).single('image');
-    upload(req, res, function(err) {
-        let returns = null;
-        req.body.image = res.req.file && res.req.file.filename || req.body.userimage;
-        StaffOrTransportRequestModel.findByPk(req.body.id).then(function(resp) {
-            resp.update(req.body).then(function(result) {
-                res.send(result);
-            });
-        })
-    });
-}
 
-exports.deleteStaffOrTransportRequest = function (req, res) {
-    StaffOrTransportRequestModel.findByPk(req.params.id).then(function (result) {
-        result.destroy().then((resp) => {
-            res.send(resp);
-        })
-    }, function (err) {
-        res.status(500).send(err);
-    })
-}
-
-exports.makeStaffOrTransportInterest = function (req, res) {
-    StaffOrTransportInterestModel.create(req.body).then((resp) => {
-        res.send(resp);
-    }, function (err) {
-        res.status(500).send(err);
-    })
-}
-
-exports.updateStaffOrTransportInterest = function (req, res) {
-    StaffOrTransportInterestModel.findByPk(req.body.id).then(function (result) {
-        result.update(req.body).then((resp) => {
-            res.send(resp);
-        })
-    }, function (err) {
-        res.status(500).send(err);
-    })
-}
 
 exports.checkAvailability = function (req, res) {
 
