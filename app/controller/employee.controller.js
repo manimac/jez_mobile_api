@@ -161,76 +161,67 @@ exports.getAssignments = async (req, res) => {
 
         const interests = await StaffOrTransportInterestModel.findAll({
             where: { employee_id },
-            // where: { employee_id, status },
         });
+
         let staffOrTransportRequests;
+
         if (search.type === 'transport') {
             const excludedIds = interests.map(({ staffortransportrequest_id }) => staffortransportrequest_id);
+
             const where = {
                 status,
-                from: {
-                    [Op.and]: [
-                        Sequelize.where(Sequelize.col('workstartdate'), '>=', checkindate),
-                        Sequelize.where(Sequelize.col('workstartdate'), '<=', checkoutdate),
-                    ],
-                },
+                from: { [Op.and]: [Sequelize.where(Sequelize.col('workstartdate'), '>=', checkindate),
+                                  Sequelize.where(Sequelize.col('workstartdate'), '<=', checkoutdate)] },
                 type,
             };
-    
+
             if (excludedIds.length > 0) {
                 where.id = { [Op.notIn]: excludedIds };
             }
+
             staffOrTransportRequests = await StaffOrTransportRequestModel.findAll({ where });
+
         } else {
             const employeeCategories = await EmployeeCategoryModel.findAll({
-                where: { employee_id, status },
+                where: { employee_id },
             });
 
             if (employeeCategories.length === 0) {
                 return res.json([]);
             }
 
-            const assignmentPromises = employeeCategories.map(async (category) => {
-                const categoryWhere = {
-                    category_id: category.category_id,
-                    status: 1,
-                    from: {
-                        [Op.and]: [
-                            Sequelize.where(Sequelize.col('workstartdate'), '>=', checkindate),
-                            Sequelize.where(Sequelize.col('workstartdate'), '<=', checkoutdate),
-                        ],
-                    },
-                    [Op.and]: [
-                        Sequelize.where(Sequelize.col('staffaccepted'), {
-                            [Op.lt]: Sequelize.col('staffneeded'),
-                        }),
-                    ],
-                };
-                if(req.body.category_id){
-                    categoryWhere.category_id = [req.body.category_id];
-                }
-                if(req.body.title){
-                    categoryWhere.title = [req.body.title];
-                }
+            const categoryIds = employeeCategories.map(category => category.category_id);
 
-                const categoryExcludedIds = interests.map((interest) => interest.staffortransportrequest_id);
+            const categoryWhere = {
+                category_id: categoryIds,
+                status,
+                from: { [Op.and]: [Sequelize.where(Sequelize.col('workstartdate'), '>=', checkindate),
+                                  Sequelize.where(Sequelize.col('workstartdate'), '<=', checkoutdate)] },
+                [Op.and]: [Sequelize.where(Sequelize.col('staffaccepted'), { [Op.lt]: Sequelize.col('staffneeded') })],
+            };
 
-                if (categoryExcludedIds.length > 0) {
-                    categoryWhere.id = { [Op.notIn]: categoryExcludedIds };
-                }
+            if (req.body.category_id) {
+                categoryWhere.category_id = [req.body.category_id];
+            }
 
-                categoryWhere['type'] = search.type;
+            if (req.body.title) {
+                categoryWhere.title = [req.body.title];
+            }
 
-                const categoryRequests = await StaffOrTransportRequestModel.findAll({
-                    where: categoryWhere,
-                    include: [CategoryModel]
-                });
+            const categoryExcludedIds = interests.map(interest => interest.staffortransportrequest_id);
 
-                return categoryRequests;
+            if (categoryExcludedIds.length > 0) {
+                categoryWhere.id = { [Op.notIn]: categoryExcludedIds };
+            }
+
+            categoryWhere.type = search.type;
+
+            const categoryRequests = await StaffOrTransportRequestModel.findAll({
+                where: categoryWhere,
+                include: [CategoryModel],
             });
 
-            const assignmentResults = await Promise.all(assignmentPromises);
-            staffOrTransportRequests = assignmentResults.flat();
+            staffOrTransportRequests = categoryRequests;
         }
 
         const assignments = staffOrTransportRequests.flat();
@@ -242,31 +233,39 @@ exports.getAssignments = async (req, res) => {
     }
 };
 
+
 exports.successAssignments = async (req, res) => {
     try {
-        where = {};
+        const { employee_id, search } = req.body;
+        const status = [0,3];
 
-        const search = req.body.search || {};
+        const where = { employee_id, status };        
+        const staffOrTransportInterest = await StaffOrTransportInterestModel.findAll({
+            where
+        });
+        if(staffOrTransportInterest.length==0){
+            return res.json([]);
+        }
+        const requestIds = staffOrTransportInterest.map(Interest => Interest.staffortransportrequest_id);
+        var requestWhere = {
+            id: requestIds,
+            type: search.type
+        }
         if (search && search.checkindate && search.checkintime && search.checkoutdate && search.checkouttime) {
-            search.checkindatetime = moment(search.checkindate + ' ' + search.checkintime, 'DD-MM-YYYY HH:mm');
-            search.checkoutdatetime = moment(search.checkoutdate + ' ' + search.checkouttime, 'DD-MM-YYYY HH:mm');
+            search.checkindatetime = moment(`${search.checkindate} ${search.checkintime}`, 'DD-MM-YYYY HH:mm');
+            search.checkoutdatetime = moment(`${search.checkoutdate} ${search.checkouttime}`, 'DD-MM-YYYY HH:mm');
             let checkindate = search.checkindate;
             let checkoutdate = search.checkoutdate;
-            where[Op.and] = [
-                {
-                    [Op.and]: [Sequelize.where(Sequelize.col('workstartdate'), '>=', checkindate)]
-                },
-                {
-                    [Op.and]: [Sequelize.where(Sequelize.col('workstartdate'), '<=', checkoutdate)]
-                }
-            ]
+            requestWhere.from = {
+                [Op.and]: [
+                    Sequelize.where(Sequelize.col('workstartdate'), '>=', checkindate),
+                    Sequelize.where(Sequelize.col('workstartdate'), '<=', checkoutdate),
+                ],
+            };
         }
-        where.employee_id = req.body.employee_id;
-        where.status = 3;
-        where.type = search.type;
         const staffOrTransportRequests = await StaffOrTransportRequestModel.findAll({
-            where: where,
-            include: [CategoryModel]
+            where: requestWhere,
+            include: [staffOrTransportWorkingHistoryModel, CategoryModel, StaffOrTransportInterestModel]
         });
 
         res.json(staffOrTransportRequests);
@@ -281,25 +280,33 @@ exports.confirmAssignments = async (req, res) => {
         const { employee_id, search } = req.body;
         const status = 2;
 
-        const where = { employee_id, status };
-
+        const where = { employee_id, status };        
+        const staffOrTransportInterest = await StaffOrTransportInterestModel.findAll({
+            where
+        });
+        if(staffOrTransportInterest.length==0){
+            return res.json([]);
+        }
+        const requestIds = staffOrTransportInterest.map(Interest => Interest.staffortransportrequest_id);
+        var requestWhere = {
+            id: requestIds,
+            type: search.type
+        }
         if (search && search.checkindate && search.checkintime && search.checkoutdate && search.checkouttime) {
             search.checkindatetime = moment(`${search.checkindate} ${search.checkintime}`, 'DD-MM-YYYY HH:mm');
             search.checkoutdatetime = moment(`${search.checkoutdate} ${search.checkouttime}`, 'DD-MM-YYYY HH:mm');
             let checkindate = search.checkindate;
             let checkoutdate = search.checkoutdate;
-            where.from = {
+            requestWhere.from = {
                 [Op.and]: [
                     Sequelize.where(Sequelize.col('workstartdate'), '>=', checkindate),
                     Sequelize.where(Sequelize.col('workstartdate'), '<=', checkoutdate),
                 ],
             };
         }
-
-        where.type = search.type;
         const staffOrTransportRequests = await StaffOrTransportRequestModel.findAll({
-            where,
-            include: [staffOrTransportWorkingHistoryModel, CategoryModel]
+            requestWhere,
+            include: [staffOrTransportWorkingHistoryModel, CategoryModel, StaffOrTransportInterestModel]
         });
 
         res.json(staffOrTransportRequests);
@@ -340,7 +347,7 @@ exports.pendingAssignments = async (req, res) => {
 
             const staffOrTransportRequests = await StaffOrTransportRequestModel.findAll({
                 where,
-                include: [CategoryModel]
+                include: [CategoryModel, StaffOrTransportInterestModel]
             });
 
             return staffOrTransportRequests;

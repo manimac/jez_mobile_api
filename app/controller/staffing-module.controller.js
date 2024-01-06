@@ -241,7 +241,8 @@ exports.statusStaffOrTransportInterest = function (req, res) {
                             model: CategoryModel
                         },
                         {
-                            model: staffOrTransportWorkingHistoryModel
+                            model: staffOrTransportWorkingHistoryModel,
+                            order: [['id', 'ASC']]
                         }
                     ]
                 },
