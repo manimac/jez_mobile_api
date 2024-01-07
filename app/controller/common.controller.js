@@ -29,7 +29,7 @@ const CertificateModel = MODELS.certificate;
 const CategoryModel = MODELS.category;
 const StaffOrTransportRequestModel = MODELS.staffOrTransportRequest;
 RandExp = require('randexp');
-
+const request = require('request');
 
 // SET STORAGE
 var storage = multer.diskStorage({
@@ -970,4 +970,32 @@ exports.updatecertificate = function (req, res) {
     }, (err) => {
         res.status(500).send(err);
     })
+}
+
+exports.mapautocomplete = function (req, res) {    
+    const cOptions = {
+        url: 'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=' + req.body.input + "&key=AIzaSyDRzC2926nlZ0VOWTn9QbHrfbBCDtj8IR8",
+        method: 'GET'
+    };
+    request(cOptions, function (err, resp) {
+        if (err) {
+            console.log(err);
+            res.status(500).send(err);
+        } else
+            res.send(resp);
+    });
+}
+
+exports.getPlaceById = function (req, res) {    
+    const cOptions = {
+        url: 'https://maps.googleapis.com/maps/api/place/details/json?place_id=' + req.body.input + "&key=AIzaSyDRzC2926nlZ0VOWTn9QbHrfbBCDtj8IR8",
+        method: 'GET'
+    };
+    request(cOptions, function (err, resp) {
+        if (err) {
+            console.log(err);
+            res.status(500).send(err);
+        } else
+            res.send(resp);
+    });
 }

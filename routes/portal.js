@@ -12,6 +12,11 @@ const category = require("../app/controller/category.controller");
 const staffingModule = require("../app/controller/staffing-module.controller");
 const authMiddware = passport.authenticate("jwt", { session: false });
 
+//Google map
+router.post("/mapautocomplete", common.mapautocomplete);
+router.post("/getPlaceById", common.getPlaceById);
+
+
 router.get("/terms-and-condition", common.getTermAndCondition);
 router.post("/forget", user.forget);
 router.get("/user/verification/:id/:token", user.verifyUser);
