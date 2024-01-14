@@ -148,19 +148,23 @@ exports.assignmentUpdate = async function (req, res) {
                 const dateArray = getDates(startDate, endDate);
 
                 if (Array.isArray(dateArray) && dateArray.length > 0) {
-                    await staffOrTransportWorkingHistoryModel.destroy({ where: { staffortransportrequest_id: order.id, employee_id } });
-                    for (const date of dateArray) {
-                        const obj = {
-                            date,
-                            hoursWorked: "",
-                            breakhours: "",
-                            comments: "",
-                            employer_id: order.employer_id,
-                            employee_id,
-                            staffortransportrequest_id: order.id,
-                        };
-                        await staffOrTransportWorkingHistoryModel.create(obj);
+                    let exist= await staffOrTransportWorkingHistoryModel.findOne({ where: { staffortransportrequest_id: order.id, employee_id } });
+                    if(!exist){
+                        for (const date of dateArray) {
+                            const obj = {
+                                date,
+                                hoursWorked: "",
+                                breakhours: "",
+                                comments: "",
+                                employer_id: order.employer_id,
+                                employee_id,
+                                staffortransportrequest_id: order.id,
+                            };
+                            await staffOrTransportWorkingHistoryModel.create(obj);
+                        }
                     }
+                    // await staffOrTransportWorkingHistoryModel.destroy({ where: { staffortransportrequest_id: order.id, employee_id } });
+                    
                 }
                 staffaccepted += 1;
                 if (staffneeded == staffaccepted) {

@@ -131,6 +131,7 @@ router.delete("/category/delete/:id", category.deleteCategory);
 
 
 router.post("/hoursUpdate", employer.hoursUpdate);
+router.post("/hoursSingleUpdate", employer.hoursSingleUpdate);
 
 
 //backup

@@ -204,6 +204,16 @@ exports.hoursUpdate = async function (req, res) {
     }
 };
 
+exports.hoursSingleUpdate = async function (req, res) {
+    try {
+        const result = await staffOrTransportWorkingHistoryModel.findByPk(req.body.id);
+        await result.update(req.body);
+        res.send({ success: true });
+    } catch (err) {
+        res.status(500).send(err);
+    }
+};
+
 // exports.filterHoursemployee = async function (req, res) {
 //     try {
 //         const result = await staffOrTransportWorkingHistoryModel.findAll({task.id});

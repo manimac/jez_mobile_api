@@ -534,9 +534,25 @@ exports.createProduct = function (req, res) {
     }, {
         name: 'images',
         maxCount: 10
+    }, {
+        name: 'image1',
+        maxCount: 1
+    }, {
+        name: 'image2',
+        maxCount: 1
+    }, {
+        name: 'image3',
+        maxCount: 1
+    }, {
+        name: 'image4',
+        maxCount: 1
     }]);
     upload(req, res, function (err) {
         req.body.thumbnail = res.req.files && (res.req.files.thumbnail && res.req.files.thumbnail[0].filename);
+        req.body.image1 = res.req.files && (res.req.files.image1 && res.req.files.image1[0].filename);
+        req.body.image2 = res.req.files && (res.req.files.image2 && res.req.files.image2[0].filename);
+        req.body.image3 = res.req.files && (res.req.files.image3 && res.req.files.image3[0].filename);
+        req.body.image4 = res.req.files && (res.req.files.image4 && res.req.files.image4[0].filename);
         req.body.status = 1;
         ProductModel.create(req.body).then(async function (product) {
             if (res.req.files && res.req.files.images) {
@@ -587,10 +603,26 @@ exports.updateProduct = function (req, res) {
     }, {
         name: 'images',
         maxCount: 10
+    }, {
+        name: 'image1',
+        maxCount: 1
+    }, {
+        name: 'image2',
+        maxCount: 1
+    }, {
+        name: 'image3',
+        maxCount: 1
+    }, {
+        name: 'image4',
+        maxCount: 1
     }]);
     upload(req, res, function (err) {
         ProductModel.findByPk(req.body.id).then(function (result) {
             req.body.thumbnail = res.req.files && (res.req.files.thumbnail && res.req.files.thumbnail[0].filename) || result.thumbnail;
+            req.body.image1 = res.req.files && (res.req.files.image1 && res.req.files.image1[0].filename);
+            req.body.image2 = res.req.files && (res.req.files.image2 && res.req.files.image2[0].filename);
+            req.body.image3 = res.req.files && (res.req.files.image3 && res.req.files.image3[0].filename);
+            req.body.image4 = res.req.files && (res.req.files.image4 && res.req.files.image4[0].filename);
             result.update(req.body).then((resp) => {
                 result.images = [];
                 async.eachSeries(res.req.files.images, function (image, callback) {

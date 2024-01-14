@@ -5,6 +5,9 @@ const staffOrTransportWorkingHistory = (sequelize, Sequelize) => {
         hoursWorked: { type: Sequelize.STRING, allowNull: true },
         breakhours: { type: Sequelize.STRING, allowNull: true },
         comments: { type: Sequelize.STRING, allowNull: true },
+        starttime: { type: Sequelize.STRING, allowNull: true },
+        endtime: { type: Sequelize.STRING, allowNull: true },
+        status: { type: Sequelize.INTEGER, defaultValue: 0 },
     })
 
     return staffOrTransportWorking
