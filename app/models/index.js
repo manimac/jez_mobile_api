@@ -63,6 +63,7 @@ db.specification = require("./specification.model")(sequelize, Sequelize);
 db.productspecification = require("./productspecification.model")(sequelize, Sequelize);
 db.category = require("./category.model")(sequelize, Sequelize);
 db.staffOrTransportWorkingHistory = require("./staffrortransportworkinghistory.model")(sequelize, Sequelize);
+db.orderSharing = require("./ordersharing.model")(sequelize, Sequelize);
 
 // db.transportmenu = require("./transportmenu.model")(sequelize, Sequelize);
 // db.transport = require("./transport.model")(sequelize, Sequelize);
@@ -168,6 +169,11 @@ db.product.belongsTo(db.filter, { foreignKey: 'nationality', targetKey: 'id' });
 db.product.belongsTo(db.filter, { foreignKey: 'voertuig', targetKey: 'id' });
 
 db.productimage.belongsTo(db.product, { foreignKey: 'product_id', targetKey: 'id' });
+
+
+db.orderSharing.belongsTo(db.orderhistory, { foreignKey: 'orderhistory_id', targetKey: 'id' })
+db.orderSharing.belongsTo(db.users, { foreignKey: 'user_id', targetKey: 'id' })
+db.orderhistory.hasMany(db.orderSharing, { foreignKey: 'orderhistory_id', targetKey: 'id' });
 
 // db.staffingmenu.hasMany(db.staffing, { foreignKey: 'beroep_id', targetKey: 'id' });
 // db.staffing.belongsTo(db.staffingmenu, { foreignKey: 'beroep_id', targetKey: 'id' });

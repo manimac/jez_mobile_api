@@ -19,6 +19,10 @@ const ProductModel = (sequelize, Sequelize) => {
         description: { type: Sequelize.TEXT, allowNull: true },
         status: { type: Sequelize.INTEGER, defaultValue: 1 },
         showinindex: { type: Sequelize.INTEGER, defaultValue: 0 },
+        image1: { type: Sequelize.STRING, allowNull: true },
+        image2: { type: Sequelize.STRING, allowNull: true },
+        image3: { type: Sequelize.STRING, allowNull: true },
+        image4: { type: Sequelize.STRING, allowNull: true },
         path: {
             type: Sequelize.VIRTUAL,
             get() {

@@ -21,6 +21,7 @@ const WithdrawRequestModel = MODELS.withdrawrequest;
 const ScreenshotModel = MODELS.screenshot;
 const ProductSpecificationModel = MODELS.productspecification;
 const CategoryModel = MODELS.category;
+const OrderSharingModel = MODELS.orderSharing;
 
 // SET STORAGE
 var storage = multer.diskStorage({
@@ -1028,8 +1029,14 @@ exports.makeOrder = function (req, res) {
                     orderhistory.maxcheckoutdateutc = search.maxcheckoutdateutc;
                 }
                 delete orderhistory.id;
-                OrderHistoryModel.create(orderhistory).then((history) => {
+                OrderHistoryModel.create(orderhistory).then(async (history) => {
                     resp.Orderhistories.push(history);
+                    var obj = {
+                        orderhistory_id: history.id,
+                        user_id: USER.id || null,
+                        owner: 1,
+                    }
+                    await OrderSharingModel.create(obj);
                     async.eachSeries(product['Extras'], function (extra, eCallback) {
                         if (extra.checked) {
                             let orderhistory = extra;
@@ -1473,7 +1480,7 @@ exports.ordersForApp = function (req, res) {
     let limit = req.body.limit || 1000;
     let orderHistoryWhere = { status: 1 };
     let where = {};
-    let endbooking = 0;
+    let endbooking = null;
     if (req.body.past) {
         endbooking = 1;
     }
@@ -1484,14 +1491,20 @@ exports.ordersForApp = function (req, res) {
     if (req.body.id) {
         orderHistoryWhere.id = req.body.id;
     }
-    // if (req.body.frontend) {
-    if (req.body.team_id)
-        where.team_id = req.body.team_id;
-    else
-        orderHistoryWhere.user_id = appUtil.getUser(req.headers.authorization).id || null;
-    // }
+    // if (req.body.team_id)
+    //     where.team_id = req.body.team_id;
+    // else
+    //     orderHistoryWhere.user_id = appUtil.getUser(req.headers.authorization).id || null;
+
+    sharingwhere = {
+        user_id : appUtil.getUser(req.headers.authorization).id || null
+    }
     OrderHistoryModel.findAndCountAll({
-        where: orderHistoryWhere
+        where: orderHistoryWhere,
+        include: [{
+            model: OrderSharingModel,
+            where: sharingwhere,
+        }]
     }).then((output) => {
         result.count = output.count;
         OrderHistoryModel.findAll({
@@ -1509,11 +1522,19 @@ exports.ordersForApp = function (req, res) {
                     },
                     required: false
                 }]
+            },
+            {
+                model: OrderSharingModel,
+                where: sharingwhere,
+                include: [UserModel]
             }, {
                 model: UserModel,
                 required: false
             }, {
                 model: ScreenshotModel,
+                required: false
+            }, {
+                model: ProductModel,
                 required: false
             }],
             order: [
@@ -2111,6 +2132,7 @@ exports.invoiceslist = function (req, res) {
     })
 }
 
+
 exports.userfindinvoice = async function (req, res) {
     const invoice = await stripe.invoices.retrieve(
         req.params.id
@@ -2301,3 +2323,59 @@ exports.productIdeal = async function (req, res) {
     // const encInput = Buffer.from(JSON.stringify(req.body)).toString('base64');
 
 }
+
+
+//invitations
+exports.invitations = function (req, res) {
+    let where = { orderhistory_id: req.body.id, owner: { [Op.ne]: 1 } }
+    OrderSharingModel.findAll({
+        where,
+        include:[
+            UserModel,
+        ],
+        order: [
+            ['createdAt', 'DESC']
+        ],
+    }).then(function (result) {
+        res.send(result);
+    }, function (err) {
+        res.status(500).send(err);
+    })
+}
+
+exports.createinvitation = async function (req, res) {
+    try {
+        let user = await UserModel.findOne({
+            where: { email: req.body.email }
+        });
+        if (user) {
+            let userOrder = await OrderSharingModel.findOne({
+                where: { user_id: user.id, orderhistory_id: req.body.id }
+            });
+            if (userOrder) {
+                res.status(500).send('Already user can added to this booking');
+            } else {
+                var obj = {
+                    user_id: user.id,
+                    orderhistory_id: req.body.id,
+                    owner: 0
+                }
+                let createdEntry = await OrderSharingModel.create(obj);
+                res.send(createdEntry || null);
+            }
+        } else {
+            res.status(500).send('Email not found');
+        }
+    } catch (err) {
+        res.status(500).send(err.message || 'Internal Server Error');
+    }
+};
+
+exports.removeinvitation = async function (req, res) {
+    try {
+        let result = await OrderSharingModel.destroy({ where: { user_id: req.body.userid, orderhistory_id:  req.body.orderhistory_id} });
+        res.status(200).send({ user: result });
+    } catch (err) {
+        res.status(500).send(err.message || 'Internal Server Error');
+    }
+};
