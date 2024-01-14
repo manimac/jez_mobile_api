@@ -305,7 +305,7 @@ exports.confirmAssignments = async (req, res) => {
             };
         }
         const staffOrTransportRequests = await StaffOrTransportRequestModel.findAll({
-            requestWhere,
+            where: requestWhere,
             include: [staffOrTransportWorkingHistoryModel, CategoryModel, StaffOrTransportInterestModel]
         });
 
