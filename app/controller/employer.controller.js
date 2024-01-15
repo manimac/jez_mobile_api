@@ -16,6 +16,7 @@ const StaffOrTransportRequestModel = MODELS.staffOrTransportRequest;
 const StaffOrTransportInterestModel = MODELS.staffOrTransportInterest;
 const CategoryModel = MODELS.category;
 const staffOrTransportWorkingHistoryModel = MODELS.staffOrTransportWorkingHistory;
+const UserModel = MODELS.users;
 
 // SET STORAGE
 var storage = multer.diskStorage({
@@ -208,6 +209,9 @@ exports.hoursSingleUpdate = async function (req, res) {
     try {
         const result = await staffOrTransportWorkingHistoryModel.findByPk(req.body.id);
         await result.update(req.body);
+        const employee = await EmployeeModel.findOne({ where: { id: result.employee_id }});
+        const user = await UserModel.findOne({ where: { id: employee.user_id }});
+        appUtil.hoursUpdate(user, req.body.status);
         res.send({ success: true });
     } catch (err) {
         res.status(500).send(err);

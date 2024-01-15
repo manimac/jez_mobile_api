@@ -564,3 +564,39 @@ function generateOTP() {
     }
     return otp;
 }
+
+exports.hoursUpdate = function (user, status) {
+    readHTMLFile('./app/mail/email-temp.html', function (err, html) {
+        var template = handlebars.compile(html);
+        let ms = '';
+        if(status == 1){
+            ms = `Your hours rejected. Please verify and enter again`
+        }
+        else if(status == 2){
+            ms =  `Your hours verified successfully`
+        }
+        let comments = (status == 0) ? `New hours updated for ` + user.firstname + ' ' + user.lastname : ms;
+        var replacements = {
+            username:(status == 0) ? 'Admin': user.firstname + ' ' + user.lastname,
+            message: comments,
+            message2: '',
+        };
+        let subjectMdg = (status == 0) ? `Hours updated` : `Hours verified`;
+
+        var htmlToSend = template(replacements);
+        // send mail with defined transport object
+        let detail = {
+            from: 'support@jezsel.nl', // sender address
+            to: (status == 0) ? 'manimac333@gmail.com' : user.email, // list of receivers
+            subject: subjectMdg, // Subject lin
+            html: htmlToSend
+        }
+        transporter.sendMail(detail, function (error, info) {
+            if (error) {
+                return (error);
+            } else {
+                return (true);
+            }
+        })
+    })
+}
