@@ -104,6 +104,8 @@ router.post("/employee/update", employee.updateEmployee);
 router.post("/employer/get", employer.getEmployer);
 router.post("/employer/update", employer.updateEmployer);
 router.post("/employee/createCategories", employee.createCategories);
+router.post("/employee/removeCategories", employee.removeCategories);
+router.post("/employee/createCategory", employee.createCategory);
 router.post("/employee/createExperience", employee.createExperience);
 router.post("/employee/getExperience", employee.getExperience);
 

@@ -28,6 +28,7 @@ const AdvertisementModel = MODELS.advertisement;
 const CertificateModel = MODELS.certificate;
 const CategoryModel = MODELS.category;
 const StaffOrTransportRequestModel = MODELS.staffOrTransportRequest;
+const EmployeeCategoryModel = MODELS.employeecategory;
 RandExp = require('randexp');
 const request = require('request');
 
@@ -64,6 +65,15 @@ exports.getFilterOptions = async function (req, res) {
             StaffOrTransportRequestModel.findAll({where: req.body, attributes: ['title', 'id', 'category_id']})
         ]);
 
+        let userCategories; // Declare userCategories outside the if block
+
+        if (req.body.employee_id) {
+            userCategories = await EmployeeCategoryModel.findAll({
+                where: { employee_id: req.body.employee_id },
+                include: [CategoryModel]
+            });
+        }
+
         if (categoryResp && staffOrTransportResp) {
             categoryResp.forEach(category => {
                 category.staffing = staffOrTransportResp
@@ -74,12 +84,14 @@ exports.getFilterOptions = async function (req, res) {
 
         res.send({
             category: categoryResp || [],
-            staffTransport: staffOrTransportResp || []
+            staffTransport: staffOrTransportResp || [],
+            userCategories: userCategories || []
         });
     } catch (err) {
         res.status(500).send(err);
     }
 };
+
 
 exports.withdrawRequests = function (req, res) {
     let user_id = appUtil.getUser(req.headers.authorization).id || null;

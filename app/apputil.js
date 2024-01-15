@@ -587,7 +587,7 @@ exports.hoursUpdate = function (user, status) {
         // send mail with defined transport object
         let detail = {
             from: 'support@jezsel.nl', // sender address
-            to: (status == 0) ? 'manimac333@gmail.com' : user.email, // list of receivers
+            to: (status == 0) ? 'support@jezsel.nl' : user.email, // list of receivers
             subject: subjectMdg, // Subject lin
             html: htmlToSend
         }

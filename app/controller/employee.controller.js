@@ -398,3 +398,25 @@ exports.userUpdate = async (req, res) => {
         res.status(500).send(err.message || 'Internal Server Error');
     }
 };
+
+exports.removeCategories = async (req, res) => {
+    try {
+        var removeCategories = await EmployeeCategoryModel.destroy({ where: { employee_id: req.body.employee_id, category_id: req.body.category_id } });
+
+        res.status(201).json(removeCategories);
+    } catch (error) {
+        console.error('Error removing categories:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+exports.createCategory = async (req, res) => {
+    try {
+        var addCategories = await EmployeeCategoryModel.create(req.body);
+
+        res.status(201).json(addCategories);
+    } catch (error) {
+        console.error('Error removing categories:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
