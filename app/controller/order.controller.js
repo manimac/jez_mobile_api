@@ -1481,6 +1481,7 @@ exports.ordersForApp = function (req, res) {
     let endbooking = null;
     if (req.body.past) {
         endbooking = 1;
+        orderHistoryWhere.status = [0,1];
     }
     orderHistoryWhere.endbooking = endbooking;
     if (req.body.status) {
@@ -1719,19 +1720,17 @@ exports.myWallet = function (req, res) {
 }
 
 exports.cancelOrderHistory = function (req, res) {
-    req.body.canceleddate = moment().format('YYYY-MM-DD HH:mm:ss')
     OrderHistoryModel.findOne({
         where: {
             id: req.body.id
-        },
-        include: [{
-            model: OrderModel,
-            include: [{
-                model: UserModel,
-            }]
-        }],
+        }
     }).then(function (resp) {
-        resp.update(req.body).then(function (result) {
+        var obj = {
+            endbooking: 1,
+            status: req.body.status,
+            canceleddate: moment().format('YYYY-MM-DD HH:mm:ss')
+        }
+        resp.update(obj).then(function (result) {
             if (result.Order && result.Order.User) {
                 appUtil.cancelNotification(result.Order.User, result);
             }
