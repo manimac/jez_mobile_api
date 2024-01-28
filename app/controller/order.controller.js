@@ -1177,7 +1177,6 @@ exports.checkAvailability = function (req, res) {
     where.status = 1;
     where.type = req.body.type;
     where.product_id = search.product_id;
-    where.filterlocation_id = search.locationid;
     OrderHistoryModel.findOne({
         where,
         include: [OrderModel],
@@ -1193,17 +1192,7 @@ exports.checkAvailability = function (req, res) {
             if (resp.Order && resp.Order.user_id != user_id) {
                 res.send({ booked: true });
             } else {
-                /** Same user tried to book same time. */
                 let hWhere = {};
-                // hWhere[Op.or] = [{
-                //     checkindate: {
-                //         [Op.between]: [search.defaultcheckindatetimeex, search.defaultcheckoutdatetimeex]
-                //     }
-                // }, {
-                //     checkoutdate: {
-                //         [Op.between]: [search.defaultcheckindatetimeex, search.defaultcheckoutdatetimeex]
-                //     }
-                // }];
 
                 hWhere[Op.or] = [{
                     [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.defaultcheckindatetimeex),
@@ -1220,7 +1209,6 @@ exports.checkAvailability = function (req, res) {
                 hWhere.status = 1;
                 hWhere.type = req.body.type;
                 hWhere.product_id = search.product_id;
-                hWhere.filterlocation_id = search.locationid;
                 OrderHistoryModel.findOne({
                     where: hWhere,
                     include: [{
@@ -1292,7 +1280,6 @@ exports.checkAvailability = function (req, res) {
             hWhere.status = 1;
             //hWhere.type = req.body.type;
             hWhere.product_id = search.product_id;
-            hWhere.filterlocation_id = search.locationid;
             hWhere.type = [req.body.type, 'maintenance'];
             OrderHistoryModel.findOne({
                 where: hWhere,
