@@ -36,7 +36,9 @@ const OrderModel = (sequelize, Sequelize) => {
       	paymentLinkstatus: { type: Sequelize.INTEGER, defaultValue: 1 },
       	driverlicense: { type: Sequelize.STRING, allowNull: true },
       	maxcheckoutdateutc: { type: Sequelize.DATE, allowNull: true },
-        mail: { type: Sequelize.BOOLEAN, allowNull: true }
+        mail: { type: Sequelize.BOOLEAN, allowNull: true },
+        isreaded: { type: Sequelize.BOOLEAN, allowNull: true },
+        freebooking: { type: Sequelize.BOOLEAN, allowNull: true }
     })
 
     return Order

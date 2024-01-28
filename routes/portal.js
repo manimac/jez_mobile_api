@@ -44,6 +44,7 @@ router.post("/order/make-order", order.makeOrder);
 router.post("/order/update-status", order.updateOrder);
 router.post("/order/availability", order.checkAvailability);
 router.post("/order-history/update", order.orderHistoryUpdate);
+router.post("/order/update-read", order.updateRead);
 
 router.post("/products", product.products);
 router.get("/productfind/:id", product.getProductFind);
@@ -119,7 +120,6 @@ router.post("/employee/confirmAssignments", employee.confirmAssignments);
 router.post("/employer/listEmployer", employer.listEmployer);
 router.post("/employer/updateEmployerStatus", employer.updateEmployerStatus);
 
-router.post("/payment/ideal", order.productIdeal);
 
 router.post("/reset/password", common.resetPassword);
 router.post("/withdraw/create", common.createWithdrawRequest);
@@ -139,6 +139,7 @@ router.post("/hoursSingleUpdate", employer.hoursSingleUpdate);
 //backup
 router.get('/filtersOptions', common.filtersOptions);
 router.post('/home/update', common.updateHome);
+router.delete('/order/deleteOrder/:id', order.deleteOrder);
 router.post('/home/peek', common.updatePeekHour);
 router.post('/aboutus', common.updateAboutUs);
 router.post('/update-term-and-cond', common.updateTermAndCond);

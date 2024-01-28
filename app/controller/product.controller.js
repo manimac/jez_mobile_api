@@ -13,6 +13,7 @@ const UserModel = MODELS.users;
 const ExtraModel = MODELS.extra;
 const OrderModel = MODELS.order;
 const OrderHistoryModel = MODELS.orderhistory;
+const ScreenshotModel = MODELS.screenshot;
 const WithdrawRequestModel = MODELS.withdrawrequest;
 const FilterModel = MODELS.filter;
 const SpecificationModel = MODELS.specification;
@@ -58,7 +59,9 @@ exports.products = function (req, res) {
 
         where.status = 1;
         where.type = [req.body.type, 'maintenance'];
-        where.filterlocation_id = search.locationid;
+        if(search.locationid){
+            where.filterlocation_id = search.locationid;
+        }        
         if (appUtil.getUser(req.headers.authorization).id) {
             where.user_id = {
                 [Op.not]: appUtil.getUser(req.headers.authorization).id
@@ -74,7 +77,9 @@ exports.products = function (req, res) {
                 let userWhere = {};
                 userWhere.status = 1;
                 userWhere.type = [req.body.type, 'maintenance'];
-                userWhere.filterlocation_id = search.locationid;
+                if(search.locationid){
+                    userWhere.filterlocation_id = search.locationid;
+                }                
                 userWhere.user_id = appUtil.getUser(req.headers.authorization).id;
 
                 search.checkindatetime = moment(search.checkindate + ' ' + search.checkintime, 'DD-MM-YYYY HH:mm');
@@ -239,6 +244,10 @@ exports.products = function (req, res) {
                 {
                     model: ProductSpecificationModel,
                     include: [SpecificationModel],
+                    required: false
+                },{
+                    model: OrderHistoryModel,
+                    include: [ScreenshotModel],
                     required: false
                 }],
                 order: [

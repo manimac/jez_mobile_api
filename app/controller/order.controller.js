@@ -964,7 +964,7 @@ exports.findExtraByType = function (req, res) {
 exports.makeOrder = function (req, res) {
     delete req.body.id;
     const USER = appUtil.getUser(req.headers.authorization);
-    req.body.user_id = USER.id || null;
+    req.body.user_id = (req.body.freebooking)==1 ? req.body.user_id : USER.id || null;
     let checkOutDates = [];
     async.eachSeries(req.body.products, function (product, pCallback) {
         const search = product.search;
@@ -1000,14 +1000,20 @@ exports.makeOrder = function (req, res) {
             appUtil.sendOrderConfirmationMail(resp, req.body.type);
         }
         async.eachSeries(req.body.products, function (product, pCallback) {
-            if (product.type == 'rent' || product.type == 'Rent' || product.type == 'RENT') {
+            if (product.type == 'rent' || product.type == 'Rent' || product.type == 'RENT' || 'maintenance') {
                 let orderhistory = product;
                 orderhistory.order_id = resp.id;
                 orderhistory.product_id = product.id;
                 orderhistory.name = product.name;
                 orderhistory.price = product.priceperhr;
                 orderhistory.advancepaid = product.advancePayment;
-                orderhistory.user_id = USER.id || null;
+                if(req.body.freebooking==1){
+                    orderhistory.user_id = req.body.user_id;
+                }
+                else{
+                    orderhistory.user_id = USER.id || null;
+                }
+                
                 if (product.search) {
                     const search = product.search;
                     orderhistory.filterlocation_id = search.locationid;
@@ -2412,3 +2418,13 @@ exports.removeinvitation = async function (req, res) {
         res.status(500).send(err.message || 'Internal Server Error');
     }
 };
+
+exports.updateRead = function (req, res) {
+    OrderModel.findByPk(req.body.id).then(function (result) {
+        result.update(req.body).then((resp) => {
+            res.send(resp);
+        })
+    }, function (err) {
+        res.status(500).send(err);
+    })
+}
