@@ -32,6 +32,9 @@ const staffOrTransportRequest = (sequelize, Sequelize) => {
         staffaccepted: { type: Sequelize.STRING, allowNull: true },
         status: { type: Sequelize.INTEGER, defaultValue: 1 },
         image: { type: Sequelize.STRING, allowNull: true },
+        lat: { type: Sequelize.STRING, allowNull: true },
+        lng: { type: Sequelize.STRING, allowNull: true },
+        locationaddress: { type: Sequelize.STRING, allowNull: true },
         path: {
             type: Sequelize.VIRTUAL,
             get() {
