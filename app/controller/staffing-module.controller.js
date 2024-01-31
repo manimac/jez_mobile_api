@@ -13,6 +13,8 @@ const staffOrTransportWorkingHistoryModel = MODELS.staffOrTransportWorkingHistor
 const CategoryModel = MODELS.category;
 const EmployeeModel = MODELS.employee;
 const EmployeeExperienceModel = MODELS.employeeexperiense;
+const UserTokenModel = MODELS.usertoken;
+const request = require('request');
 
 
 // SET STORAGE
@@ -31,14 +33,22 @@ var assignmentStorage = multer.diskStorage({
 
 exports.createStaffOrTransportRequest = function (req, res) {
     var upload = multer({ storage: assignmentStorage }).single('image');
-    upload(req, res, function (err) {
+    upload(req, res, async function (err) {
         req.body.image = res.req.file && res.req.file.filename || req.body.image;
+        const userTokens = await UserTokenModel.findAll();
+        for (let i = 0; i < userTokens.length; i++) {
+            let obj = {
+                token: userTokens[i].token,
+                type: req.body.type == 'staffing' ? 'Staffing' : 'Transport',
+                msg: "We have a new order. Please look into this",
+            };
+            await appUtil.sendmessage(obj);
+        }
         StaffOrTransportRequestModel.create(req.body).then(function (resp) {
             resp.update(req.body).then(function (result) {
                 res.send(result);
             });
         })
-
     });
 }
 
@@ -125,7 +135,16 @@ exports.assignmentUpdate = async function (req, res) {
         let staffneeded = parseInt(requestResult.staffneeded) || 0;
         let staffaccepted = parseInt(requestResult.staffaccepted) || 0;
 
+        const userTokens = await UserTokenModel.findAll({where: {user_id:interestResult.user_id}});
         if (status == 3) {
+            for (let i = 0; i < userTokens.length; i++) {
+                let obj = {
+                    token: userTokens[i].token,
+                    type: requestResult == 'staffing' ? 'Staffing' : 'Transport',
+                    msg: "Completed your order. please check in the completed assignments",
+                };
+                await appUtil.sendmessage(obj);
+            }
             const interestCompletedCount = await StaffOrTransportInterestModel.count({
                 where: {
                     status: 3,
@@ -139,6 +158,14 @@ exports.assignmentUpdate = async function (req, res) {
                 await interestResult.update({ status });
             }
         } else if (status == 2) {
+            for (let i = 0; i < userTokens.length; i++) {
+                let obj = {
+                    token: userTokens[i].token,
+                    type: requestResult == 'staffing' ? 'Staffing' : 'Transport',
+                    msg: "Your order has been accepted.",
+                };
+                await appUtil.sendmessage(obj);
+            }
             if (staffneeded > staffaccepted) {
                 await interestResult.update({ status });
                 const workstartdate = order.workstartdate.split('-').reverse().join('-');
@@ -176,6 +203,16 @@ exports.assignmentUpdate = async function (req, res) {
                 return res.status(400).json({ message: 'Already employees assigned to this assignment' });
             }
         } else {
+            if(status == 0){
+                for (let i = 0; i < userTokens.length; i++) {
+                    let obj = {
+                        token: userTokens[i].token,
+                        type: requestResult == 'staffing' ? 'Staffing' : 'Transport',
+                        msg: "Your order has been rejected.",
+                    };
+                    await appUtil.sendmessage(obj);
+                }
+            }
             await interestResult.update({ status });
         }
 
@@ -268,7 +305,8 @@ exports.statusStaffOrTransportInterest = function (req, res) {
 }
 
 exports.makeStaffOrTransportInterest = function (req, res) {
-    StaffOrTransportInterestModel.create(req.body).then((resp) => {
+    StaffOrTransportInterestModel.create(req.body).then(async (resp) => {
+        await appUtil.interestUpdate(obj);
         res.send(resp);
     }, function (err) {
         res.status(500).send(err);

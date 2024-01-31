@@ -1023,7 +1023,7 @@ exports.sendmessage = function (req, res) {
         headers: headers,
         json: true,  // Set this to true to send JSON data
         body: {
-            to: "fR4v7IRaRyKpd6HmmqCqB7:APA91bF9y_uWgMOtfggtJYpyq1v9xz0SJ5ZYdTX20X2KM_DTjsLkXDxDw6V8ECR6ZLKeBYNCkARO3QmlYcDI-aIChGiDFfDDvIfw1NrOGADoI4GTxLrda7CKE8B_U6IOis0azgCiGYpr",
+            to: req.body.token,
             notification: {
                 title: "Success",
                 body: "There’s a new pickup order in line!",

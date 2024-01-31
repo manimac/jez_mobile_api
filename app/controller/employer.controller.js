@@ -16,7 +16,10 @@ const StaffOrTransportRequestModel = MODELS.staffOrTransportRequest;
 const StaffOrTransportInterestModel = MODELS.staffOrTransportInterest;
 const CategoryModel = MODELS.category;
 const staffOrTransportWorkingHistoryModel = MODELS.staffOrTransportWorkingHistory;
+const staffOrTransportRequestModel = MODELS.staffOrTransportRequest;
 const UserModel = MODELS.users;
+const UserTokenModel = MODELS.usertoken;
+const request = require('request');
 
 // SET STORAGE
 var storage = multer.diskStorage({
@@ -209,9 +212,24 @@ exports.hoursSingleUpdate = async function (req, res) {
     try {
         const result = await staffOrTransportWorkingHistoryModel.findByPk(req.body.id);
         await result.update(req.body);
-        const employee = await EmployeeModel.findOne({ where: { id: result.employee_id }});
-        const user = await UserModel.findOne({ where: { id: employee.user_id }});
-        appUtil.hoursUpdate(user, req.body.status);
+        const staffortransportrequestresult = await staffOrTransportRequestModel.findOne({ where: { id: result.staffortransportrequest_id  } });
+        const employee = await EmployeeModel.findOne({ where: { id: result.employee_id } });
+        const user = await UserModel.findOne({ where: { id: employee.user_id } });
+        
+        if (req.body.status!=0) {
+            const userTokens = await UserTokenModel.findAll();
+            for (let i = 0; i < userTokens.length; i++) {
+                let obj = {
+                    token: userTokens[i].token,
+                    type: staffortransportrequestresult.type == 'staffing' ? 'Staffing' : 'Transport',
+                    msg: req.body.status == 1 ? "Your hours has been rejected" : "Your hours has been verified successfully",
+                };
+                await appUtil.sendmessage(obj);
+            }
+        }
+        else{
+            appUtil.hoursUpdate(user, req.body.status);
+        }
         res.send({ success: true });
     } catch (err) {
         res.status(500).send(err);

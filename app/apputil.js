@@ -15,6 +15,7 @@ const stripe = require('stripe')('sk_live_51J15t6KmpImSnmCuWgFVswelXB7SK1jLyx8tF
 
 var jwtSecret = 'tportalsecret';
 exports.jwtSecret = jwtSecret;
+const request = require('request');
 
 var registerStatus = [
     { id: 1, value: "Registration" },
@@ -599,4 +600,62 @@ exports.hoursUpdate = function (user, status) {
             }
         })
     })
+}
+
+exports.interestUpdate = function (user, status) {
+    readHTMLFile('./app/mail/email-temp.html', function (err, html) {
+        var template = handlebars.compile(html);
+        let comments = `Your have new interest in your assignment`;
+        var replacements = {
+            username:'Admin',
+            message: comments,
+            message2: '',
+        };
+        let subjectMdg = `New Interest`;
+
+        var htmlToSend = template(replacements);
+        // send mail with defined transport object
+        let detail = {
+            from: 'support@jezsel.nl', // sender address
+            to: 'support@jezsel.nl', // list of receivers
+            subject: subjectMdg, // Subject lin
+            html: htmlToSend
+        }
+        transporter.sendMail(detail, function (error, info) {
+            if (error) {
+                return (error);
+            } else {
+                return (true);
+            }
+        })
+    })
+}
+
+exports.sendmessage = function (body) {
+    let headers = { 'Authorization': 'key=AAAAnG5n6m0:APA91bHvs4G6CpIV87WbzPwoh5hYqvgndQnxbaY_GDvoSzcHt82Jaqhp61s-9G1uGbNPIKJ9865D7kJS-kBjnQsETqTELvXR0W179sjMV8ev3UU_Cy8lOyEkKBb5TXbORs4XWfeQcAhZ', 'Accept': 'application/json', 'Content-Type': 'application/json' };
+    
+    const cOptions = {
+        url: 'https://fcm.googleapis.com/fcm/send',
+        method: 'POST',
+        headers: headers,
+        json: true,  // Set this to true to send JSON data
+        body: {
+            to: body.token,
+            notification: {
+                title: body.type,
+                body: body.msg,
+                sound: "default"
+            }
+        }
+    };
+
+    request(cOptions, function (err, resp) {
+        if (err) {
+            console.error(err);
+            return (err);
+        } else {
+            console.log(resp.body);
+            return (true);
+        }
+    });
 }
