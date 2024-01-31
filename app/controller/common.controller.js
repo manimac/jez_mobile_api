@@ -29,6 +29,7 @@ const CertificateModel = MODELS.certificate;
 const CategoryModel = MODELS.category;
 const StaffOrTransportRequestModel = MODELS.staffOrTransportRequest;
 const EmployeeCategoryModel = MODELS.employeecategory;
+const UserTokenModel = MODELS.usertoken;
 RandExp = require('randexp');
 const request = require('request');
 
@@ -1011,3 +1012,56 @@ exports.getPlaceById = function (req, res) {
             res.send(resp);
     });
 }
+
+
+exports.sendmessage = function (req, res) {
+    let headers = { 'Authorization': 'key=AAAAnG5n6m0:APA91bHvs4G6CpIV87WbzPwoh5hYqvgndQnxbaY_GDvoSzcHt82Jaqhp61s-9G1uGbNPIKJ9865D7kJS-kBjnQsETqTELvXR0W179sjMV8ev3UU_Cy8lOyEkKBb5TXbORs4XWfeQcAhZ', 'Accept': 'application/json', 'Content-Type': 'application/json' };
+    
+    const cOptions = {
+        url: 'https://fcm.googleapis.com/fcm/send',
+        method: 'POST',
+        headers: headers,
+        json: true,  // Set this to true to send JSON data
+        body: {
+            to: "fR4v7IRaRyKpd6HmmqCqB7:APA91bF9y_uWgMOtfggtJYpyq1v9xz0SJ5ZYdTX20X2KM_DTjsLkXDxDw6V8ECR6ZLKeBYNCkARO3QmlYcDI-aIChGiDFfDDvIfw1NrOGADoI4GTxLrda7CKE8B_U6IOis0azgCiGYpr",
+            notification: {
+                title: "Success",
+                body: "There’s a new pickup order in line!",
+                sound: "default"
+            }
+        }
+    };
+
+    request(cOptions, function (err, resp) {
+        if (err) {
+            console.error(err);
+            res.status(500).send(err);
+        } else {
+            console.log(resp.body);
+            res.send(resp.body);
+        }
+    });
+};
+
+
+
+exports.updatetoken = async function (req, res) {
+    try {
+        const existingToken = await UserTokenModel.findOne({
+            where: {
+                token: req.body.token,
+                user_id: req.body.user_id,
+            },
+        });
+        if (existingToken) {
+            const updatedToken = await existingToken.update(req.body);
+            res.send(updatedToken);
+        } else {
+            const newToken = await UserTokenModel.create(req.body);
+            res.send(newToken);
+        }
+    } catch (err) {
+        console.error('Error updating/creating token:', err);
+        res.status(500).send('Internal Server Error');
+    }
+};

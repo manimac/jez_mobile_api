@@ -148,13 +148,6 @@ exports.userUpdate = function (req, res) {
                 res.send(result);
             });
         })
-        // } else {
-        //     appUtil.updateUserDetail(req.body).then(function(resp) {
-        //         res.send(resp);
-        //     }, (err) => {
-        //         res.status(500).send(err);
-        //     })
-        // }
 
     });
 

@@ -13,9 +13,11 @@ const staffingModule = require("../app/controller/staffing-module.controller");
 const authMiddware = passport.authenticate("jwt", { session: false });
 
 //Google map
+router.post('/token/updatetoken', common.updatetoken);
 router.post("/mapautocomplete", common.mapautocomplete);
 router.post("/getPlaceById", common.getPlaceById);
-
+router.post("/pushnotification/sendmessage", common.sendmessage);
+router.post("/payment/ideal", order.productIdeal);
 
 router.get("/terms-and-condition", common.getTermAndCondition);
 router.post("/forget", user.forget);
@@ -98,6 +100,7 @@ router.post("/staff-transport-interest/update",staffingModule.updateStaffOrTrans
 
 /** Screenshots update */
 router.post("/screenshot/upsert", order.upsertScreenshots);
+router.post("/screenshot/get", order.getscreenshot);
 
 router.post("/employee/get", employee.getEmployee);
 router.post("/employee/create", employee.createEmployee);
@@ -176,4 +179,5 @@ router.get('/aboutus', common.getAboutUs);
 router.get('/certificate', common.getcertificate);
 router.get('/contactus', common.contactus);
 router.get('/faqs', common.faqs);
+
 module.exports = router;

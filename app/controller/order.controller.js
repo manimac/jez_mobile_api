@@ -1443,7 +1443,14 @@ exports.orders = function (req, res) {
         result.count = output.count;
         OrderModel.findAll({
             where: where,
-            include: [OrderHistoryModel, UserModel],
+            include: [
+                {
+                    model: OrderHistoryModel,
+                    include: [{
+                        model: ScreenshotModel
+                    }]
+                }, UserModel
+            ],
             order: [
                 ['createdAt', 'DESC']
             ],
@@ -2208,6 +2215,19 @@ exports.userfindinvoice = async function (req, res) {
 //         });
 //     })
 // }
+
+exports.getscreenshot = async function (req, res) {
+    try {
+        const screenshots = await ScreenshotModel.findOne({
+            where: { orderhistory_id: req.body.orderhistory_id },
+        });
+        res.send(screenshots);
+    } catch (err) {
+        console.error('Error fetching screenshots:', err);
+        res.status(500).send('Internal Server Error');
+    }
+};
+
 
 exports.upsertScreenshots = function (req, res) {
     ScreenshotModel.findOne({
