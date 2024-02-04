@@ -30,6 +30,7 @@ const CategoryModel = MODELS.category;
 const StaffOrTransportRequestModel = MODELS.staffOrTransportRequest;
 const EmployeeCategoryModel = MODELS.employeecategory;
 const UserTokenModel = MODELS.usertoken;
+const UserApplicantModel = MODELS.userapplicant;
 RandExp = require('randexp');
 const request = require('request');
 
@@ -63,7 +64,7 @@ exports.getFilterOptions = async function (req, res) {
     try {
         const [categoryResp, staffOrTransportResp] = await Promise.all([
             CategoryModel.findAll({}),
-            StaffOrTransportRequestModel.findAll({where: req.body, attributes: ['title', 'id', 'category_id']})
+            StaffOrTransportRequestModel.findAll({ where: req.body, attributes: ['title', 'id', 'category_id'] })
         ]);
 
         let userCategories; // Declare userCategories outside the if block
@@ -985,7 +986,7 @@ exports.updatecertificate = function (req, res) {
     })
 }
 
-exports.mapautocomplete = function (req, res) {    
+exports.mapautocomplete = function (req, res) {
     const cOptions = {
         url: 'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=' + req.body.input + "&key=AIzaSyDRzC2926nlZ0VOWTn9QbHrfbBCDtj8IR8",
         method: 'GET'
@@ -999,7 +1000,7 @@ exports.mapautocomplete = function (req, res) {
     });
 }
 
-exports.getPlaceById = function (req, res) {    
+exports.getPlaceById = function (req, res) {
     const cOptions = {
         url: 'https://maps.googleapis.com/maps/api/place/details/json?place_id=' + req.body.input + "&key=AIzaSyDRzC2926nlZ0VOWTn9QbHrfbBCDtj8IR8",
         method: 'GET'
@@ -1016,7 +1017,7 @@ exports.getPlaceById = function (req, res) {
 
 exports.sendmessage = function (req, res) {
     let headers = { 'Authorization': 'key=AAAAnG5n6m0:APA91bHvs4G6CpIV87WbzPwoh5hYqvgndQnxbaY_GDvoSzcHt82Jaqhp61s-9G1uGbNPIKJ9865D7kJS-kBjnQsETqTELvXR0W179sjMV8ev3UU_Cy8lOyEkKBb5TXbORs4XWfeQcAhZ', 'Accept': 'application/json', 'Content-Type': 'application/json' };
-    
+
     const cOptions = {
         url: 'https://fcm.googleapis.com/fcm/send',
         method: 'POST',
@@ -1063,5 +1064,55 @@ exports.updatetoken = async function (req, res) {
     } catch (err) {
         console.error('Error updating/creating token:', err);
         res.status(500).send('Internal Server Error');
+    }
+};
+
+
+exports.createApplicant = async function (req, res) {
+    UserApplicantModel.create(req.body).then(function () {
+        res.send(req.body);
+    }, function (err) {
+        res.status(500).send(err);
+    })
+}
+exports.getApplicant = async function (req, res) {
+    UserApplicantModel.findAll({
+        where: { user_id: req.body.user_id },
+    }).then(function (entries) {
+        res.send(entries || null)
+    }, function (err) {
+        res.status(500).send(err);
+    })
+}
+
+exports.sumsubwebook = async (req, res) => {
+    try {
+        const payload = req.body;
+        console.log('Received Sumsub Webhook:', payload);
+        if (payload.type === 'applicantReviewed' && payload.reviewResult) {
+            const userApplicant = await UserApplicantModel.findOne({
+                where: { applicantId: payload.applicantId },
+            });
+            if (userApplicant) {
+                const alreadyUser = await userModel.findOne({
+                    where: {
+                        id: userApplicant.user_id
+                    }
+                });
+                if (alreadyUser) {
+                    const updatedUser = alreadyUser.toJSON();
+                    updatedUser.is_id_verified =  (payload.reviewResult.reviewAnswer === 'GREEN') ? 1 : 0;
+                    await alreadyUser.update(updatedUser);
+                    res.status(200).send('Webhook received successfully');
+                } else {
+                    res.status(500).send('User not found');
+                }
+            }
+        } else {
+            res.status(200).send('Webhook received, but conditions not met for processing');
+        }
+    } catch (error) {
+        console.error('Error processing Sumsub Webhook:', error);
+        res.status(500).send({ message: 'Internal Server Error' });
     }
 };

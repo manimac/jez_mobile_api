@@ -964,7 +964,7 @@ exports.findExtraByType = function (req, res) {
 exports.makeOrder = function (req, res) {
     delete req.body.id;
     const USER = appUtil.getUser(req.headers.authorization);
-    req.body.user_id = (req.body.freebooking)==1 ? req.body.user_id : USER.id || null;
+    req.body.user_id = (req.body.freebooking) == 1 ? req.body.user_id : USER.id || null;
     let checkOutDates = [];
     async.eachSeries(req.body.products, function (product, pCallback) {
         const search = product.search;
@@ -1007,13 +1007,13 @@ exports.makeOrder = function (req, res) {
                 orderhistory.name = product.name;
                 orderhistory.price = product.priceperhr;
                 orderhistory.advancepaid = product.advancePayment;
-                if(req.body.freebooking==1){
+                if (req.body.freebooking == 1) {
                     orderhistory.user_id = req.body.user_id;
                 }
-                else{
+                else {
                     orderhistory.user_id = USER.id || null;
                 }
-                
+
                 if (product.search) {
                     const search = product.search;
                     orderhistory.filterlocation_id = search.locationid;
@@ -1105,11 +1105,11 @@ exports.makeOrder = function (req, res) {
 
 exports.createStaffOrTransportRequest = function (req, res) {
     var upload = multer({ storage: assignmentStorage }).single('image');
-    upload(req, res, function(err) {
+    upload(req, res, function (err) {
         let returns = null;
         req.body.image = res.req.file && res.req.file.filename || req.body.image;
-        StaffOrTransportRequestModel.create(req.body).then(function(resp) {
-            resp.update(req.body).then(function(result) {
+        StaffOrTransportRequestModel.create(req.body).then(function (resp) {
+            resp.update(req.body).then(function (result) {
                 res.send(result);
             });
         })
@@ -1481,7 +1481,7 @@ exports.ordersForApp = function (req, res) {
     let endbooking = null;
     if (req.body.past) {
         endbooking = 1;
-        orderHistoryWhere.status = [0,1];
+        orderHistoryWhere.status = [0, 1];
     }
     orderHistoryWhere.endbooking = endbooking;
     if (req.body.status) {
@@ -1496,7 +1496,7 @@ exports.ordersForApp = function (req, res) {
     //     orderHistoryWhere.user_id = appUtil.getUser(req.headers.authorization).id || null;
 
     sharingwhere = {
-        user_id : appUtil.getUser(req.headers.authorization).id || null
+        user_id: appUtil.getUser(req.headers.authorization).id || null
     }
     OrderHistoryModel.findAndCountAll({
         where: orderHistoryWhere,
@@ -2242,14 +2242,14 @@ exports.upsertScreenshots = function (req, res) {
 }
 
 function updateImages(req, res, resp) {
-    const updateFields = ['initialimage1', 'initialimage2', 'initialimage3', 'initialimage4', 'completedimage1', 'completedimage2', 'completedimage3', 'completedimage4', 'additionstartimage', 'additionendimage'];
+    const updateFields = ['initialimage1', 'initialimage2', 'initialimage3', 'initialimage4', 'completedimage1', 'completedimage2', 'completedimage3', 'completedimage4', 'additionstartimage', 'additionendimage', 'reportimage1', 'reportimage2', 'reportimage3', 'reportimage4'];
 
     updateFields.forEach((fieldName) => {
         let base64Data = req.body[fieldName];
         if (base64Data) {
             base64Data = base64Data.replace(/^data:image\/\w+;base64,/, '');
             const buffer = Buffer.from(base64Data, 'base64');
-            let format = fieldName+"Format";
+            let format = fieldName + "Format";
             const filename = `${fieldName}-${Date.now()}.${req.body[format]}`; // Adjust the extension as needed
 
             fs.writeFileSync(`./public/uploads/screenshot/${filename}`, buffer);
@@ -2273,7 +2273,7 @@ function createImages(req, res) {
         if (base64Data) {
             base64Data = base64Data.replace(/^data:image\/\w+;base64,/, '');
             const buffer = Buffer.from(base64Data, 'base64');
-            let format = fieldName+"Format";
+            let format = fieldName + "Format";
             const filename = `${fieldName}-${Date.now()}.${req.body[format]}`; // Adjust the extension as needed
 
             fs.writeFileSync(`./public/uploads/screenshot/${filename}`, buffer);
@@ -2335,40 +2335,106 @@ exports.orderHistoryUpdate = function (req, res) {
 // }
 
 exports.productIdeal = async function (req, res) {
-    stripeAmount = req.body.total * 100;
-    let pName = req.body.pname;
+    try {
+        stripeAmount = req.body.total * 100;
+        let pName = req.body.pname;
 
-    const session = await stripe.checkout.sessions.create({
-        line_items: [{
-            price_data: {
-                // To accept `ideal`, all line items must have currency: eur
-                currency: 'EUR',
-                product_data: {
-                    name: pName,
-                    metadata: {
-                        'id': '',
-                        'name': pName
-                    }
+        const session = await stripe.checkout.sessions.create({
+            line_items: [{
+                price_data: {
+                    currency: 'EUR',
+                    product_data: {
+                        name: pName,
+                        metadata: {
+                            'id': '',
+                            'name': pName
+                        }
+                    },
+                    unit_amount: Math.round(stripeAmount),
                 },
-                unit_amount: Math.round(stripeAmount),
-            },
-            quantity: 1,
-        }],
-        payment_method_types: [
-            'card',
-            'ideal',
-        ],
-        mode: 'payment',
-        invoice_creation: { enabled: true },
-        success_url: `${process.env.appUrl}payment-success`,
-        cancel_url: `${process.env.appUrl}payment-failure`,
-    });
+                quantity: 1,
+            }],
+            payment_method_types: ['card', 'ideal'],
+            mode: 'payment',
+            success_url: `${process.env.appUrl}payment-mobile-success`,
+            cancel_url: `${process.env.appUrl}payment-mobile-failure`,
+        });
 
-    res.json({ url: session.url, paymentchargeid: session.payment_intent, sessionId: session.id }) // <-- this is the changed line
+        const isOrder = await OrderModel.findOne({
+            where: {
+                id: req.body.id
+            }
+        });
 
-    // const encInput = Buffer.from(JSON.stringify(req.body)).toString('base64');
+        if (isOrder) {
+            const updatedOrder = isOrder.toJSON();
+            updatedOrder.intentid = session.payment_intent;
+            await OrderModel.update(updatedOrder, { where: { id: req.body.id } });
+            res.json({ url: session.url, paymentchargeid: session.payment_intent, sessionId: session.id });
+        } else {
+            res.status(500).send('Order not found');
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Internal Server Error');
+    }
+};
 
+
+exports.paymentWebhook = async function (req, res) {
+    const event = req.body; 
+    switch (event.type) {
+        case 'payment_intent.succeeded':
+            const paymentIntent = event.data.object;
+            var isOrder = await OrderModel.findOne({
+                where: {
+                    intentid: paymentIntent.id
+                }
+            });    
+            if (isOrder) {
+                const updatedOrder = isOrder.toJSON();
+                updatedOrder.status = 1;
+                await OrderModel.update(updatedOrder, { where: { intentid: paymentIntent.id } });
+            } else {
+                res.status(500).send('Order not found');
+            }
+            break;
+        case 'payment_method.canceled':
+            const paymentMethod = event.data.object;
+            isOrder = await OrderModel.findOne({
+                where: {
+                    intentid: paymentMethod.id
+                }
+            });    
+            if (isOrder) {
+                const updatedOrder = isOrder.toJSON();
+                updatedOrder.status = 2;
+                await OrderModel.update(updatedOrder, { where: { intentid: paymentMethod.id } });
+            } else {
+                res.status(500).send('Order not found');
+            }
+            break;
+        case 'payment_method.payment_failed':
+            const paymentFailed = event.data.object; 
+            isOrder = await OrderModel.findOne({
+                where: {
+                    intentid: paymentFailed.id
+                }
+            });    
+            if (isOrder) {
+                const updatedOrder = isOrder.toJSON();
+                updatedOrder.status = 2;
+                await OrderModel.update(updatedOrder, { where: { intentid: paymentFailed.id } });
+            } else {
+                res.status(500).send('Order not found');
+            }
+            break;
+        default:
+            console.log(`Unhandled event type ${event.type}`);
+    }
+    res.json({ received: true }); // Corrected from 'response.json' to 'res.json'
 }
+
 
 
 //invitations
@@ -2376,7 +2442,7 @@ exports.invitations = function (req, res) {
     let where = { orderhistory_id: req.body.id, owner: { [Op.ne]: 1 } }
     OrderSharingModel.findAll({
         where,
-        include:[
+        include: [
             UserModel,
         ],
         order: [
@@ -2419,7 +2485,7 @@ exports.createinvitation = async function (req, res) {
 
 exports.removeinvitation = async function (req, res) {
     try {
-        let result = await OrderSharingModel.destroy({ where: { user_id: req.body.userid, orderhistory_id:  req.body.orderhistory_id} });
+        let result = await OrderSharingModel.destroy({ where: { user_id: req.body.userid, orderhistory_id: req.body.orderhistory_id } });
         res.status(200).send({ user: result });
     } catch (err) {
         res.status(500).send(err.message || 'Internal Server Error');

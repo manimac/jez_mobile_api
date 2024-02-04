@@ -38,7 +38,8 @@ const OrderModel = (sequelize, Sequelize) => {
       	maxcheckoutdateutc: { type: Sequelize.DATE, allowNull: true },
         mail: { type: Sequelize.BOOLEAN, allowNull: true },
         isreaded: { type: Sequelize.BOOLEAN, allowNull: true },
-        freebooking: { type: Sequelize.BOOLEAN, allowNull: true }
+        freebooking: { type: Sequelize.BOOLEAN, allowNull: true },
+        intentid: { type: Sequelize.TEXT, allowNull: true }
     })
 
     return Order

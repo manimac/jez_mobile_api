@@ -11,6 +11,7 @@ const UserModel = (sequelize, Sequelize) => {
         status: { type: Sequelize.INTEGER, defaultValue: 1 },
         is_verified: { type: Sequelize.BOOLEAN, defaultValue: 0 },
         is_admin: { type: Sequelize.BOOLEAN, defaultValue: 0 },
+        is_id_verified: { type: Sequelize.BOOLEAN, defaultValue: 0 },
         newsletter: { type: Sequelize.BOOLEAN, defaultValue: 0 },
         termsandcondition: { type: Sequelize.BOOLEAN, defaultValue: 0 },
         is_favorite: { type: Sequelize.BOOLEAN, defaultValue: 0 },

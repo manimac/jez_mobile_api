@@ -24,23 +24,15 @@ db.category = require("./category.model")(sequelize, Sequelize);
 db.employeecategory = require("./employeecategory.model")(sequelize, Sequelize);
 db.employeenotification = require("./employeenotification.model")(sequelize, Sequelize);
 db.employeeexperiense = require("./employeeexperiense.model")(sequelize, Sequelize);
-// db.userDetails = require("./userdetail.model")(sequelize, Sequelize);
 
 db.home = require("./home.model")(sequelize, Sequelize);
 db.filterlocation = require("./filterlocation.model")(sequelize, Sequelize);
-// db.filtercity = require("./filtercity.model")(sequelize, Sequelize);
 db.faq = require("./faq.model")(sequelize, Sequelize);
 db.advertisement = require("./advertisement.model")(sequelize, Sequelize);
 db.filter = require("./filter.model")(sequelize, Sequelize);
 db.enquiry = require("./enquiry.model")(sequelize, Sequelize);
-// db.soort = require("./soort.model")(sequelize, Sequelize);
-// db.brandstof = require("./brandstof.model")(sequelize, Sequelize);
-// db.transmissie = require("./transmissie.model")(sequelize, Sequelize);
 db.product = require("./product.model")(sequelize, Sequelize);
 db.productimage = require("./productimage.model")(sequelize, Sequelize);
-
-// db.staffingmenu = require("./staffingmenu.model")(sequelize, Sequelize);
-// db.staffing = require("./staffing.model")(sequelize, Sequelize);
 
 db.about = require("./aboutus.model")(sequelize, Sequelize);
 db.termandcondition = require("./termsandcondition.model")(sequelize, Sequelize);
@@ -65,13 +57,7 @@ db.category = require("./category.model")(sequelize, Sequelize);
 db.staffOrTransportWorkingHistory = require("./staffrortransportworkinghistory.model")(sequelize, Sequelize);
 db.orderSharing = require("./ordersharing.model")(sequelize, Sequelize);
 db.usertoken = require("./usertoken.model")(sequelize, Sequelize);
-
-// db.transportmenu = require("./transportmenu.model")(sequelize, Sequelize);
-// db.transport = require("./transport.model")(sequelize, Sequelize);
-// db.transportregister = require("./transportregister.model")(sequelize, Sequelize);
-// db.vehicleregister = require("./vehicleregister.model")(sequelize, Sequelize);
-// db.staffingregister = require("./staffingregister.model")(sequelize, Sequelize);
-
+db.userapplicant = require("./userapplicant.model")(sequelize, Sequelize);
 
 
 /** relationship */
@@ -80,8 +66,6 @@ db.team.belongsTo(db.users, { foreignKey: 'user_id', targetKey: 'id' });
 db.users.belongsTo(db.team, { foreignKey: 'team_id', targetKey: 'id' });
 db.withdrawrequest.belongsTo(db.users, { foreignKey: 'user_id', targetKey: 'id' });
 db.withdrawrequest.belongsTo(db.team, { foreignKey: 'team_id', targetKey: 'id' });
-
-// db.product.hasMany(db.extra, { foreignKey: 'type', targetKey: 'type' });
 db.product.hasMany(db.extra, { foreignKey: 'type', sourceKey: 'type' });
 db.order.hasMany(db.orderhistory, { foreignKey: 'order_id', targetKey: 'id' });
 
@@ -123,8 +107,6 @@ db.orderhistory.belongsTo(db.users, { foreignKey: 'user_id', targetKey: 'id' });
 db.orderhistory.hasOne(db.screenshot, { foreignKey: 'orderhistory_id', targetKey: 'id' })
 db.screenshot.belongsTo(db.orderhistory, { foreignKey: 'orderhistory_id', targetKey: 'id' })
 
-// db.category.belongsTo(db.employeruser, { foreignKey: 'employer_id', targetKey: 'id' });
-
 db.staffOrTransportRequest.belongsTo(db.category, { foreignKey: 'category_id', targetKey: 'id' });
 
 db.staffOrTransportRequest.hasMany(db.staffOrTransportInterest, { foreignKey: 'staffortransportrequest_id', targetKey: 'id' });
@@ -134,24 +116,7 @@ db.staffOrTransportWorkingHistory.belongsTo(db.employeruser, { foreignKey: 'empl
 db.staffOrTransportWorkingHistory.belongsTo(db.employee, { foreignKey: 'employee_id', targetKey: 'id' });
 db.staffOrTransportWorkingHistory.belongsTo(db.staffOrTransportRequest, { foreignKey: 'staffortransportrequest_id', targetKey: 'id' });
 db.staffOrTransportRequest.hasMany(db.staffOrTransportWorkingHistory, { foreignKey: 'staffortransportrequest_id', targetKey: 'id' });
-// db.transportregister.belongsTo(db.users, { foreignKey: 'created_by', targetKey: 'id' });
-// db.transportregister.belongsTo(db.users, { foreignKey: 'updated_by', targetKey: 'id' });
-
-// db.vehicleregister.belongsTo(db.users, { foreignKey: 'created_by', targetKey: 'id' });
-// db.vehicleregister.belongsTo(db.users, { foreignKey: 'updated_by', targetKey: 'id' });
-
-// db.staffingregister.belongsTo(db.users, { foreignKey: 'created_by', targetKey: 'id' });
-// db.staffingregister.belongsTo(db.users, { foreignKey: 'updated_by', targetKey: 'id' });
-
-// db.soort.hasMany(db.vehicle, { foreignKey: 'soort_id', targetKey: 'id' });
-// db.vehicle.belongsTo(db.soort, { foreignKey: 'soort_id', targetKey: 'id' });
-// db.brandstof.hasMany(db.vehicle, { foreignKey: 'brandstof_id', targetKey: 'id' });
-// db.vehicle.belongsTo(db.brandstof, { foreignKey: 'brandstof_id', targetKey: 'id' });
-// db.transmissie.hasMany(db.vehicle, { foreignKey: 'transmissie_id', targetKey: 'id' });
-// db.vehicle.belongsTo(db.transmissie, { foreignKey: 'transmissie_id', targetKey: 'id' });
-
-// db.vehicle.belongsTo(db.users, { foreignKey: 'created_by', targetKey: 'id' });
-// db.vehicle.belongsTo(db.users, { foreignKey: 'updated_by', targetKey: 'id' });
+db.userapplicant.belongsTo(db.users, { foreignKey: 'user_id', targetKey: 'id' });
 
 db.product.hasMany(db.productimage, { foreignKey: 'product_id', targetKey: 'id' });
 db.product.hasMany(db.productspecification, { foreignKey: 'product_id', targetKey: 'id' });
@@ -178,61 +143,5 @@ db.orderSharing.belongsTo(db.users, { foreignKey: 'user_id', targetKey: 'id' })
 db.orderhistory.hasMany(db.orderSharing, { foreignKey: 'orderhistory_id', targetKey: 'id' });
 
 db.usertoken.belongsTo(db.users, { foreignKey: 'user_id', targetKey: 'id' })
-// db.staffingmenu.hasMany(db.staffing, { foreignKey: 'beroep_id', targetKey: 'id' });
-// db.staffing.belongsTo(db.staffingmenu, { foreignKey: 'beroep_id', targetKey: 'id' });
-// db.staffingmenu.hasMany(db.staffing, { foreignKey: 'leeftijd_id', targetKey: 'id' });
-// db.staffing.belongsTo(db.staffingmenu, { foreignKey: 'leeftijd_id', targetKey: 'id' });
-// db.staffingmenu.hasMany(db.staffing, { foreignKey: 'ervaring_id', targetKey: 'id' });
-// db.staffing.belongsTo(db.staffingmenu, { foreignKey: 'ervaring_id', targetKey: 'id' });
-// db.staffingmenu.hasMany(db.staffing, { foreignKey: 'landen_id', targetKey: 'id' });
-// db.staffing.belongsTo(db.staffingmenu, { foreignKey: 'landen_id', targetKey: 'id' });
-
-// db.transportmenu.hasMany(db.transport, { foreignKey: 'brand_id', targetKey: 'id' });
-// db.transport.belongsTo(db.transportmenu, { foreignKey: 'brand_id', targetKey: 'id' });
-// db.transportmenu.hasMany(db.transport, { foreignKey: 'model_id', targetKey: 'id' });
-// db.transport.belongsTo(db.transportmenu, { foreignKey: 'model_id', targetKey: 'id' });
-// db.transportmenu.hasMany(db.transport, { foreignKey: 'variant_id', targetKey: 'id' });
-// db.transport.belongsTo(db.transportmenu, { foreignKey: 'variant_id', targetKey: 'id' });
-
-// db.transport.hasMany(db.transportregister, { foreignKey: 'transport_id', targetKey: 'id' });
-// db.transportregister.belongsTo(db.transport, { foreignKey: 'transport_id', targetKey: 'id' });
-// db.users.hasMany(db.transportregister, { foreignKey: 'registeruser_id', targetKey: 'id' });
-// db.transportregister.belongsTo(db.users, { as: 'registeruser', foreignKey: 'registeruser_id', targetKey: 'id' });
-// db.users.hasMany(db.transportregister, { foreignKey: 'paymentuser_id', targetKey: 'id' });
-// db.transportregister.belongsTo(db.users, { as: 'paymentuser', foreignKey: 'paymentuser_id', targetKey: 'id' });
-
-// db.vehicle.hasMany(db.vehicleregister, { foreignKey: 'vehicle_id', targetKey: 'id' });
-// db.vehicleregister.belongsTo(db.vehicle, { foreignKey: 'vehicle_id', targetKey: 'id' });
-// db.users.hasMany(db.transportregister, { foreignKey: 'registeruser_id', targetKey: 'id' });
-// db.vehicleregister.belongsTo(db.users, { as: 'registeruser', foreignKey: 'registeruser_id', targetKey: 'id' });
-// db.users.hasMany(db.transportregister, { foreignKey: 'paymentuser_id', targetKey: 'id' });
-// db.vehicleregister.belongsTo(db.users, { as: 'paymentuser', foreignKey: 'paymentuser_id', targetKey: 'id' });
-
-
-// db.staffing.hasMany(db.staffingregister, { foreignKey: 'staffing_id', targetKey: 'id' });
-// db.staffingregister.belongsTo(db.staffing, { foreignKey: 'staffing_id', targetKey: 'id' });
-// db.users.hasMany(db.staffingregister, { foreignKey: 'registeruser_id', targetKey: 'id' });
-// db.staffingregister.belongsTo(db.users, { as: 'registeruser', foreignKey: 'registeruser_id', targetKey: 'id' });
-// db.users.hasMany(db.staffingregister, { foreignKey: 'paymentuser_id', targetKey: 'id' });
-// db.staffingregister.belongsTo(db.users, { as: 'paymentuser', foreignKey: 'paymentuser_id', targetKey: 'id' });
-
-// /** Relationships */
-
-// db.users.hasOne(db.userDetails, { foreignKey: 'user_id', targetKey: 'id' });
-// db.userDetails.belongsTo(db.users, { foreignKey: 'user_id', targetKey: 'id' });
-
-// db.filterlocation.hasMany(db.vehicle, { foreignKey: 'filterlocation_id', targetKey: 'id' });
-// db.vehicle.belongsTo(db.filterlocation, { foreignKey: 'filterlocation_id', targetKey: 'id' });
-// db.filterlocation.hasMany(db.staffing, { foreignKey: 'filterlocation_id', targetKey: 'id' });
-// db.staffing.belongsTo(db.filterlocation, { foreignKey: 'filterlocation_id', targetKey: 'id' });
-// db.filterlocation.hasMany(db.transport, { foreignKey: 'filterlocation_id', targetKey: 'id' });
-// db.transport.belongsTo(db.filterlocation, { foreignKey: 'filterlocation_id', targetKey: 'id' });
-
-// db.filtercity.hasMany(db.vehicle, { foreignKey: 'filtercity_id', targetKey: 'id' });
-// db.vehicle.belongsTo(db.filtercity, { foreignKey: 'filtercity_id', targetKey: 'id' });
-// db.filtercity.hasMany(db.staffing, { foreignKey: 'filtercity_id', targetKey: 'id' });
-// db.staffing.belongsTo(db.filtercity, { foreignKey: 'filtercity_id', targetKey: 'id' });
-// db.filtercity.hasMany(db.transport, { foreignKey: 'filtercity_id', targetKey: 'id' });
-// db.transport.belongsTo(db.filtercity, { foreignKey: 'filtercity_id', targetKey: 'id' });
 
 module.exports = db;

@@ -18,6 +18,8 @@ router.post("/mapautocomplete", common.mapautocomplete);
 router.post("/getPlaceById", common.getPlaceById);
 router.post("/pushnotification/sendmessage", common.sendmessage);
 router.post("/payment/ideal", order.productIdeal);
+router.post("/payment/webhook", order.paymentWebhook);
+router.post("/common/sumsubwebook", common.sumsubwebook);
 
 router.get("/terms-and-condition", common.getTermAndCondition);
 router.post("/forget", user.forget);
@@ -72,6 +74,10 @@ router.post("/employeruser/update", employer.updateEmployerUser);
 
 router.post("/staffing/getFilterOptions", common.getFilterOptions);
 router.post("/employeeuser/update", employee.userUpdate);
+router.get("/invers/getNewToken", invers.getNewToken);
+router.post("/invers/getApplication", invers.getApplication);
+router.post("/common/createApplicant", common.createApplicant);
+router.post("/common/getApplicant", common.getApplicant);
 
 /** For auth enabled */
 router.use(authMiddware);
