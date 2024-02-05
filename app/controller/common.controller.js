@@ -62,9 +62,10 @@ exports.getTermAndCondition = function (req, res) {
 
 exports.getFilterOptions = async function (req, res) {
     try {
+        var type = req.body.search ? req.body.search.type : req.body.type
         const [categoryResp, staffOrTransportResp] = await Promise.all([
             CategoryModel.findAll({}),
-            StaffOrTransportRequestModel.findAll({ where: req.body, attributes: ['title', 'id', 'category_id'] })
+            StaffOrTransportRequestModel.findAll({ where: {status: req.body.status, type: type}, attributes: ['title', 'id', 'category_id'] })
         ]);
 
         let userCategories; // Declare userCategories outside the if block
