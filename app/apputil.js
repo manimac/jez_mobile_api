@@ -272,30 +272,30 @@ async function main(user) {
     })
 }
 
-exports.sendOTP = function (phone = null) {
-    return new Promise(function (resolve, reject) {
-        if (phone) {
-            var payload = {
-                origin: 'MY ELOAH',
-                message: '{*code*} is your MY ELOAH verification code.',
-                destination: phone
-            };
-            // {*code*} placeholder is mandatory and will be replaced by an auto generated numeric code.
-            smsglobal.otp.send(payload, function (error, response) {
-                if (response) {
-                    resolve(response)
-                    // verifyOTP();
-                }
-                if (error) {
-                    reject(error)
-                }
-            });
-        } else {
-            reject(false);
-        }
-    })
+// exports.sendOTP = function (phone = null) {
+//     return new Promise(function (resolve, reject) {
+//         if (phone) {
+//             var payload = {
+//                 origin: 'MY ELOAH',
+//                 message: '{*code*} is your MY ELOAH verification code.',
+//                 destination: phone
+//             };
+//             // {*code*} placeholder is mandatory and will be replaced by an auto generated numeric code.
+//             smsglobal.otp.send(payload, function (error, response) {
+//                 if (response) {
+//                     resolve(response)
+//                     // verifyOTP();
+//                 }
+//                 if (error) {
+//                     reject(error)
+//                 }
+//             });
+//         } else {
+//             reject(false);
+//         }
+//     })
 
-}
+// }
 
 exports.verifyOTP = function (user, code) {
     return new Promise(function (resolve, reject) {
@@ -504,55 +504,97 @@ exports.appLogin = function (body) {
             }
         }).then(async function (row) {
             if (row) {
-                await sendOTP(row);
+                const otp = generateOTP();
+                await UserModel.update({ otp: otp }, {
+                    where: {
+                        id: row.id
+                    }
+                });
+                // Use Promise.all for parallel execution of sending OTP through email and SMS
+                await Promise.all([sendOTP(row, otp), sendOTPSMS(row, otp, body.countrycode)]);
+
                 resolve({
-                    'message': 'OTP Send to user Email', status: 200
+                    'message': 'OTP sent to user Email and SMS', status: 200
                 });
             } else {
                 resolve({
-                    'message': 'OTP Send to user Email', status: 204
+                    'message': 'User not found', status: 204
                 });
             }
         });
     })
 }
 /** OTP  */
-async function sendOTP(userObj) {
-    readHTMLFile('./app/mail/email-temp.html', function (err, html) {
-        var template = handlebars.compile(html);
-        const otp = generateOTP();
-        UserModel.update({ otp: otp }, {
-            where: {
-                id: userObj.id
-            }
-        }).then(() => {
-            console.log('Record updated successfully');
-        }).catch((error) => {
-            console.error('Error updating record:', error);
-        });
-        let comments = `Jezsel logic OTP: ${otp}`;
-        var replacements = {
+async function sendOTP(userObj, otp) {
+    try {
+        const html = fs.readFileSync('./app/mail/email-temp.html', 'utf8');
+        const template = handlebars.compile(html);
+        const comments = `Jezsel logic OTP: ${otp}`;
+        const replacements = {
             username: userObj.fullname,
             message: comments,
             message2: '',
         };
 
-        var htmlToSend = template(replacements);
-        // send mail with defined transport object
-        let detail = {
-            from: 'support@jezsel.nl', // sender address
-            to: userObj.email, // list of receivers
-            subject: 'JEZSEL Login OTP', // Subject lin
+        const htmlToSend = template(replacements);
+
+        const detail = {
+            from: 'support@jezsel.nl',
+            to: userObj.email,
+            subject: 'JEZSEL Login OTP',
             html: htmlToSend
-        }
-        transporter.sendMail(detail, function (error, info) {
-            if (error) {
-                return (error);
-            } else {
-                return (true);
+        };
+
+        await transporter.sendMail(detail);
+        return true;
+    } catch (error) {
+        console.error('Error sending OTP through email:', error);
+        throw error;
+    }
+}
+
+async function sendOTPSMS(userObj, otp, countrycode) {
+    try {
+        const headers = { 'Authorization': 'AccessKey 3z5juOZyiZoxMXbVKlN4A1hza2sWbdMKubwh', 'Accept': `application/json` };
+        const cOptions = {
+            url: 'https://api.bird.com/workspaces/24e482ef-9608-4080-bce9-888bd2362a7d/channels/52892b02-ca92-4fc0-a102-8636abdce013/messages',
+            method: 'POST',
+            headers: headers,
+            json: true,
+            body: {
+                body: {
+                    type: "text",
+                    text: {
+                        text: `${otp} is your one-time password (OTP) to login to JEZSEL. Please enter OTP to proceed`
+                    }
+                },
+                receiver: {
+                    contacts: [
+                        {
+                            identifierValue: countrycode + userObj.phone,
+                            identifierKey: "phonenumber"
+                        }
+                    ]
+                }
             }
-        })
-    })
+        };
+
+        await new Promise((resolve, reject) => {
+            request(cOptions, function (err, resp) {
+                if (err) {
+                    console.error('Error sending OTP through SMS:', err);
+                    reject(err);
+                } else {
+                    resolve(resp);
+                }
+            });
+        });
+
+        return true;
+    } catch (error) {
+        console.error('Error sending OTP through SMS:', error);
+        throw error;
+    }
 }
 
 function generateOTP() {
@@ -570,15 +612,15 @@ exports.hoursUpdate = function (user, status) {
     readHTMLFile('./app/mail/email-temp.html', function (err, html) {
         var template = handlebars.compile(html);
         let ms = '';
-        if(status == 1){
+        if (status == 1) {
             ms = `Your hours rejected. Please verify and enter again`
         }
-        else if(status == 2){
-            ms =  `Your hours verified successfully`
+        else if (status == 2) {
+            ms = `Your hours verified successfully`
         }
         let comments = (status == 0) ? `New hours updated for ` + user.firstname + ' ' + user.lastname : ms;
         var replacements = {
-            username:(status == 0) ? 'Admin': user.firstname + ' ' + user.lastname,
+            username: (status == 0) ? 'Admin' : user.firstname + ' ' + user.lastname,
             message: comments,
             message2: '',
         };
@@ -607,7 +649,7 @@ exports.interestUpdate = function (user, status) {
         var template = handlebars.compile(html);
         let comments = `Your have new interest in your assignment`;
         var replacements = {
-            username:'Admin',
+            username: 'Admin',
             message: comments,
             message2: '',
         };
@@ -633,7 +675,7 @@ exports.interestUpdate = function (user, status) {
 
 exports.sendmessage = function (body) {
     let headers = { 'Authorization': 'key=AAAAnG5n6m0:APA91bHvs4G6CpIV87WbzPwoh5hYqvgndQnxbaY_GDvoSzcHt82Jaqhp61s-9G1uGbNPIKJ9865D7kJS-kBjnQsETqTELvXR0W179sjMV8ev3UU_Cy8lOyEkKBb5TXbORs4XWfeQcAhZ', 'Accept': 'application/json', 'Content-Type': 'application/json' };
-    
+
     const cOptions = {
         url: 'https://fcm.googleapis.com/fcm/send',
         method: 'POST',
