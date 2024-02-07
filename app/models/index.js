@@ -58,9 +58,13 @@ db.staffOrTransportWorkingHistory = require("./staffrortransportworkinghistory.m
 db.orderSharing = require("./ordersharing.model")(sequelize, Sequelize);
 db.usertoken = require("./usertoken.model")(sequelize, Sequelize);
 db.userapplicant = require("./userapplicant.model")(sequelize, Sequelize);
+db.notificationmaster = require("./notificationmaster.model.model")(sequelize, Sequelize);
+db.usernotification = require("./usernotification.model")(sequelize, Sequelize);
 
 
 /** relationship */
+db.usernotification.belongsTo(db.notificationmaster, { foreignKey: 'notificationmaster_id', targetKey: 'id' });
+db.usernotification.belongsTo(db.users, { foreignKey: 'user_id', targetKey: 'id' });
 db.users.hasOne(db.team, { foreignKey: 'user_id', targetKey: 'id' });
 db.team.belongsTo(db.users, { foreignKey: 'user_id', targetKey: 'id' });
 db.users.belongsTo(db.team, { foreignKey: 'team_id', targetKey: 'id' });
