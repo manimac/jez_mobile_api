@@ -186,4 +186,6 @@ router.get('/certificate', common.getcertificate);
 router.get('/contactus', common.contactus);
 router.get('/faqs', common.faqs);
 
+router.get('/notification-masters', common.notificationMasters);
+
 module.exports = router;

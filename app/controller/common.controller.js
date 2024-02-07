@@ -31,6 +31,8 @@ const StaffOrTransportRequestModel = MODELS.staffOrTransportRequest;
 const EmployeeCategoryModel = MODELS.employeecategory;
 const UserTokenModel = MODELS.usertoken;
 const UserApplicantModel = MODELS.userapplicant;
+const NotificationMasterModel = MODELS.notificationmaster;
+
 RandExp = require('randexp');
 const request = require('request');
 
@@ -65,7 +67,7 @@ exports.getFilterOptions = async function (req, res) {
         var type = req.body.search ? req.body.search.type : req.body.type
         const [categoryResp, staffOrTransportResp] = await Promise.all([
             CategoryModel.findAll({}),
-            StaffOrTransportRequestModel.findAll({ where: {status: req.body.status, type: type}, attributes: ['title', 'id', 'category_id'] })
+            StaffOrTransportRequestModel.findAll({ where: { status: req.body.status, type: type }, attributes: ['title', 'id', 'category_id'] })
         ]);
 
         let userCategories; // Declare userCategories outside the if block
@@ -1102,7 +1104,7 @@ exports.sumsubwebook = async (req, res) => {
                 });
                 if (alreadyUser) {
                     const updatedUser = alreadyUser.toJSON();
-                    updatedUser.is_id_verified =  (payload.reviewResult.reviewAnswer === 'GREEN') ? 1 : 0;
+                    updatedUser.is_id_verified = (payload.reviewResult.reviewAnswer === 'GREEN') ? 1 : 0;
                     await alreadyUser.update(updatedUser);
                     res.status(200).send('Webhook received successfully');
                 } else {
@@ -1117,3 +1119,16 @@ exports.sumsubwebook = async (req, res) => {
         res.status(500).send({ message: 'Internal Server Error' });
     }
 };
+
+exports.notificationMasters = function (req, res) {
+    NotificationMasterModel.findAll({
+        where: {
+            'status': 1
+        },
+        order: [
+            ['updatedAt', 'DESC']
+        ]
+    }).then(function (entries) {
+        res.send(entries || null)
+    });
+}
