@@ -41,30 +41,33 @@ router.post('/login', function(req, res, next) {
     passport.authenticate('local-login-app', function(err, user, info) {
         if (err) {
             console.log(err);
-            return next(err)
+            return next(err);
         }
         if (!user) {
             // *** Display message without using flash option
             // re-render the login form with a message
             // return res.status(400).send({ message: "Invalid Credentials" });
-            res.status(500).send('User not found');
+            return res.status(500).send('Please enter a correct OTP');
         }
-        user = user.toJSON();
-        if (user.is_verified == 0) {
-            res.status(500).send('Verifeer uw account om in te loggen');
-            // return res.status(400).send({ message: "Verifeer uw account om in te loggen" });
+        if (user) {
+            user = user.toJSON();
+            if (user.is_verified == 0) {
+                return res.status(500).send('Verifeer uw account om in te loggen');
+                // return res.status(400).send({ message: "Verifeer uw account om in te loggen" });
+            }
+            delete user.password;
+            delete user.status;
+            delete user.verification_token;
+            delete user.is_verified;
+            delete user.createdAt;
+            delete user.updatedAt;
+            const token = jwt.sign(user, appUtil.jwtSecret);
+            user.token = token;
+            return res.json(user);
         }
-        delete user.password;
-        delete user.status;
-        delete user.verification_token;
-        delete user.is_verified;
-        delete user.createdAt;
-        delete user.updatedAt;
-        const token = jwt.sign(user, appUtil.jwtSecret);
-        user.token = token;
-        return res.json(user);
     })(req, res, next);
 });
+
 
 router.post('/login-admin', function(req, res, next) {
     passport.authenticate('local-login-admin', function(err, user, info) {
