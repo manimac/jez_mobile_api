@@ -58,7 +58,7 @@ db.staffOrTransportWorkingHistory = require("./staffrortransportworkinghistory.m
 db.orderSharing = require("./ordersharing.model")(sequelize, Sequelize);
 db.usertoken = require("./usertoken.model")(sequelize, Sequelize);
 db.userapplicant = require("./userapplicant.model")(sequelize, Sequelize);
-db.notificationmaster = require("./notificationmaster.model.model")(sequelize, Sequelize);
+db.notificationmaster = require("./notificationmaster.model")(sequelize, Sequelize);
 db.usernotification = require("./usernotification.model")(sequelize, Sequelize);
 
 
