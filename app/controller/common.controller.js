@@ -32,6 +32,7 @@ const EmployeeCategoryModel = MODELS.employeecategory;
 const UserTokenModel = MODELS.usertoken;
 const UserApplicantModel = MODELS.userapplicant;
 const NotificationMasterModel = MODELS.notificationmaster;
+const UserNotificationModel = MODELS.usernotification;
 
 RandExp = require('randexp');
 const request = require('request');
@@ -1130,5 +1131,25 @@ exports.notificationMasters = function (req, res) {
         ]
     }).then(function (entries) {
         res.send(entries || null)
+    });
+}
+exports.upsertUserNotificationSetting = function (req, res) {
+    UserNotificationModel.findOne({ user_id: req.body.user_id, notificationmaster_id: req.body.notificationmaster_id }).then(async function (row) {
+        if (row) {
+            try {
+                const notify = await row.update(req.body);
+                res.send(notify);
+            } catch (err) {
+                res.status(500).send(err);
+            }
+        } else {
+            try {
+                const notify = await UserNotificationModel.create(req.body);
+                res.send(notify);
+            } catch (err) {
+                res.status(500).send(err);
+            }
+
+        }
     });
 }
