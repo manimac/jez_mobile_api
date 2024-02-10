@@ -187,6 +187,7 @@ router.get('/contactus', common.contactus);
 router.get('/faqs', common.faqs);
 
 router.get('/notification-masters', common.notificationMasters);
+router.get('/getUserNotification', common.getUserNotification);
 router.post('/notification-setting/update', common.upsertUserNotificationSetting);
 
 module.exports = router;

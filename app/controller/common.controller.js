@@ -1134,7 +1134,7 @@ exports.notificationMasters = function (req, res) {
     });
 }
 exports.upsertUserNotificationSetting = function (req, res) {
-    UserNotificationModel.findOne({ user_id: req.body.user_id, notificationmaster_id: req.body.notificationmaster_id }).then(async function (row) {
+    UserNotificationModel.findOne({ user_id: req.body.user_id }).then(async function (row) {
         if (row) {
             try {
                 const notify = await row.update(req.body);
@@ -1153,3 +1153,14 @@ exports.upsertUserNotificationSetting = function (req, res) {
         }
     });
 }
+
+exports.getUserNotification = async function (req, res) {
+    try {
+        const row = await UserNotificationModel.findOne({ user_id: req.body.user_id });
+        res.send(row);
+    } catch (err) {
+        console.error("Error retrieving user notification:", err);
+        res.status(500).send(err);
+    }
+}
+
