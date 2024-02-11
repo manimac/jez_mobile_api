@@ -7,10 +7,14 @@ const stripe = require('stripe')(process.env.stripe_sk);
 const fs = require('fs');
 const appUtil = require('../apputil');
 const MODELS = require("../models");
+const util = require('util');
 const StaffOrTransportRequestModel = MODELS.staffOrTransportRequest;
 const StaffOrTransportInterestModel = MODELS.staffOrTransportInterest;
 const staffOrTransportWorkingHistoryModel = MODELS.staffOrTransportWorkingHistory;
 const CategoryModel = MODELS.category;
+const EmployeeCategoryModel = MODELS.employeecategory;
+const FunctionsModel = MODELS.function;
+const EmployeeFunctionsModel = MODELS.employeefunctions;
 const EmployeeModel = MODELS.employee;
 const EmployeeExperienceModel = MODELS.employeeexperiense;
 const UserTokenModel = MODELS.usertoken;
@@ -19,38 +23,78 @@ const request = require('request');
 
 
 // SET STORAGE
-var assignmentStorage = multer.diskStorage({
+const assignmentStorage = multer.diskStorage({
     destination: function (req, file, cb) {
-        var dir = './public/uploads/employer'
+        var dir = './public/uploads/employer';
         if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir, { recursive: true });
         }
-        cb(null, dir)
+        cb(null, dir);
     },
     filename: function (req, file, cb) {
-        cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname)) // Appending the extension
+        cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname)); // Appending the extension
     }
-})
+});
 
-exports.createStaffOrTransportRequest = function (req, res) {
-    var upload = multer({ storage: assignmentStorage }).single('image');
-    upload(req, res, async function (err) {
+const uploadAsync = util.promisify(multer({ storage: assignmentStorage }).single('image'));
+
+exports.createStaffOrTransportRequest = async function (req, res) {
+    try {
+        await uploadAsync(req, res);
+
         req.body.image = res.req.file && res.req.file.filename || req.body.image;
-        const userTokens = await UserTokenModel.findAll();
-        for (let i = 0; i < userTokens.length; i++) {
-            let obj = {
-                token: userTokens[i].token,
-                type: req.body.type == 'staffing' ? 'Staffing' : 'Transport',
-                msg: "We have a new order. Please look into this",
-            };
-            await appUtil.sendmessage(obj);
+
+        const createdRequest = await StaffOrTransportRequestModel.create(req.body);
+        await createdRequest.update(req.body);
+
+        await notifyEmployeesByCategory(req.body.category_id, req.body.type);
+        await notifyEmployeesByFunction(req.body.function_id, req.body.type);
+
+        res.send(createdRequest);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Internal Server Error');
+    }
+};
+
+async function notifyEmployeesByCategory(categoryId, requestType) {
+    const employeeCategories = await EmployeeCategoryModel.findAll({ where: { category_id: categoryId } });
+
+    for (const category of employeeCategories) {
+        const employee = await EmployeeModel.findOne({ where: { id: category.employee_id } });
+        const userNotification = await UserNotificationModel.findOne({ where: { user_id: employee.user_id } });
+
+        if (userNotification && userNotification.newassignmentscategory === 1) {
+            await notifyUserTokens(employee.user_id, requestType);
         }
-        StaffOrTransportRequestModel.create(req.body).then(function (resp) {
-            resp.update(req.body).then(function (result) {
-                res.send(result);
-            });
-        })
-    });
+    }
+}
+
+async function notifyEmployeesByFunction(functionId, requestType) {
+    const employeeFunctions = await EmployeeFunctionsModel.findAll({ where: { function_id: functionId } });
+
+    for (const func of employeeFunctions) {
+        const employee = await EmployeeModel.findOne({ where: { id: func.employee_id } });
+        const userNotification = await UserNotificationModel.findOne({ where: { user_id: employee.user_id } });
+
+        if (userNotification && userNotification.newassignmentsfunction === 1) {
+            await notifyUserTokens(employee.user_id, requestType);
+        }
+    }
+}
+
+async function notifyUserTokens(userId, requestType) {
+    const userTokens = await UserTokenModel.findAll({ where: { user_id: userId } });
+
+    for (const userToken of userTokens) {
+        const notification = {
+            token: userToken.token,
+            type: requestType === 'staffing' ? 'Staffing' : 'Transport',
+            msg: 'We have a new order. Please look into this',
+        };
+
+        await appUtil.sendmessage(notification);
+    }
 }
 
 exports.updateStaffOrTransportRequest = function (req, res) {
