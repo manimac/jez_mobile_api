@@ -21,6 +21,7 @@ router.post("/pushnotification/sendmessage", common.sendmessage);
 router.post("/payment/ideal", order.productIdeal);
 router.post("/payment/webhook", order.paymentWebhook);
 router.post("/common/sumsubwebook", common.sumsubwebook);
+router.get("/staff-transport-request/recentProcess", staffingModule.recentProcess);
 
 router.get("/terms-and-condition", common.getTermAndCondition);
 router.post("/forget", user.forget);
@@ -195,7 +196,7 @@ router.get('/contactus', common.contactus);
 router.get('/faqs', common.faqs);
 
 router.get('/notification-masters', common.notificationMasters);
-router.get('/getUserNotification', common.getUserNotification);
+router.post('/getUserNotification', common.getUserNotification);
 router.post('/notification-setting/update', common.upsertUserNotificationSetting);
 
 module.exports = router;

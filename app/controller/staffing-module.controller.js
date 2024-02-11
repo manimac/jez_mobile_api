@@ -1,4 +1,5 @@
 const Sequelize = require('sequelize');
+const DataTypes  = require('sequelize');
 const Op = Sequelize.Op;
 const multer = require('multer');
 const path = require('path');
@@ -20,6 +21,7 @@ const EmployeeExperienceModel = MODELS.employeeexperiense;
 const UserTokenModel = MODELS.usertoken;
 const UserNotificationModel = MODELS.usernotification;
 const request = require('request');
+var schedule = require('node-schedule');
 
 
 // SET STORAGE
@@ -37,6 +39,82 @@ const assignmentStorage = multer.diskStorage({
 });
 
 const uploadAsync = util.promisify(multer({ storage: assignmentStorage }).single('image'));
+
+// var StaffOrTransportRequestModels = Sequelize.define('StaffOrTransportRequest', {
+//     workstartdate: {
+//         type: DataTypes.DATEONLY, // Use DATEONLY for date without time
+//         allowNull: false,
+//     },
+//     worktime: {
+//         type: DataTypes.TIME, // Use TIME for time without date
+//         allowNull: false,
+//     },
+//     // ... other attributes
+// });
+
+// StaffOrTransportRequestModel.beforeCreate(async (instance, options) => {
+//     // Combine workstartdate and worktime to create the complete datetime
+//     const workStartDateTime = new Date(`${instance.workstartdate}T${instance.worktime}`);
+    
+//     // Schedule the job to execute 1 hour before workstartdate
+//     const jobDate = new Date(workStartDateTime);
+//     jobDate.setMinutes(jobDate.getMinutes() - 2);
+
+//     schedule.scheduleJob(jobDate, async () => {
+//         const interestCompleted = await StaffOrTransportInterestModel.findAll({
+//             where: {
+//                 status: 2,
+//                 notified: {
+//                     [Op.not]: 1,
+//                 },
+//                 staffortransportrequest_id: requestId
+//             },
+//         });
+//         await yourMethodToExecute(instance.userId, instance.requestType);
+//     });
+// });
+
+function rememberNotification(request, usernotification) {
+    if (usernotification && usernotification.rememberassignments && request.workstartdate && request.worktime) {
+        request.workstartdate = request.workstartdate.split("-").reverse().join("-");
+        const workStartDateTime = new Date(`${request.workstartdate}T${request.worktime}`);
+        
+        // Mapping of rememberassignmentsoption to hours or days
+        const optionMapping = {
+            '1 hour': 1,
+            '2 hours': 2,
+            '3 hours': 3,
+            '4 hours': 4,
+            '5 hours': 5,
+            '6 hours': 6,
+            '7 hours': 7,
+            '8 hours': 8,
+            '9 hours': 9,
+            '10 hours': 10,
+            '1 Day': 24,
+            '2 Days': 48,
+            '3 Days': 72,
+            '4 Days': 96,
+            '5 Days': 120,
+            '6 Days': 144,
+            '7 Days': 168,
+            '1 week': 168,
+            '2 weeks': 336,
+        };
+
+        const optionValue = optionMapping[usernotification.rememberassignmentsoption];
+
+        if (optionValue !== undefined) {
+            const jobDate = new Date(workStartDateTime);
+            jobDate.setHours(jobDate.getHours() - optionValue);
+
+            schedule.scheduleJob(jobDate, async () => {
+                await yourMethodToExecute(usernotification.user_id, request.type, usernotification.rememberassignmentsoption);
+            });
+        }
+    }
+}
+
 
 exports.createStaffOrTransportRequest = async function (req, res) {
     try {
@@ -56,6 +134,20 @@ exports.createStaffOrTransportRequest = async function (req, res) {
         res.status(500).send('Internal Server Error');
     }
 };
+
+async function yourMethodToExecute(userId, requestType, type) {
+    const userTokens = await UserTokenModel.findAll({ where: { user_id: userId } });
+
+    for (const userToken of userTokens) {
+        const notification = {
+            token: userToken.token,
+            type: requestType === 'staffing' ? 'Staffing' : 'Transport',
+            msg: 'Remember for your order.Will start in ' + type,
+        };
+
+        await appUtil.sendmessage(notification);
+    }
+}
 
 async function notifyEmployeesByCategory(categoryId, requestType) {
     const employeeCategories = await EmployeeCategoryModel.findAll({ where: { category_id: categoryId } });
@@ -142,6 +234,23 @@ exports.staffOrTransportRequests = function (req, res) {
     })
 }
 
+exports.recentProcess = function (req, res) {
+    let where = {};
+    StaffOrTransportRequestModel.findAll(
+        {
+            where: where,
+            order: [
+                ['updatedAt', 'DESC']
+            ],
+            include: [CategoryModel]
+        },
+    ).then((resp) => {
+        res.send(resp);
+    }, function (err) {
+        res.status(500).send(err);
+    })
+}
+
 function getDates(startDate, endDate) {
     let dateArray = [];
     let currentDate = new Date(startDate);
@@ -204,17 +313,18 @@ exports.assignmentUpdate = async function (req, res) {
                 await interestResult.update({ status });
             }
         } else if (status == 2) {
-            if (UserNotification && (UserNotification.acceptedassignments == 1)) {
-                for (let i = 0; i < userTokens.length; i++) {
-                    let obj = {
-                        token: userTokens[i].token,
-                        type: requestResult == 'staffing' ? 'Staffing' : 'Transport',
-                        msg: "Your order has been accepted.",
-                    };
-                    await appUtil.sendmessage(obj);
-                }
-            }
             if (staffneeded > staffaccepted) {
+                if (UserNotification && (UserNotification.acceptedassignments == 1)) {
+                    for (let i = 0; i < userTokens.length; i++) {
+                        let obj = {
+                            token: userTokens[i].token,
+                            type: requestResult == 'staffing' ? 'Staffing' : 'Transport',
+                            msg: "Your order has been accepted.",
+                        };
+                        await appUtil.sendmessage(obj);
+                    }
+                }
+                rememberNotification(requestResult, UserNotification)
                 await interestResult.update({ status });
                 const workstartdate = order.workstartdate.split('-').reverse().join('-');
                 const workenddate = order.workenddate.split('-').reverse().join('-');
@@ -356,7 +466,7 @@ exports.statusStaffOrTransportInterest = function (req, res) {
 
 exports.makeStaffOrTransportInterest = function (req, res) {
     StaffOrTransportInterestModel.create(req.body).then(async (resp) => {
-        await appUtil.interestUpdate(obj);
+        await appUtil.interestUpdate();
         res.send(resp);
     }, function (err) {
         res.status(500).send(err);

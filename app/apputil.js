@@ -644,7 +644,7 @@ exports.hoursUpdate = function (user, status) {
     })
 }
 
-exports.interestUpdate = function (user, status) {
+exports.interestUpdate = function () {
     readHTMLFile('./app/mail/email-temp.html', function (err, html) {
         var template = handlebars.compile(html);
         let comments = `Your have new interest in your assignment`;
