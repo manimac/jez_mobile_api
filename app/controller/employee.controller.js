@@ -15,6 +15,8 @@ const StaffOrTransportRequestModel = MODELS.staffOrTransportRequest;
 const StaffOrTransportInterestModel = MODELS.staffOrTransportInterest;
 const staffOrTransportWorkingHistoryModel = MODELS.staffOrTransportWorkingHistory;
 const CategoryModel = MODELS.category;
+const FunctionsModel = MODELS.functions;
+const EmployeeFunctionsModel = MODELS.employeefunctions;
 
 
 // SET STORAGE
@@ -204,8 +206,8 @@ exports.getAssignments = async (req, res) => {
                 categoryWhere.category_id = [req.body.category_id];
             }
 
-            if (req.body.title) {
-                categoryWhere.title = [req.body.title];
+            if (req.body.function_id) {
+                categoryWhere.function_id = [req.body.function_id];
             }
 
             const categoryExcludedIds = interests.map(interest => interest.staffortransportrequest_id);
@@ -417,6 +419,26 @@ exports.createCategory = async (req, res) => {
         res.status(201).json(addCategories);
     } catch (error) {
         console.error('Error removing categories:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+exports.createFunctions = async (req, res) => {
+    try {
+        var addFunctions = await EmployeeFunctionsModel.create(req.body);
+        res.status(201).json(addFunctions);
+    } catch (error) {
+        console.error('Error removing functions:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+exports.removeFunctions = async (req, res) => {
+    try {
+        var removeFunctions = await EmployeeFunctionsModel.destroy({ where: { employee_id: req.body.employee_id, function_id: req.body.function_id } });
+        res.status(201).json(removeFunctions);
+    } catch (error) {
+        console.error('Error removing functions:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 };

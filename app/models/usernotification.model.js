@@ -5,8 +5,8 @@ const usernotificationModel = (sequelize, Sequelize) => {
          hoursrejected: { type: Sequelize.INTEGER, allowNull: true },
          rejectedassignments: { type: Sequelize.INTEGER, allowNull: true },
          acceptedassignments: { type: Sequelize.INTEGER, allowNull: true },
-         newassignments: { type: Sequelize.INTEGER, allowNull: true },
-         newassignmentsoption: { type: Sequelize.STRING, allowNull: true },
+         newassignmentscategory: { type: Sequelize.INTEGER, allowNull: true },
+         newassignmentsfunction: { type: Sequelize.STRING, allowNull: true },
          rememberassignments: { type: Sequelize.INTEGER, allowNull: true },
          rememberassignmentsoption: { type: Sequelize.STRING, allowNull: true },
          status: { type: Sequelize.INTEGER, defaultValue: 1 } //1- Success, 2 - failure, 3-In Progress

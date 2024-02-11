@@ -61,6 +61,7 @@ db.userapplicant = require("./userapplicant.model")(sequelize, Sequelize);
 db.notificationmaster = require("./notificationmaster.model")(sequelize, Sequelize);
 db.usernotification = require("./usernotification.model")(sequelize, Sequelize);
 db.functions = require("./functions.model")(sequelize, Sequelize);
+db.employeefunctions = require("./employeefunctions.model")(sequelize, Sequelize);
 
 
 /** relationship */
@@ -150,5 +151,10 @@ db.orderhistory.hasMany(db.orderSharing, { foreignKey: 'orderhistory_id', target
 
 db.usertoken.belongsTo(db.users, { foreignKey: 'user_id', targetKey: 'id' })
 db.functions.belongsTo(db.category, { foreignKey: 'category_id', targetKey: 'id' });
+
+db.employee.hasMany(db.employeefunctions, { foreignKey: 'employee_id', targetKey: 'id' });
+db.employeefunctions.belongsTo(db.employee, { foreignKey: 'employee_id', targetKey: 'id' });
+db.functions.hasMany(db.employeefunctions, { foreignKey: 'function_id', targetKey: 'id' });
+db.employeefunctions.belongsTo(db.functions, { foreignKey: 'function_id', targetKey: 'id' });
 
 module.exports = db;
