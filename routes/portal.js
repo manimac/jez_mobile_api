@@ -10,6 +10,7 @@ const employee = require("../app/controller/employee.controller");
 const employer = require("../app/controller/employer.controller");
 const category = require("../app/controller/category.controller");
 const staffingModule = require("../app/controller/staffing-module.controller");
+const functions = require("../app/controller/function.controller");
 const authMiddware = passport.authenticate("jwt", { session: false });
 
 //Google map
@@ -139,6 +140,11 @@ router.post("/category/get", category.getCategory);
 router.post("/category/create", category.createCategory);
 router.post("/category/update", category.updateCategory);
 router.delete("/category/delete/:id", category.deleteCategory);
+//functions
+router.post("/functions/get", functions.getFunction);
+router.post("/functions/create", functions.createFunction);
+router.post("/functions/update", functions.updateFunction);
+router.delete("/functions/delete/:id", functions.deleteFunction);
 
 
 router.post("/hoursUpdate", employer.hoursUpdate);

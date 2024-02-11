@@ -14,6 +14,7 @@ const CategoryModel = MODELS.category;
 const EmployeeModel = MODELS.employee;
 const EmployeeExperienceModel = MODELS.employeeexperiense;
 const UserTokenModel = MODELS.usertoken;
+const UserNotificationModel = MODELS.usernotification;
 const request = require('request');
 
 
@@ -125,9 +126,9 @@ exports.assignmentUpdate = async function (req, res) {
             return res.status(400).json({ error: 'Invalid request data' });
         }
         const requestResult = await StaffOrTransportRequestModel.findByPk(requestId);
-        const interestResult = await StaffOrTransportInterestModel.findByPk(interestId);        
-        
-        
+        const interestResult = await StaffOrTransportInterestModel.findByPk(interestId);
+
+
         if (!requestResult || !interestResult) {
             return res.status(404).json({ error: 'Request or interest not found' });
         }
@@ -135,7 +136,8 @@ exports.assignmentUpdate = async function (req, res) {
         let staffneeded = parseInt(requestResult.staffneeded) || 0;
         let staffaccepted = parseInt(requestResult.staffaccepted) || 0;
 
-        const userTokens = await UserTokenModel.findAll({where: {user_id:interestResult.user_id}});
+        const userTokens = await UserTokenModel.findAll({ where: { user_id: interestResult.user_id } });
+        const UserNotification = await UserNotificationModel.findOne({ where: { user_id: interestResult.user_id } });
         if (status == 3) {
             for (let i = 0; i < userTokens.length; i++) {
                 let obj = {
@@ -158,13 +160,15 @@ exports.assignmentUpdate = async function (req, res) {
                 await interestResult.update({ status });
             }
         } else if (status == 2) {
-            for (let i = 0; i < userTokens.length; i++) {
-                let obj = {
-                    token: userTokens[i].token,
-                    type: requestResult == 'staffing' ? 'Staffing' : 'Transport',
-                    msg: "Your order has been accepted.",
-                };
-                await appUtil.sendmessage(obj);
+            if (UserNotification && (UserNotification.acceptedassignments == 1)) {
+                for (let i = 0; i < userTokens.length; i++) {
+                    let obj = {
+                        token: userTokens[i].token,
+                        type: requestResult == 'staffing' ? 'Staffing' : 'Transport',
+                        msg: "Your order has been accepted.",
+                    };
+                    await appUtil.sendmessage(obj);
+                }
             }
             if (staffneeded > staffaccepted) {
                 await interestResult.update({ status });
@@ -175,8 +179,8 @@ exports.assignmentUpdate = async function (req, res) {
                 const dateArray = getDates(startDate, endDate);
 
                 if (Array.isArray(dateArray) && dateArray.length > 0) {
-                    let exist= await staffOrTransportWorkingHistoryModel.findOne({ where: { staffortransportrequest_id: order.id, employee_id } });
-                    if(!exist){
+                    let exist = await staffOrTransportWorkingHistoryModel.findOne({ where: { staffortransportrequest_id: order.id, employee_id } });
+                    if (!exist) {
                         for (const date of dateArray) {
                             const obj = {
                                 date,
@@ -191,7 +195,7 @@ exports.assignmentUpdate = async function (req, res) {
                         }
                     }
                     // await staffOrTransportWorkingHistoryModel.destroy({ where: { staffortransportrequest_id: order.id, employee_id } });
-                    
+
                 }
                 staffaccepted += 1;
                 if (staffneeded == staffaccepted) {
@@ -203,14 +207,16 @@ exports.assignmentUpdate = async function (req, res) {
                 return res.status(400).json({ message: 'Already employees assigned to this assignment' });
             }
         } else {
-            if(status == 0){
-                for (let i = 0; i < userTokens.length; i++) {
-                    let obj = {
-                        token: userTokens[i].token,
-                        type: requestResult == 'staffing' ? 'Staffing' : 'Transport',
-                        msg: "Your order has been rejected.",
-                    };
-                    await appUtil.sendmessage(obj);
+            if (status == 0) {
+                if (UserNotification && (UserNotification.rejectedassignments == 1)) {
+                    for (let i = 0; i < userTokens.length; i++) {
+                        let obj = {
+                            token: userTokens[i].token,
+                            type: requestResult == 'staffing' ? 'Staffing' : 'Transport',
+                            msg: "Your order has been rejected.",
+                        };
+                        await appUtil.sendmessage(obj);
+                    }
                 }
             }
             await interestResult.update({ status });

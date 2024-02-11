@@ -60,6 +60,7 @@ db.usertoken = require("./usertoken.model")(sequelize, Sequelize);
 db.userapplicant = require("./userapplicant.model")(sequelize, Sequelize);
 db.notificationmaster = require("./notificationmaster.model")(sequelize, Sequelize);
 db.usernotification = require("./usernotification.model")(sequelize, Sequelize);
+db.functions = require("./functions.model")(sequelize, Sequelize);
 
 
 /** relationship */
@@ -112,6 +113,7 @@ db.orderhistory.hasOne(db.screenshot, { foreignKey: 'orderhistory_id', targetKey
 db.screenshot.belongsTo(db.orderhistory, { foreignKey: 'orderhistory_id', targetKey: 'id' })
 
 db.staffOrTransportRequest.belongsTo(db.category, { foreignKey: 'category_id', targetKey: 'id' });
+db.staffOrTransportRequest.belongsTo(db.functions, { foreignKey: 'function_id', targetKey: 'id' });
 
 db.staffOrTransportRequest.hasMany(db.staffOrTransportInterest, { foreignKey: 'staffortransportrequest_id', targetKey: 'id' });
 
@@ -147,5 +149,6 @@ db.orderSharing.belongsTo(db.users, { foreignKey: 'user_id', targetKey: 'id' })
 db.orderhistory.hasMany(db.orderSharing, { foreignKey: 'orderhistory_id', targetKey: 'id' });
 
 db.usertoken.belongsTo(db.users, { foreignKey: 'user_id', targetKey: 'id' })
+db.functions.belongsTo(db.category, { foreignKey: 'category_id', targetKey: 'id' });
 
 module.exports = db;
