@@ -198,6 +198,9 @@ exports.appLogin = function (req, res) {
     appUtil.appLogin(req.body).then(function(resp){
         if(resp && resp.status == 200) {
             res.status(200).json({message:'OTP Send to user email'});
+        }
+        else if (resp && resp.message == 'Verifeer uw account om in te loggen') {
+            res.status(500).send('Verifeer uw account om in te loggen');
         } else {
             res.status(500).send('User not found');
         }
