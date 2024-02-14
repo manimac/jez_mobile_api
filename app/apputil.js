@@ -504,18 +504,25 @@ exports.appLogin = function (body) {
             }
         }).then(async function (row) {
             if (row) {
-                const otp = generateOTP();
-                await UserModel.update({ otp: otp }, {
-                    where: {
-                        id: row.id
-                    }
-                });
-                // Use Promise.all for parallel execution of sending OTP through email and SMS
-                await Promise.all([sendOTP(row, otp), sendOTPSMS(row, otp, body.countrycode)]);
-
-                resolve({
-                    'message': 'OTP sent to user Email and SMS', status: 200
-                });
+                if(row.is_verified == 0){
+                    resolve({
+                        'message': 'Verifeer uw account om in te loggen', status: 204
+                    });
+                }
+                else{
+                    const otp = generateOTP();
+                    await UserModel.update({ otp: otp }, {
+                        where: {
+                            id: row.id
+                        }
+                    });
+                    // Use Promise.all for parallel execution of sending OTP through email and SMS
+                    await Promise.all([sendOTP(row, otp), sendOTPSMS(row, otp, body.countrycode)]);
+    
+                    resolve({
+                        'message': 'OTP sent to user Email and SMS', status: 200
+                    });
+                }                
             } else {
                 resolve({
                     'message': 'User not found', status: 204
@@ -644,7 +651,7 @@ exports.hoursUpdate = function (user, status) {
     })
 }
 
-exports.interestUpdate = function (user, status) {
+exports.interestUpdate = function () {
     readHTMLFile('./app/mail/email-temp.html', function (err, html) {
         var template = handlebars.compile(html);
         let comments = `Your have new interest in your assignment`;

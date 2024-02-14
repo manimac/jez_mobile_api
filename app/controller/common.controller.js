@@ -33,6 +33,8 @@ const UserTokenModel = MODELS.usertoken;
 const UserApplicantModel = MODELS.userapplicant;
 const NotificationMasterModel = MODELS.notificationmaster;
 const UserNotificationModel = MODELS.usernotification;
+const functionModel = MODELS.functions;
+const EmployeeFunctionModel = MODELS.employeefunctions;
 
 RandExp = require('randexp');
 const request = require('request');
@@ -66,17 +68,25 @@ exports.getTermAndCondition = function (req, res) {
 exports.getFilterOptions = async function (req, res) {
     try {
         var type = req.body.search ? req.body.search.type : req.body.type
-        const [categoryResp, staffOrTransportResp] = await Promise.all([
+        const [categoryResp, functionsResp, staffOrTransportResp] = await Promise.all([
             CategoryModel.findAll({}),
+            functionModel.findAll({}),
             StaffOrTransportRequestModel.findAll({ where: { status: req.body.status, type: type }, attributes: ['title', 'id', 'category_id'] })
         ]);
 
         let userCategories; // Declare userCategories outside the if block
+        let userFunctions; 
 
         if (req.body.employee_id) {
             userCategories = await EmployeeCategoryModel.findAll({
                 where: { employee_id: req.body.employee_id },
                 include: [CategoryModel]
+            });
+        }
+        if (req.body.employee_id) {
+            userFunctions = await EmployeeFunctionModel.findAll({
+                where: { employee_id: req.body.employee_id },
+                include: [functionModel]
             });
         }
 
@@ -91,7 +101,9 @@ exports.getFilterOptions = async function (req, res) {
         res.send({
             category: categoryResp || [],
             staffTransport: staffOrTransportResp || [],
-            userCategories: userCategories || []
+            userCategories: userCategories || [],
+            functions: functionsResp || [],
+            userFunctions: userFunctions || []
         });
     } catch (err) {
         res.status(500).send(err);
@@ -1127,14 +1139,14 @@ exports.notificationMasters = function (req, res) {
             'status': 1
         },
         order: [
-            ['updatedAt', 'DESC']
+            ['order', 'ASC']
         ]
     }).then(function (entries) {
         res.send(entries || null)
     });
 }
 exports.upsertUserNotificationSetting = function (req, res) {
-    UserNotificationModel.findOne({ user_id: req.body.user_id, notificationmaster_id: req.body.notificationmaster_id }).then(async function (row) {
+    UserNotificationModel.findOne({ where: {user_id: req.body.user_id} }).then(async function (row) {
         if (row) {
             try {
                 const notify = await row.update(req.body);
@@ -1153,3 +1165,14 @@ exports.upsertUserNotificationSetting = function (req, res) {
         }
     });
 }
+
+exports.getUserNotification = async function (req, res) {
+    try {
+        const row = await UserNotificationModel.findOne({ where: {user_id: req.body.user_id} });
+        res.send(row);
+    } catch (err) {
+        console.error("Error retrieving user notification:", err);
+        res.status(500).send(err);
+    }
+}
+

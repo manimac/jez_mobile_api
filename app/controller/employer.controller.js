@@ -19,6 +19,7 @@ const staffOrTransportWorkingHistoryModel = MODELS.staffOrTransportWorkingHistor
 const staffOrTransportRequestModel = MODELS.staffOrTransportRequest;
 const UserModel = MODELS.users;
 const UserTokenModel = MODELS.usertoken;
+const UserNotificationModel = MODELS.usernotification;
 const request = require('request');
 
 // SET STORAGE
@@ -215,16 +216,27 @@ exports.hoursSingleUpdate = async function (req, res) {
         const staffortransportrequestresult = await staffOrTransportRequestModel.findOne({ where: { id: result.staffortransportrequest_id  } });
         const employee = await EmployeeModel.findOne({ where: { id: result.employee_id } });
         const user = await UserModel.findOne({ where: { id: employee.user_id } });
+        const UserNotification = await UserNotificationModel.findOne({ where: { user_id: employee.user_id } });
         
         if (req.body.status!=0) {
             const userTokens = await UserTokenModel.findAll();
             for (let i = 0; i < userTokens.length; i++) {
-                let obj = {
-                    token: userTokens[i].token,
-                    type: staffortransportrequestresult.type == 'staffing' ? 'Staffing' : 'Transport',
-                    msg: req.body.status == 1 ? "Your hours has been rejected" : "Your hours has been verified successfully",
-                };
-                await appUtil.sendmessage(obj);
+                if(req.body.status == 1 && UserNotification && (UserNotification.hoursrejected==1)){
+                    let obj = {
+                        token: userTokens[i].token,
+                        type: staffortransportrequestresult.type == 'staffing' ? 'Staffing' : 'Transport',
+                        msg: "Your hours has been rejected",
+                    };
+                    await appUtil.sendmessage(obj);
+                }
+                else if(UserNotification && (UserNotification.hoursaccepted==1)){
+                    let obj = {
+                        token: userTokens[i].token,
+                        type: staffortransportrequestresult.type == 'staffing' ? 'Staffing' : 'Transport',
+                        msg: "Your hours has been verified successfully",
+                    };
+                    await appUtil.sendmessage(obj);
+                }                
             }
         }
         else{

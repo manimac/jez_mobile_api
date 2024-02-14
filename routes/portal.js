@@ -10,6 +10,7 @@ const employee = require("../app/controller/employee.controller");
 const employer = require("../app/controller/employer.controller");
 const category = require("../app/controller/category.controller");
 const staffingModule = require("../app/controller/staffing-module.controller");
+const functions = require("../app/controller/function.controller");
 const authMiddware = passport.authenticate("jwt", { session: false });
 
 //Google map
@@ -20,6 +21,7 @@ router.post("/pushnotification/sendmessage", common.sendmessage);
 router.post("/payment/ideal", order.productIdeal);
 router.post("/payment/webhook", order.paymentWebhook);
 router.post("/common/sumsubwebook", common.sumsubwebook);
+router.get("/staff-transport-request/recentProcess", staffingModule.recentProcess);
 
 router.get("/terms-and-condition", common.getTermAndCondition);
 router.post("/forget", user.forget);
@@ -116,6 +118,8 @@ router.post("/employer/update", employer.updateEmployer);
 router.post("/employee/createCategories", employee.createCategories);
 router.post("/employee/removeCategories", employee.removeCategories);
 router.post("/employee/createCategory", employee.createCategory);
+router.post("/employee/removeFunctions", employee.removeFunctions);
+router.post("/employee/createFunctions", employee.createFunctions);
 router.post("/employee/createExperience", employee.createExperience);
 router.post("/employee/getExperience", employee.getExperience);
 
@@ -139,6 +143,11 @@ router.post("/category/get", category.getCategory);
 router.post("/category/create", category.createCategory);
 router.post("/category/update", category.updateCategory);
 router.delete("/category/delete/:id", category.deleteCategory);
+//functions
+router.post("/functions/get", functions.getFunction);
+router.post("/functions/create", functions.createFunction);
+router.post("/functions/update", functions.updateFunction);
+router.delete("/functions/delete/:id", functions.deleteFunction);
 
 
 router.post("/hoursUpdate", employer.hoursUpdate);
@@ -187,6 +196,7 @@ router.get('/contactus', common.contactus);
 router.get('/faqs', common.faqs);
 
 router.get('/notification-masters', common.notificationMasters);
+router.post('/getUserNotification', common.getUserNotification);
 router.post('/notification-setting/update', common.upsertUserNotificationSetting);
 
 module.exports = router;
