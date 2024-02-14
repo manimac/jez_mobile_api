@@ -53,9 +53,10 @@ exports.createUserDetail = function (req, res) {
 }
 
 exports.verifyUser = function (req, res) {
-    UserModel.findByPk(req.params.id).then(function (user) {
+    UserModel.findByPk(req.params.userid).then(function (user) {
         if (!user) {
-            res.status(204).send('User not available');
+            res.send('Invalid verification');
+            // res.redirect(`${process.env.appUrl}/receipt/${collection.txnid}`);
         } else if (!user.is_verified) {
             if ((user.verification_token == req.params.token)) {
                 user.update({ is_verified: 1 }).then(function (resp) {
@@ -68,10 +69,12 @@ exports.verifyUser = function (req, res) {
                     res.status(500).send(updateErr);
                 })
             } else {
-                res.send({ status: 0, message: 'Invalid verification' });
+                res.send('Invalid verification');
+                // res.redirect(`${process.env.appUrl}/receipt/${collection.txnid}`);
             }
-        } else {
-            res.send({ status: 1, message: 'User Already Verified' });
+        }
+        else {
+            res.send('User Already Verified');
         }
     }).catch(function (err) {
         res.status(500).send(err);
@@ -79,7 +82,7 @@ exports.verifyUser = function (req, res) {
 }
 
 
-exports.allUsers = function(req, res) {
+exports.allUsers = function (req, res) {
     let result = { count: 0, data: [] };
     let offset = req.body.offset || 0;
     let limit = req.body.limit || 1000;
@@ -195,9 +198,9 @@ exports.forget = async function (req, res) {
 }
 
 exports.appLogin = function (req, res) {
-    appUtil.appLogin(req.body).then(function(resp){
-        if(resp && resp.status == 200) {
-            res.status(200).json({message:'OTP Send to user email'});
+    appUtil.appLogin(req.body).then(function (resp) {
+        if (resp && resp.status == 200) {
+            res.status(200).json({ message: 'OTP Send to user email' });
         } else {
             res.status(500).send('User not found');
         }
