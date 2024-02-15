@@ -7,6 +7,7 @@ const ProductModel = (sequelize, Sequelize) => {
         qnr: { type: Sequelize.STRING, allowNull: true },
         lat: { type: Sequelize.STRING, allowNull: true },
         lng: { type: Sequelize.STRING, allowNull: true },
+        location: { type: Sequelize.TEXT, allowNull: true },
         vehicletype: { type: Sequelize.STRING, allowNull: true }, // Car, Van, Truck
         thumbnail: { type: Sequelize.STRING, allowNull: true },
         priceperhr: { type: Sequelize.STRING, allowNull: true },

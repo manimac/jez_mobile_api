@@ -2,6 +2,7 @@ const UserModel = (sequelize, Sequelize) => {
     const User = sequelize.define('User', {
         id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
         phone: { type: Sequelize.STRING, allowNull: true },
+        countrycode: { type: Sequelize.STRING, allowNull: true },
         firstname: { type: Sequelize.STRING, allowNull: true },
         lastname: { type: Sequelize.STRING, allowNull: true },
         insertion: { type: Sequelize.STRING, allowNull: true },

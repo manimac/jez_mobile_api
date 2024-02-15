@@ -137,7 +137,7 @@ async function sendVfMail(user, password = null) {
         let comments = `Welkom bij Jezsel. U heeft succesvol een account bij Jezsel.nl aangemaakt. Klikt u op de link om uw e-mailadres te bevestigen.</p><p>Mocht u geen account hebben aangemaakt, stuur dan een e-mail naar info@jezsel.nl</p><p>
         ${verifyUrl}</p><p>Wij wensen u nog veel plezier met de diensten van Jezsel.`;
         var replacements = {
-            username: user.firstname + ' ' + user.lastname,
+            username: user.firstname ? user.firstname : '' + ' ' + user.lastname ? user.lastname : '',
             message: comments,
             message2: '',
         };
@@ -175,7 +175,7 @@ async function sendOrdConfirmation(order, type) {
         var template = handlebars.compile(html);
         let comments = `Bedankt voor uw bezoek aan Jezsel.nl. Wij hebben uw aanvraag in goede orde ontvangen. Uw ordernummer is ` + order.id + ".</p><p>" + `Heeft u nog vragen naar aanleiding van dit bericht. Dan kunt u contact met ons opnemen per e-mail. Vergeet niet uw ordernummer te vermelden.</p><p>Wij wensen u alvast een fijne ervaring met onze diensten.`;
         var replacements = {
-            username: user.firstname + ' ' + user.lastname,
+            username: user.firstname ? user.firstname : '' + ' ' + user.lastname ? user.lastname : '',
             message: comments,
             message2: '',
         };
@@ -250,7 +250,7 @@ async function main(user) {
         // let comments = `Click the following link to process the payment ${verifyUrl}`;
         let comments = `Bedankt voor uw bezoek aan onze website. U heeft ervoor gekozen om via een betalingslink te betalen. Via de onderstaande link kunt u betalen.</p><p>${verifyUrl}</p>Mocht u problemen ondervinden met de betalingslink, kunt u contact met ons opnemen.</p><p>Heeft u nog vragen naar aanleiding van dit bericht, kunt u ook contact met ons opnemen.`;
         var replacements = {
-            username: user.firstname + ' ' + user.lastname,
+            username: user.firstname ? user.firstname : '' + ' ' + user.lastname ? user.lastname : '',
             message: comments,
             message2: '',
         };
@@ -325,7 +325,7 @@ exports.resetedPassword = function (user, password) {
 
             // message: `You have successfully reset the password for your JEZSEL account, Your current password is ${password}`,
             var replacements = {
-                username: user.firstname + ' ' + user.lastname,
+                username: user.firstname ? user.firstname : '' + ' ' + user.lastname ? user.lastname : '',
                 message: comments,
                 message2: '',
             };
@@ -362,7 +362,7 @@ exports.expireNotification = function (order) {
         Bedankt voor het gebruik maken van de diensten van Jezsel en graag tot ziens.
         `;
         var replacements = {
-            username: user.firstname + ' ' + user.lastname,
+            username: user.firstname ? user.firstname : '' + ' ' + user.lastname ? user.lastname : '',
             message: comments,
             message2: '',
         };
@@ -390,7 +390,7 @@ exports.cancelNotification = function (user, order) {
         var template = handlebars.compile(html);
         let comments = `U heeft beroep gedaan op uw annuleringsverzekering.</p><p>Hierbij bevestigen wij dat uw annulering in goede orde is aangekomen.</p><p>Wij zien u graag terug bij Jezsel.`;
         var replacements = {
-            username: user.firstname + ' ' + user.lastname,
+            username: user.firstname ? user.firstname : '' + ' ' + user.lastname ? user.lastname : '',
             message: comments,
             message2: '',
         };
@@ -418,7 +418,7 @@ exports.withdrawRequest = function (user, status) {
         var template = handlebars.compile(html);
         let comments = (status == 'Accepted') ? `U heeft een verzoek gedaan tot uitbetaling van uw wallet. Uw verzoek is goedgekeurd. Het bedrag zal binnen zeven werkdagen worden gestort op uw rekening.</p><p>Wij wensen u nog veel plezier met de diensten van Jezsel.` : `U heeft een verzoek gedaan tot uitbetaling van uw wallet. Uw verzoek is helaas afgekeurd. Binnen 3-5 werkdagen zal er contact met u worden opgenomen om de reden van afwijzing toe te lichten.</p><p>Mocht u nog vragen hebben naar aanleiding van dit bericht, verzoeken wij u vriendelijk om de vijf werkdagen te wachten en na de toelichting uw vraag te stellen. Op het moment dat u eerder contact opneemt, kunnen wij niet garanderen dat wij u verder kunnen helpen.</p><p>U kunt contact met ons opnemen per e-mail. Vergeet niet uw ordernummer te vermelden.`;
         var replacements = {
-            username: user.firstname + ' ' + user.lastname,
+            username: user.firstname ? user.firstname : '' + ' ' + user.lastname ? user.lastname : '',
             message: comments,
             message2: '',
         };
@@ -625,9 +625,9 @@ exports.hoursUpdate = function (user, status) {
         else if (status == 2) {
             ms = `Your hours verified successfully`
         }
-        let comments = (status == 0) ? `New hours updated for ` + user.firstname + ' ' + user.lastname : ms;
+        let comments = (status == 0) ? `New hours updated for ` + user.firstname ? user.firstname : '' + ' ' + user.lastname ? user.lastname : '' : ms;
         var replacements = {
-            username: (status == 0) ? 'Admin' : user.firstname + ' ' + user.lastname,
+            username: (status == 0) ? 'Admin' : user.firstname ? user.firstname : '' + ' ' + user.lastname ? user.lastname : '',
             message: comments,
             message2: '',
         };
