@@ -1421,6 +1421,22 @@ exports.updateOrder = function (req, res) {
     })
 }
 
+exports.findOrder = async function (req, res) {
+    try {
+        const order = await OrderModel.findByPk(req.body.id);
+
+        if (order) {
+            res.send(order);
+        } else {
+            res.status(404).send("Order not found");
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Internal Server Error");
+    }
+};
+
+
 exports.orders = function (req, res) {
     let result = { count: 0, data: [] };
     let offset = req.body.offset || 0;
@@ -2389,12 +2405,17 @@ exports.paymentWebhook = async function (req, res) {
             var isOrder = await OrderModel.findOne({
                 where: {
                     intentid: paymentIntent.id
-                }
+                },
+                include: [UserModel]
             });    
             if (isOrder) {
                 const updatedOrder = isOrder.toJSON();
                 updatedOrder.status = 1;
-                await OrderModel.update(updatedOrder, { where: { intentid: paymentIntent.id } });
+                let resp = await OrderModel.update(updatedOrder, { where: { intentid: paymentIntent.id } });
+                if(isOrder.User){
+                    resp.user = isOrder.User;
+                }
+                appUtil.sendOrderConfirmationMail(resp, resp.type);
             } else {
                 res.status(500).send('Order not found');
             }

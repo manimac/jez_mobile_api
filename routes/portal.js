@@ -40,6 +40,7 @@ router.post("/orders-removeinvitation", order.removeinvitation);
 router.post("/order/my-wallet", order.myWallet);
 router.post("/withdraws", common.withdrawRequests);
 router.get("/product/extras", product.extras);
+router.post("/order/find", order.findOrder);
 
 /** Booking Screen */
 router.post("/order/create", order.createProduct);
