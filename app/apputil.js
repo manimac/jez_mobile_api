@@ -516,8 +516,12 @@ exports.appLogin = function (body) {
                             id: row.id
                         }
                     });
-                    // Use Promise.all for parallel execution of sending OTP through email and SMS
-                    await Promise.all([sendOTP(row, otp), sendOTPSMS(row, otp, body.countrycode)]);
+                    if (body.isPhone) {
+                        await sendOTPSMS(row, otp, body.countrycode);
+                    } else {
+                        await sendOTP(row, otp);
+                    }
+                    // await Promise.all([sendOTP(row, otp), sendOTPSMS(row, otp, body.countrycode)]);
     
                     resolve({
                         'message': 'OTP sent to user Email and SMS', status: 200
@@ -525,7 +529,7 @@ exports.appLogin = function (body) {
                 }                
             } else {
                 resolve({
-                    'message': 'User not found', status: 204
+                    'message': 'Please enter valid credentials', status: 204
                 });
             }
         });

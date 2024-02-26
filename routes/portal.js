@@ -27,6 +27,7 @@ router.get("/terms-and-condition", common.getTermAndCondition);
 router.post("/forget", user.forget);
 router.get("/user/verification/:id/:token", user.verifyUser);
 router.post("/reset/password", user.resetPassword);
+router.post("/checkPhoneExist", user.checkPhoneExist);
 router.get('/filter/locations', common.allFilterLocations);
 
 /** Profile Screen */

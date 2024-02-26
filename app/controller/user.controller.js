@@ -60,9 +60,10 @@ exports.verifyUser = function (req, res) {
         } else if (!user.is_verified) {
             if ((user.verification_token == req.params.token)) {
                 user.update({ is_verified: 1 }).then(function (resp) {
-                    res.writeHead(301, {
-                        Location: process.env.appUrl
-                    }).end();
+                    res.redirect(302, process.env.verificationUrl);
+                    // res.writeHead(301, {
+                    //     Location: process.env.appUrl
+                    // }).end();
                     //res.redirect(200, process.env.appUrl);
                     // res.send({ status: 1, message: 'User Verified' });
                 }, function (updateErr) {
@@ -74,7 +75,8 @@ exports.verifyUser = function (req, res) {
             }
         }
         else {
-            res.send('User Already Verified');
+            res.redirect(302, process.env.alreadyverificationUrl);
+            // res.send('User Already Verified');
         }
     }).catch(function (err) {
         res.status(500).send(err);
@@ -183,6 +185,23 @@ exports.resetPassword = async function (req, res) {
     }
 }
 
+exports.checkPhoneExist = async function (req, res) {
+    let phone = req.body.phone;
+    let alreadyuser = await UserModel.findOne({
+        where: {
+            'phone': phone,
+            'id': {
+                [Op.ne]: req.body.id
+            } 
+        }
+    });
+    if (alreadyuser) {
+        res.status(500).send('Mobile number exists');
+    } else {
+        res.status(200).send({ user: true });
+    }
+}
+
 exports.forget = async function (req, res) {
     const alreadyuser = await UserModel.findOne({
         where: {
@@ -205,7 +224,7 @@ exports.appLogin = function (req, res) {
         else if (resp && resp.message == 'Verifeer uw account om in te loggen') {
             res.status(500).send('Verifeer uw account om in te loggen');
         } else {
-            res.status(500).send('User not found');
+            res.status(500).send('Please enter valid credentials');
         }
     })
 }
