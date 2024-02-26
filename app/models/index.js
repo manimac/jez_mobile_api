@@ -106,6 +106,8 @@ db.order.belongsTo(db.team, { foreignKey: 'team_id', targetKey: 'id' });
 db.order.belongsTo(db.coupon, { foreignKey: 'coupon_id', targetKey: 'id' });
 db.product.hasMany(db.orderhistory, { foreignKey: 'product_id', targetKey: 'id' });
 db.orderhistory.belongsTo(db.product, { foreignKey: 'product_id', targetKey: 'id' });
+db.product.hasMany(db.orderhistory, { foreignKey: 'originalproduct_id', targetKey: 'id', as:'original_histories' });
+db.orderhistory.belongsTo(db.product, { foreignKey: 'originalproduct_id', targetKey: 'id', as:'original_product' });
 db.orderhistory.belongsTo(db.extra, { foreignKey: 'extra_id', targetKey: 'id' })
 db.orderhistory.belongsTo(db.filterlocation, { foreignKey: 'filterlocation_id', targetKey: 'id' })
 db.orderhistory.belongsTo(db.order, { foreignKey: 'order_id', targetKey: 'id' })

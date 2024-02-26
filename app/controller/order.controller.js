@@ -1295,6 +1295,155 @@ exports.checkAvailability = function (req, res) {
 
 }
 
+exports.returnAvailableProducts = function (req, res) {
+
+    // var bookedVehicle = [];
+    const search = req.body
+    let where = {};
+    const checkindatetime = moment(search.checkindate + ' ' + search.checkintime, 'DD-MM-YYYY HH:mm');
+    const checkoutdatetime = moment(search.checkoutdate + ' ' + search.checkouttime, 'DD-MM-YYYY HH:mm');
+    search.checkindatetimeex = checkindatetime.clone();
+    search.checkoutdatetimeex = checkoutdatetime.clone();
+    search.checkindatetimeex = search.checkindatetimeex.subtract(60, 'minutes').format('YYYY-MM-DD HH:mm:ss');
+    search.checkoutdatetimeex = search.checkoutdatetimeex.add(60, 'minutes').format('YYYY-MM-DD HH:mm:ss');
+
+    search.defaultcheckindatetimeex = checkindatetime.clone();
+    search.defaultcheckoutdatetimeex = checkoutdatetime.clone();
+    search.defaultcheckindatetimeex = search.defaultcheckindatetimeex.add(10, 'seconds').format('YYYY-MM-DD HH:mm:ss');
+    search.defaultcheckoutdatetimeex = search.defaultcheckoutdatetimeex.format('YYYY-MM-DD HH:mm:ss');
+
+
+    where[Op.or] = [{
+        [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.checkindatetimeex),
+        Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.checkindatetimeex)]
+    },
+    {
+        [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.checkoutdatetimeex),
+        Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.checkoutdatetimeex)]
+    }]
+    let user_id = appUtil.getUser(req.headers.authorization).id || null;
+    where.status = 1;
+    where.type = req.body.type;
+    where.product_id = search.product_id;
+    where.user_id != user_id;
+    OrderHistoryModel.findAll({
+        where,
+        include: [OrderModel],
+        order: [
+            ['updatedAt', 'DESC']
+        ]
+    }).then((resp) => {
+        // bookedVehicle = resp.map((x, i) => {
+        //     return x.product_id;
+        // });
+
+        if (resp) {
+            if (resp.length) {
+                res.send(resp);
+            } else {
+                let hWhere = {};
+
+                hWhere[Op.or] = [{
+                    [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.defaultcheckindatetimeex),
+                    Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.defaultcheckindatetimeex)]
+                },
+                {
+                    [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.defaultcheckoutdatetimeex),
+                    Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.defaultcheckoutdatetimeex)]
+                }];
+
+                // hWhere.checkoutdate = {
+                //     [Op.between]: [search.checkindatetime.toDate(), search.checkoutdatetime.toDate()]
+                // };
+                hWhere.status = 1;
+                hWhere.type = req.body.type;
+                hWhere.product_id = search.product_id;
+                OrderHistoryModel.findAll({
+                    where: hWhere,
+                    include: [{
+                        model: OrderModel,
+                        where: {
+                            user_id: user_id
+                        },
+                        required: true
+                    }],
+                    order: [
+                        ['updatedAt', 'DESC']
+                    ]
+                }).then((sResp) => {
+                    console.log('-----------------------------------');
+                    if (sResp && sResp.length)
+                        res.send(sResp);
+                    else {
+                        /** Check maintenance */
+                        hWhere.type = 'maintenance';
+                        OrderHistoryModel.findAll({
+                            where: hWhere,
+                        }).then((mResp) => {
+                            if (mResp && mResp.length) {
+                                res.send(mResp);
+                            } else {
+                                res.send([]);
+                            }
+                        });
+
+                    }
+                });
+            }
+
+            // let bookedCheckoutdate = moment(resp.checkoutdate);
+            // let bookedCheckoutdate = resp.checkoutdate;
+            // var isafter = search.checkoutdatetime.isAfter(bookedCheckoutdate); // true
+            // if (isafter) {
+            //     let differenceHrs = search.checkoutdatetime.diff(bookedCheckoutdate, 'hours');
+            //     if (differenceHrs < 1) {
+            //         if (resp.Order && resp.Order.user_id != user_id)
+            //             res.send({ booked: true });
+            //         else
+            //             res.send({ booked: false });
+            //     } else
+            //         res.send({ booked: false });
+            // } else {
+            //     res.send({ booked: true });
+            // }
+        } else {
+            /** Check maintenance */
+            let hWhere = {};
+            // hWhere[Op.or] = [{
+            //     checkindate: {
+            //         [Op.between]: [search.defaultcheckindatetimeex, search.defaultcheckoutdatetimeex]
+            //     }
+            // }, {
+            //     checkoutdate: {
+            //         [Op.between]: [search.defaultcheckindatetimeex, search.defaultcheckoutdatetimeex]
+            //     }
+            // }];
+            hWhere[Op.or] = [{
+                [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.defaultcheckindatetimeex),
+                Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.defaultcheckindatetimeex)]
+            },
+            {
+                [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.defaultcheckoutdatetimeex),
+                Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.defaultcheckoutdatetimeex)]
+            }];
+            hWhere.status = 1;
+            //hWhere.type = req.body.type;
+            hWhere.product_id = search.product_id;
+            hWhere.type = [req.body.type, 'maintenance'];
+            OrderHistoryModel.findAll({
+                where: hWhere,
+            }).then((mResp) => {
+                if (mResp && mResp.length) {
+                    res.send(mResp);
+                } else {
+                    res.send([]);
+                }
+            });
+        }
+    })
+
+}
+
 
 exports.checkAvailabilityProducts = function (req, res) {
 
@@ -2398,7 +2547,7 @@ exports.productIdeal = async function (req, res) {
 
 
 exports.paymentWebhook = async function (req, res) {
-    const event = req.body; 
+    const event = req.body;
     switch (event.type) {
         case 'payment_intent.succeeded':
             const paymentIntent = event.data.object;
@@ -2407,12 +2556,12 @@ exports.paymentWebhook = async function (req, res) {
                     intentid: paymentIntent.id
                 },
                 include: [UserModel]
-            });    
+            });
             if (isOrder) {
                 const updatedOrder = isOrder.toJSON();
                 updatedOrder.status = 1;
                 let resp = await OrderModel.update(updatedOrder, { where: { intentid: paymentIntent.id } });
-                if(isOrder.User){
+                if (isOrder.User) {
                     resp.user = isOrder.User;
                 }
                 appUtil.sendOrderConfirmationMail(resp, resp.type);
@@ -2426,7 +2575,7 @@ exports.paymentWebhook = async function (req, res) {
                 where: {
                     intentid: paymentMethod.id
                 }
-            });    
+            });
             if (isOrder) {
                 const updatedOrder = isOrder.toJSON();
                 updatedOrder.status = 2;
@@ -2436,12 +2585,12 @@ exports.paymentWebhook = async function (req, res) {
             }
             break;
         case 'payment_method.payment_failed':
-            const paymentFailed = event.data.object; 
+            const paymentFailed = event.data.object;
             isOrder = await OrderModel.findOne({
                 where: {
                     intentid: paymentFailed.id
                 }
-            });    
+            });
             if (isOrder) {
                 const updatedOrder = isOrder.toJSON();
                 updatedOrder.status = 2;
