@@ -51,6 +51,7 @@ router.delete("/order/image/delete/:id", order.deleteProductImage);
 router.post("/order/make-order", order.makeOrder);
 router.post("/order/update-status", order.updateOrder);
 router.post("/order/availability", order.checkAvailability);
+router.post("/order/get-available-products", order.returnAvailableProducts);
 router.post("/order-history/update", order.orderHistoryUpdate);
 router.post("/order/update-read", order.updateRead);
 

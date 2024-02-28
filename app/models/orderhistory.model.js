@@ -7,7 +7,9 @@ const OrderhistoryModel = (sequelize, Sequelize) => {
         checkindate: { type: 'Timestamp', allowNull: true },
         checkintime: { type: Sequelize.TIME, allowNull: true },
         checkoutdate: { type: 'Timestamp', allowNull: true },
+        originalcheckoutdate: { type: 'Timestamp', allowNull: true },
         checkouttime: { type: Sequelize.TIME, allowNull: true },
+        originalcheckouttime: { type: Sequelize.TIME, allowNull: true },
         price: { type: Sequelize.STRING, allowNull: true },
         discount: { type: Sequelize.STRING, allowNull: true },
         advancepaid: { type: Sequelize.STRING, allowNull: true },
@@ -22,6 +24,9 @@ const OrderhistoryModel = (sequelize, Sequelize) => {
         endbooking: { type: Sequelize.BOOLEAN, allowNull: true },
         endbookingtime: { type: 'Timestamp', allowNull: true },
         screenshotupdated: { type: Sequelize.INTEGER, defaultValue: 0 },
+        beforeemail: { type: Sequelize.INTEGER, defaultValue: 0 },
+        currentemail: { type: Sequelize.INTEGER, defaultValue: 0 },
+        futureemail: { type: Sequelize.INTEGER, defaultValue: 0 },
         minutes_diff: {
             type: Sequelize.VIRTUAL,
             get() {
