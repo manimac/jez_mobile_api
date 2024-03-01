@@ -2585,15 +2585,12 @@ exports.paymentWebhook = async function (req, res) {
                 const updatedOrder = isOrder.toJSON();
                 updatedOrder.status = 1;
                 await OrderModel.update(updatedOrder, { where: { intentid: paymentIntent.id } });
-                const resp = {
-                    ...updatedOrder,
-                    user: isOrder.User || null // Check if User exists before adding
-                };
                 const allHistories = await OrderHistoryModel.findAll({ where: { order_id: isOrder.id } });
 
                 // Loop through histories and send order confirmation emails
                 if (allHistories && Array.isArray(allHistories) && allHistories.length > 0) {
                     for (let i = 0; i < allHistories.length; i++) {
+                        allHistories[i].user = isOrder.User;
                         appUtil.sendOrderConfirmationMail(allHistories[i], isOrder.type);
                     }
                 }
