@@ -1577,6 +1577,29 @@ exports.findOrder = async function (req, res) {
         if (order) {
             res.send(order);
         } else {
+            res.status(500).send("Order not found");
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Internal Server Error");
+    }
+};
+
+exports.findOrderHistory = async function (req, res) {
+    try {
+        const order = await OrderHistoryModel.findOne({
+            where: { id: req.body.id, extra_id: null },
+            include: [
+                { model: UserModel },
+                { model: ProductModel }
+            ]
+        });
+
+        if (order && order.endbooking) {
+            res.status(404).send("Already booking completed");
+        } else if (order) {
+            res.send(order);
+        } else {
             res.status(404).send("Order not found");
         }
     } catch (err) {
@@ -1584,6 +1607,7 @@ exports.findOrder = async function (req, res) {
         res.status(500).send("Internal Server Error");
     }
 };
+
 
 
 exports.orders = function (req, res) {
@@ -2560,11 +2584,20 @@ exports.paymentWebhook = async function (req, res) {
             if (isOrder) {
                 const updatedOrder = isOrder.toJSON();
                 updatedOrder.status = 1;
-                let resp = await OrderModel.update(updatedOrder, { where: { intentid: paymentIntent.id } });
-                if (isOrder.User) {
-                    resp.user = isOrder.User;
+                await OrderModel.update(updatedOrder, { where: { intentid: paymentIntent.id } });
+                const resp = {
+                    ...updatedOrder,
+                    user: isOrder.User || null // Check if User exists before adding
+                };
+                const allHistories = await OrderHistoryModel.findAll({ where: { order_id: isOrder.id } });
+
+                // Loop through histories and send order confirmation emails
+                if (allHistories && Array.isArray(allHistories) && allHistories.length > 0) {
+                    for (let i = 0; i < allHistories.length; i++) {
+                        appUtil.sendOrderConfirmationMail(allHistories[i], isOrder.type);
+                    }
                 }
-                appUtil.sendOrderConfirmationMail(resp, resp.type);
+
             } else {
                 res.status(500).send('Order not found');
             }
