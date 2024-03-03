@@ -35,15 +35,6 @@ exports.products = function (req, res) {
         let checkoutdatetimeex = search.checkoutdatetime.clone();
         search.checkindatetimeex = checkindatetimeex.subtract(60, 'minutes').format('YYYY-MM-DD HH:mm:ss');
         search.checkoutdatetimeex = checkoutdatetimeex.add(60, 'minutes').format('YYYY-MM-DD HH:mm:ss');
-        // where[Op.or] = [{
-        //     checkindate: {
-        //         [Op.between]: [search.checkindatetimeex, search.checkoutdatetimeex]
-        //     }
-        // }, {
-        //     checkoutdate: {
-        //         [Op.between]: [search.checkindatetimeex, search.checkoutdatetimeex]
-        //     }
-        // }]
 
         where[Op.or] = [{
             [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.checkindatetimeex),
@@ -89,16 +80,6 @@ exports.products = function (req, res) {
                 let checkoutdatetimeex = search.checkoutdatetime.clone();
                 search.checkindatetimeex = checkindatetimeex.add(10, 'seconds').format('YYYY-MM-DD HH:mm:ss');
                 search.checkoutdatetimeex = checkoutdatetimeex.format('YYYY-MM-DD HH:mm:ss');
-
-                // userWhere[Op.or] = [{
-                //     checkindate: {
-                //         [Op.between]: [search.checkindatetimeex, search.checkoutdatetimeex]
-                //     }
-                // }, {
-                //     checkoutdate: {
-                //         [Op.between]: [search.checkindatetimeex, search.checkoutdatetimeex]
-                //     }
-                // }]
 
                 userWhere[Op.or] = [{
                     [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.checkindatetimeex),

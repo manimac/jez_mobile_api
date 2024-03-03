@@ -1333,9 +1333,6 @@ exports.returnAvailableProducts = function (req, res) {
             ['updatedAt', 'DESC']
         ]
     }).then((resp) => {
-        // bookedVehicle = resp.map((x, i) => {
-        //     return x.product_id;
-        // });
 
         if (resp) {
             if (resp.length) {
@@ -1351,10 +1348,6 @@ exports.returnAvailableProducts = function (req, res) {
                     [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.defaultcheckoutdatetimeex),
                     Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.defaultcheckoutdatetimeex)]
                 }];
-
-                // hWhere.checkoutdate = {
-                //     [Op.between]: [search.checkindatetime.toDate(), search.checkoutdatetime.toDate()]
-                // };
                 hWhere.status = 1;
                 hWhere.type = req.body.type;
                 hWhere.product_id = search.product_id;
@@ -1375,7 +1368,6 @@ exports.returnAvailableProducts = function (req, res) {
                     if (sResp && sResp.length)
                         res.send(sResp);
                     else {
-                        /** Check maintenance */
                         hWhere.type = 'maintenance';
                         OrderHistoryModel.findAll({
                             where: hWhere,
@@ -1390,34 +1382,8 @@ exports.returnAvailableProducts = function (req, res) {
                     }
                 });
             }
-
-            // let bookedCheckoutdate = moment(resp.checkoutdate);
-            // let bookedCheckoutdate = resp.checkoutdate;
-            // var isafter = search.checkoutdatetime.isAfter(bookedCheckoutdate); // true
-            // if (isafter) {
-            //     let differenceHrs = search.checkoutdatetime.diff(bookedCheckoutdate, 'hours');
-            //     if (differenceHrs < 1) {
-            //         if (resp.Order && resp.Order.user_id != user_id)
-            //             res.send({ booked: true });
-            //         else
-            //             res.send({ booked: false });
-            //     } else
-            //         res.send({ booked: false });
-            // } else {
-            //     res.send({ booked: true });
-            // }
         } else {
-            /** Check maintenance */
             let hWhere = {};
-            // hWhere[Op.or] = [{
-            //     checkindate: {
-            //         [Op.between]: [search.defaultcheckindatetimeex, search.defaultcheckoutdatetimeex]
-            //     }
-            // }, {
-            //     checkoutdate: {
-            //         [Op.between]: [search.defaultcheckindatetimeex, search.defaultcheckoutdatetimeex]
-            //     }
-            // }];
             hWhere[Op.or] = [{
                 [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.defaultcheckindatetimeex),
                 Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.defaultcheckindatetimeex)]
@@ -1427,7 +1393,6 @@ exports.returnAvailableProducts = function (req, res) {
                 Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.defaultcheckoutdatetimeex)]
             }];
             hWhere.status = 1;
-            //hWhere.type = req.body.type;
             hWhere.product_id = search.product_id;
             hWhere.type = [req.body.type, 'maintenance'];
             OrderHistoryModel.findAll({
