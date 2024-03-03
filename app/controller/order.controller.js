@@ -996,9 +996,9 @@ exports.makeOrder = function (req, res) {
         resp = resp.toJSON();
         resp.user = USER;
         resp.Orderhistories = [];
-        if (resp.status == 1) {
-            appUtil.sendOrderConfirmationMail(resp, req.body.type);
-        }
+        // if (resp.status == 1) {
+        //     appUtil.sendOrderConfirmationMail(resp, req.body.type);
+        // }
         async.eachSeries(req.body.products, function (product, pCallback) {
             if (product.type == 'rent' || product.type == 'Rent' || product.type == 'RENT' || 'maintenance') {
                 let orderhistory = product;
@@ -1562,7 +1562,7 @@ exports.updateOrder = function (req, res) {
             const USER = appUtil.getUser(req.headers.authorization);
             resp.user = USER;
             if (resp.status == 1)
-                appUtil.sendOrderConfirmationMail(resp, resp.type);
+                // appUtil.sendOrderConfirmationMail(resp, resp.type);
             res.send(resp);
         })
     }, function (err) {
@@ -2585,7 +2585,7 @@ exports.paymentWebhook = async function (req, res) {
                 const updatedOrder = isOrder.toJSON();
                 updatedOrder.status = 1;
                 await OrderModel.update(updatedOrder, { where: { intentid: paymentIntent.id } });
-                const allHistories = await OrderHistoryModel.findAll({ where: { order_id: isOrder.id } });
+                const allHistories = await OrderHistoryModel.findAll({ where: { order_id: isOrder.id, extra_id: null} });
 
                 // Loop through histories and send order confirmation emails
                 if (allHistories && Array.isArray(allHistories) && allHistories.length > 0) {
