@@ -106,6 +106,7 @@ module.exports = function (passport) {
                 lastname: req.body.lastname,
                 insertion: req.body.insertion,
                 phone: req.body.phone,
+                phone: req.body.telefoonnr,
                 countrycode: req.body.countrycode,
                 newsletter: req.body.newsletter,
                 team_id: req.body.team_id || null,
