@@ -30,8 +30,16 @@ module.exports = function (passport) {
     }
 
     passport.use(new JwtStrategy(jwtOptions, function (jwt_payload, done) {
-        User.findByPk(jwt_payload.id).then(function (user) {
-            return done(null, user);
+        User.findOne({ where: { id: jwt_payload.id, email: jwt_payload.email } }).then(function (user) {
+            if (user)
+                return done(null, user);
+            else {
+                EmployerUser.findOne({ where: { id: jwt_payload.id, email: jwt_payload.email } }).then(function (empUser) {
+                    return done(null, empUser);
+                }, function (err) {
+                    return done(err, null);
+                })
+            }
         }, function (err) {
             return done(err, null);
         })
@@ -294,7 +302,7 @@ module.exports = function (passport) {
                 if (!rows) {
                     return done(null, false); // req.flash is the way to set flashdata using connect-flash
                 }
-                
+
 
                 // if the user is found but the password is wrong
                 if (!bcrypt.compareSync(password, rows.password))
