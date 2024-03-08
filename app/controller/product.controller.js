@@ -259,6 +259,15 @@ exports.products = function (req, res) {
 
 }
 
+exports.productsnofilter = function (req, res) {
+    ProductModel.findAll({}).then(function (resp) {
+        res.send(resp);
+    }, function (err) {
+        res.status(500).send(err);
+    })
+
+}
+
 exports.getProductFind = function (req, res) {
     ProductModel.findOne({
         where: { id: req.params.id },

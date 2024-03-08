@@ -1324,6 +1324,7 @@ exports.returnAvailableProducts = function (req, res) {
     let user_id = appUtil.getUser(req.headers.authorization).id || null;
     where.status = 1;
     where.type = req.body.type;
+    
     where.product_id = search.product_id;
     where.user_id != user_id;
     OrderHistoryModel.findAll({
@@ -1334,7 +1335,7 @@ exports.returnAvailableProducts = function (req, res) {
         ]
     }).then((resp) => {
 
-        if (resp) {
+        if (resp && Array.isArray(resp) && resp.length>0) {
             if (resp.length) {
                 res.send(resp);
             } else {
@@ -1655,8 +1656,7 @@ exports.ordersForApp = function (req, res) {
     OrderHistoryModel.findAndCountAll({
         where: orderHistoryWhere,
         include: [{
-            model: OrderSharingModel,
-            where: sharingwhere,
+            model: OrderSharingModel
         }]
     }).then((output) => {
         result.count = output.count;
@@ -1678,7 +1678,6 @@ exports.ordersForApp = function (req, res) {
             },
             {
                 model: OrderSharingModel,
-                where: sharingwhere,
                 include: [UserModel]
             }, {
                 model: UserModel,

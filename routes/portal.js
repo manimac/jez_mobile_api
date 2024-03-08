@@ -57,6 +57,7 @@ router.post("/order-history/find", order.findOrderHistory);
 router.post("/order/update-read", order.updateRead);
 
 router.post("/products", product.products);
+router.post("/productsnofilter", product.productsnofilter);
 router.get("/productfind/:id", product.getProductFind);
 router.get("/product/similar/:type/:id", product.getSimilarProducts);
 router.get("/filters/:type?/:category?", common.filters); // type- Rent, Staff, category - Fuel, Truck

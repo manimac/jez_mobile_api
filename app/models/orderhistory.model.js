@@ -27,6 +27,7 @@ const OrderhistoryModel = (sequelize, Sequelize) => {
         beforeemail: { type: Sequelize.INTEGER, defaultValue: 0 },
         currentemail: { type: Sequelize.INTEGER, defaultValue: 0 },
         futureemail: { type: Sequelize.INTEGER, defaultValue: 0 },
+        // isreaded: { type: Sequelize.BOOLEAN, allowNull: true },
         minutes_diff: {
             type: Sequelize.VIRTUAL,
             get() {
