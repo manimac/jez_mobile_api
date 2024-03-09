@@ -1329,7 +1329,7 @@ exports.returnAvailableProducts = function (req, res) {
     where.user_id != user_id;
     OrderHistoryModel.findAll({
         where,
-        include: [OrderModel],
+        include: [OrderModel, UserModel],
         order: [
             ['updatedAt', 'DESC']
         ]
@@ -2661,6 +2661,59 @@ exports.updateRead = function (req, res) {
         result.update(req.body).then((resp) => {
             res.send(resp);
         })
+    }, function (err) {
+        res.status(500).send(err);
+    })
+}
+
+exports.updateUserRead = function (req, res) {
+    UserModel.findByPk(req.body.id).then(function (result) {
+        result.update(req.body).then((resp) => {
+            res.send(resp);
+        })
+    }, function (err) {
+        res.status(500).send(err);
+    })
+}
+
+exports.updateWithdrawRead = function (req, res) {
+    WithdrawRequestModel.findByPk(req.body.id).then(function (result) {
+        result.update(req.body).then((resp) => {
+            res.send(resp);
+        })
+    }, function (err) {
+        res.status(500).send(err);
+    })
+}
+
+exports.getunReadOrders = function (req, res) {
+    let where = {isreaded: 0, status: 1}
+    OrderModel.findAndCountAll({
+        where
+    }).then(function (result) {
+        res.send(result);
+    }, function (err) {
+        res.status(500).send(err);
+    })
+}
+
+exports.getunReadUsers = function (req, res) {
+    let where = {isreaded: 0}
+    UserModel.findAndCountAll({
+        where
+    }).then(function (result) {
+        res.send(result);
+    }, function (err) {
+        res.status(500).send(err);
+    })
+}
+
+exports.getunReadWithdraw = function (req, res) {
+    let where = {isreaded: 0}
+    WithdrawRequestModel.findAndCountAll({
+        where
+    }).then(function (result) {
+        res.send(result);
     }, function (err) {
         res.status(500).send(err);
     })

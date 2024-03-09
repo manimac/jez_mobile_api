@@ -203,5 +203,12 @@ router.get('/faqs', common.faqs);
 router.get('/notification-masters', common.notificationMasters);
 router.post('/getUserNotification', common.getUserNotification);
 router.post('/notification-setting/update', common.upsertUserNotificationSetting);
-
+router.post('/user/update-userread', order.updateUserRead);
+router.post('/updateWithdrawRead', order.updateWithdrawRead);
+router.get('/order/getunReadOrders', order.getunReadOrders);
+router.get('/user/getunReadUsers', order.getunReadUsers);
+router.get('/getunReadWithdraw', order.getunReadWithdraw);
+router.get('/userwallet/:id', order.userwallet);
+router.get('/userwithdraws/:id', common.userwithdraws);
+router.get('/userorders/:id', order.userorders);
 module.exports = router;
