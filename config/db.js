@@ -1,8 +1,8 @@
 module.exports = {
     config: {
         // host: '127.0.0.1',
-        host: 'capricorn.premium.hostns.io',
-        // host: 'master.jezselhosting.net',
+        // host: 'capricorn.premium.hostns.io',
+        host: 'master.jezselhosting.net',
         port: '3306',
         database: 'jezselnl_mobileapp',
         user: 'jezselnl_mobileapp',

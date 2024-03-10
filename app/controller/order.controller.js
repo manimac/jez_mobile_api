@@ -1648,7 +1648,7 @@ exports.ordersForApp = function (req, res) {
     // if (req.body.team_id)
     //     where.team_id = req.body.team_id;
     // else
-    //     orderHistoryWhere.user_id = appUtil.getUser(req.headers.authorization).id || null;
+        // orderHistoryWhere.user_id = appUtil.getUser(req.headers.authorization).id || null;
 
     sharingwhere = {
         user_id: appUtil.getUser(req.headers.authorization).id || null
@@ -1656,7 +1656,8 @@ exports.ordersForApp = function (req, res) {
     OrderHistoryModel.findAndCountAll({
         where: orderHistoryWhere,
         include: [{
-            model: OrderSharingModel
+            model: OrderSharingModel,
+            where: sharingwhere,
         }]
     }).then((output) => {
         result.count = output.count;
@@ -1678,6 +1679,7 @@ exports.ordersForApp = function (req, res) {
             },
             {
                 model: OrderSharingModel,
+                where: sharingwhere,
                 include: [UserModel]
             }, {
                 model: UserModel,
@@ -1694,12 +1696,26 @@ exports.ordersForApp = function (req, res) {
             ],
             offset: offset,
             limit: limit
-        }).then((registered) => {
-            let revised = registered.map((x, i) => {
+        }).then(async (registered) => {
+            const revised = await Promise.all(registered.map(async (x, i) => {
                 let temp = x && x.toJSON();
                 temp.sno = offset + (i + 1);
+            
+                let sharingCount = await OrderSharingModel.findAndCountAll({ where: {orderhistory_id: temp.id, owner: 0} });
+                temp.sharingCount = sharingCount ? sharingCount.count : 0;
+            
                 return temp;
-            })
+            }));
+
+            // let revised = registered.map(async (x, i) => {
+            //     let temp = x && x.toJSON();
+            //     temp.sno = offset + (i + 1);
+
+            //     let sharingCount = await OrderSharingModel.findAndCountAll({ where: {orderhistory_id: temp.id, owner: 0} });
+            //     temp.sharingCount = sharingCount ? sharingCount.count : 0;
+
+            //     return temp;
+            // })
             result.data = revised;
             res.send(result);
         }).catch((err) => {
