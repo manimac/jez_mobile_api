@@ -975,18 +975,6 @@ exports.makeOrder = function (req, res) {
         let maxCheckoutDate = moment.max(checkOutDates);
         req.body.maxcheckoutdate = maxCheckoutDate.format('YYYY-MM-DD HH:mm:ss');
         req.body.maxcheckoutdateutc = moment(req.body.maxcheckoutdate).utc().format('YYYY-MM-DD') + ' ' + moment(req.body.maxcheckoutdate).utc().format('HH:mm:ss');
-        // const d = new Date(req.body.maxcheckoutdate)
-        // let current = moment(req.body.maxcheckoutdate).utc().format('YYYY-MM-DD') + ' ' + moment(req.body.maxcheckoutdate).utc().format('HH:mm:ss');
-        // let oneHrAfter = moment().format('YYYY-MM-DD') + ' ' + moment().add('1', 'hours').format('HH:mm:ss');
-        // let test = moment('11-10-2021 20:35', 'MM-DD-YYYY HH:mm').format('YYYY-MM-DD') + ' ' + moment('11-10-2021 20:35', 'MM-DD-YYYY HH:mm').format('HH:mm:ss');
-        // let test2 = new Date((req.body.maxcheckoutdate)).toLocaleString("en-US", { timeZone: "Europe/London" });
-        // let test3 = new Date(maxCheckoutDate).toUTCString()
-        // let test5 = moment('2022-10-11').utc().format('YYYY-MM-DD') + ' ' + moment('22:30','HH:mm').utc().format('HH:mm:ss');;
-        // res.send({
-        //     maxCheckoutDate: maxCheckoutDate, bodymaxcheckoutdate: req.body.maxcheckoutdate, current: current
-        // });
-        // res.send(moment(maxCheckoutDate).utc().format('YYYY-MM-DD') +' '+ moment(maxCheckoutDate, 'DD-MM-YYYY HH:mm').utc(maxCheckoutDate).format('HH:mm:ss'));
-        // res.send({test: moment(maxCheckoutDate).utc().format('YYYY-MM-DD'), test2: moment(req.body.maxcheckoutdate, 'DD-MM-YYYY HH:mm').utc().format('HH:mm:ss'), test3: req.body.maxcheckoutdate, test4: moment('2020-05-20 22:12:44').tz(moment.tz.guess()).format('YYYY-MM-DD hh:mm:ss A'), test5: moment.utc(req.body.maxcheckoutdate), test6: moment.utc(maxCheckoutDate), test7: moment.utc(d)})
     }
     if (req.body.type == 'wallet' || !req.body.maxcheckoutdate) {
         req.body.maxcheckoutdate = moment().format('YYYY-MM-DD HH:mm:ss');
@@ -996,9 +984,6 @@ exports.makeOrder = function (req, res) {
         resp = resp.toJSON();
         resp.user = USER;
         resp.Orderhistories = [];
-        // if (resp.status == 1) {
-        //     appUtil.sendOrderConfirmationMail(resp, req.body.type);
-        // }
         async.eachSeries(req.body.products, function (product, pCallback) {
             if (product.type == 'rent' || product.type == 'Rent' || product.type == 'RENT' || 'maintenance') {
                 let orderhistory = product;
@@ -1017,19 +1002,13 @@ exports.makeOrder = function (req, res) {
                 if (product.search) {
                     const search = product.search;
                     orderhistory.filterlocation_id = search.locationid;
-                    // orderhistory.checkindate = moment(search.checkindate + ' ' + search.checkintime, 'DD-MM-YYYY HH:mm').format('YYYY-MM-DD HH:mm:ss');
                     orderhistory.checkindate = moment(search.checkindate, 'DD-MM-YYYY').format('YYYY-MM-DD') + ' ' + moment(search.checkintime, 'HH:mm').format('HH:mm:ss');
                     orderhistory.checkintime = moment(search.checkintime, 'HH:mm').format('HH:mm');
-                    // orderhistory.checkoutdate = moment(search.checkoutdate + ' ' + search.checkouttime, 'DD-MM-YYYY HH:mm').format('YYYY-MM-DD HH:mm:ss');
                     orderhistory.checkoutdate = moment(search.checkoutdate, 'DD-MM-YYYY').format('YYYY-MM-DD') + ' ' + moment(search.checkouttime, 'HH:mm').format('HH:mm:ss');
                     orderhistory.checkouttime = moment(search.checkouttime, 'HH:mm').format('HH:mm');
-                    // orderhistory.maxcanceldate = moment(product.maxcanceldate + ' ' + search.checkintime, 'DD-MM-YYYY HH:mm').format('YYYY-MM-DD HH:mm:ss');
-
                     if (product.maxcanceldate) {
                         orderhistory.maxcanceldate = moment(product.maxcanceldate, 'DD-MM-YYYY').format('YYYY-MM-DD') + ' ' + moment(search.checkintime, 'HH:mm').format('HH:mm:ss');
                     }
-
-                    // let maxCheckoutDate = orderhistory.checkoutdate;
                     orderhistory.maxcheckoutdateutc = search.maxcheckoutdateutc;
                 }
                 delete orderhistory.id;
@@ -1057,7 +1036,6 @@ exports.makeOrder = function (req, res) {
                                 orderhistory.checkintime = moment(search.checkintime, 'HH:mm').format('HH:mm');
                                 orderhistory.checkoutdate = moment(search.checkoutdate + ' ' + search.checkouttime, 'DD-MM-YYYY HH:mm').format('YYYY-MM-DD HH:mm:ss');
                                 orderhistory.checkouttime = moment(search.checkouttime, 'HH:mm').format('HH:mm');
-                                // orderhistory.maxcanceldate = moment(extra.maxcanceldate + ' ' + search.checkintime, 'DD-MM-YYYY HH:mm').format('YYYY-MM-DD HH:mm:ss');
                             }
 
                             delete orderhistory.id;
