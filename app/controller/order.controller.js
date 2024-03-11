@@ -1057,7 +1057,7 @@ exports.makeOrder = function (req, res) {
                                 orderhistory.checkintime = moment(search.checkintime, 'HH:mm').format('HH:mm');
                                 orderhistory.checkoutdate = moment(search.checkoutdate + ' ' + search.checkouttime, 'DD-MM-YYYY HH:mm').format('YYYY-MM-DD HH:mm:ss');
                                 orderhistory.checkouttime = moment(search.checkouttime, 'HH:mm').format('HH:mm');
-                                orderhistory.maxcanceldate = moment(extra.maxcanceldate + ' ' + search.checkintime, 'DD-MM-YYYY HH:mm').format('YYYY-MM-DD HH:mm:ss');
+                                // orderhistory.maxcanceldate = moment(extra.maxcanceldate + ' ' + search.checkintime, 'DD-MM-YYYY HH:mm').format('YYYY-MM-DD HH:mm:ss');
                             }
 
                             delete orderhistory.id;
