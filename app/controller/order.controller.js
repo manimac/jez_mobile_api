@@ -1068,6 +1068,9 @@ exports.makeOrder = function (req, res) {
             res.send(resp);
         })
 
+    }).
+    catch((err)=>{
+        console.log(err)
     })
 }
 

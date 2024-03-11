@@ -25,7 +25,7 @@ const OrderModel = (sequelize, Sequelize) => {
         total: { type: Sequelize.FLOAT, allowNull: true },
         paymentchargeid: { type: Sequelize.STRING, allowNull: true },
         amountpaid: { type: Sequelize.STRING, allowNull: true },
-        fromwallet: { type: Sequelize.BOOLEAN, allowNull: true },
+        fromwallet: { type: Sequelize.STRING, allowNull: true },
         maxcheckoutdate: { type: Sequelize.DATE, allowNull: true },
         status: { type: Sequelize.INTEGER, defaultValue: 1 }, //1- Success, 2 - failure, 3-In Progress
         driverFirstName: { type: Sequelize.STRING, allowNull: true },
