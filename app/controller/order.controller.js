@@ -554,6 +554,8 @@ exports.createProduct = function (req, res) {
         req.body.image3 = res.req.files && (res.req.files.image3 && res.req.files.image3[0].filename);
         req.body.image4 = res.req.files && (res.req.files.image4 && res.req.files.image4[0].filename);
         req.body.status = 1;
+        req.body.showinindex = req.body.showinindex ? req.body.showinindex : 0;
+        req.body.location_id = req.body.location_id ? req.body.location_id : null;
         ProductModel.create(req.body).then(async function (product) {
             if (res.req.files && res.req.files.images) {
                 product.images = [];
