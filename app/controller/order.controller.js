@@ -1016,9 +1016,13 @@ exports.makeOrder = function (req, res) {
                 delete orderhistory.id;
                 OrderHistoryModel.create(orderhistory).then(async (history) => {
                     resp.Orderhistories.push(history);
+                    let userrid = USER.id || null;
+                    if (req.body.freebooking == 1) {
+                        userrid = req.body.user_id;
+                    }
                     var obj = {
                         orderhistory_id: history.id,
-                        user_id: USER.id || null,
+                        user_id: userrid,
                         owner: 1,
                     }
                     await OrderSharingModel.create(obj);
@@ -1138,15 +1142,6 @@ exports.checkAvailability = function (req, res) {
     search.defaultcheckoutdatetimeex = checkoutdatetime.clone();
     search.defaultcheckindatetimeex = search.defaultcheckindatetimeex.add(10, 'seconds').format('YYYY-MM-DD HH:mm:ss');
     search.defaultcheckoutdatetimeex = search.defaultcheckoutdatetimeex.format('YYYY-MM-DD HH:mm:ss');
-    // where[Op.or] = [{
-    //     checkindate: {
-    //         [Op.between]: [search.checkindatetimeex, search.checkoutdatetimeex]
-    //     }
-    // }, {
-    //     checkoutdate: {
-    //         [Op.between]: [search.checkindatetimeex, search.checkoutdatetimeex]
-    //     }
-    // }]
 
     where[Op.or] = [{
         [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.checkindatetimeex),
@@ -1160,6 +1155,7 @@ exports.checkAvailability = function (req, res) {
     where.status = 1;
     where.type = req.body.type;
     where.product_id = search.product_id;
+    where.extra_id = null ;
     OrderHistoryModel.findOne({
         where,
         include: [OrderModel],
@@ -1192,6 +1188,7 @@ exports.checkAvailability = function (req, res) {
                 hWhere.status = 1;
                 hWhere.type = req.body.type;
                 hWhere.product_id = search.product_id;
+                hWhere.extra_id = null ;
                 OrderHistoryModel.findOne({
                     where: hWhere,
                     include: [{
@@ -1264,6 +1261,7 @@ exports.checkAvailability = function (req, res) {
             //hWhere.type = req.body.type;
             hWhere.product_id = search.product_id;
             hWhere.type = [req.body.type, 'maintenance'];
+            hWhere.extra_id = null ;
             OrderHistoryModel.findOne({
                 where: hWhere,
             }).then((mResp) => {
@@ -1310,6 +1308,7 @@ exports.returnAvailableProducts = function (req, res) {
     
     where.product_id = search.product_id;
     where.user_id != user_id;
+    where.extra_id = null ;
     OrderHistoryModel.findAll({
         where,
         include: [OrderModel, UserModel],
@@ -1335,6 +1334,7 @@ exports.returnAvailableProducts = function (req, res) {
                 hWhere.status = 1;
                 hWhere.type = req.body.type;
                 hWhere.product_id = search.product_id;
+                hWhere.extra_id = null ;
                 OrderHistoryModel.findAll({
                     where: hWhere,
                     include: [{
@@ -1379,6 +1379,7 @@ exports.returnAvailableProducts = function (req, res) {
             hWhere.status = 1;
             hWhere.product_id = search.product_id;
             hWhere.type = [req.body.type, 'maintenance'];
+            hWhere.extra_id = null ;
             OrderHistoryModel.findAll({
                 where: hWhere,
             }).then((mResp) => {
@@ -1942,19 +1943,45 @@ exports.cancelOrderHistory = function (req, res) {
             id: req.body.id
         }
     }).then(function (resp) {
+        if (!resp) {
+            return res.status(404).send({ error: "Order history not found." });
+        }
         var obj = {
             endbooking: 1,
             status: req.body.status,
             canceleddate: moment().format('YYYY-MM-DD HH:mm:ss')
         }
         resp.update(obj).then(function (result) {
-            if (result.Order && result.Order.User) {
-                appUtil.cancelNotification(result.Order.User, result);
-            }
-            res.send(result);
-        })
+            OrderModel.findOne({
+                where: {
+                    id: result.order_id
+                }
+            }).then(function (resp1) {
+                if (!resp1) {
+                    return res.status(404).send({ error: "Order not found." });
+                }
+                var obj1 = {
+                    status: req.body.status,
+                }
+                resp1.update(obj1).then(function (result1) {
+                    if (result1.Order && result1.Order.User) {
+                        appUtil.cancelNotification(result1.Order.User, result1);
+                    }
+                    res.send(result1);
+                }).catch(function (err) {
+                    res.status(500).send({ error: "Error updating order: " + err.message });
+                });
+            }).catch(function (err) {
+                res.status(500).send({ error: "Error finding order: " + err.message });
+            });
+        }).catch(function (err) {
+            res.status(500).send({ error: "Error updating order history: " + err.message });
+        });
+    }).catch(function (err) {
+        res.status(500).send({ error: "Error finding order history: " + err.message });
     });
 }
+
 
 exports.oldfindOrderExpireNotification = function (req, res) {
     let where = {};

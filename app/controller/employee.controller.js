@@ -8,6 +8,7 @@ const fs = require('fs');
 const appUtil = require('../apputil');
 const MODELS = require("../models");
 const EmployeeModel = MODELS.employee;
+const EmployerModel = MODELS.employeruser;
 const UserModel = MODELS.users;
 const EmployeeCategoryModel = MODELS.employeecategory;
 const EmployeeExperienceModel = MODELS.employeeexperiense;
@@ -220,7 +221,7 @@ exports.getAssignments = async (req, res) => {
 
             const categoryRequests = await StaffOrTransportRequestModel.findAll({
                 where: categoryWhere,
-                include: [CategoryModel],
+                include: [CategoryModel, EmployerModel],
             });
 
             staffOrTransportRequests = categoryRequests;
@@ -267,7 +268,7 @@ exports.successAssignments = async (req, res) => {
         }
         const staffOrTransportRequests = await StaffOrTransportRequestModel.findAll({
             where: requestWhere,
-            include: [staffOrTransportWorkingHistoryModel, CategoryModel, StaffOrTransportInterestModel]
+            include: [staffOrTransportWorkingHistoryModel, CategoryModel, StaffOrTransportInterestModel, EmployerModel]
         });
 
         res.json(staffOrTransportRequests);
@@ -308,7 +309,7 @@ exports.confirmAssignments = async (req, res) => {
         }
         const staffOrTransportRequests = await StaffOrTransportRequestModel.findAll({
             where: requestWhere,
-            include: [staffOrTransportWorkingHistoryModel, CategoryModel, StaffOrTransportInterestModel]
+            include: [staffOrTransportWorkingHistoryModel, CategoryModel, StaffOrTransportInterestModel, EmployerModel]
         });
 
         res.json(staffOrTransportRequests);
@@ -349,7 +350,7 @@ exports.pendingAssignments = async (req, res) => {
 
             const staffOrTransportRequests = await StaffOrTransportRequestModel.findAll({
                 where,
-                include: [CategoryModel, StaffOrTransportInterestModel]
+                include: [CategoryModel, StaffOrTransportInterestModel, EmployerModel]
             });
 
             return staffOrTransportRequests;
