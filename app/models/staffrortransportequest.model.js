@@ -3,7 +3,7 @@ const staffOrTransportRequest = (sequelize, Sequelize) => {
         id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
         type: { type: Sequelize.STRING, allowNull: true },
         title: { type: Sequelize.STRING, allowNull: true },
-        description: { type: Sequelize.STRING, allowNull: true },
+        description: { type: Sequelize.TEXT, allowNull: true },
         industry: { type: Sequelize.STRING, allowNull: true },
         function: { type: Sequelize.STRING, allowNull: true },
         cancelperiod: { type: Sequelize.STRING, allowNull: true },

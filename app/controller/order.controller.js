@@ -1628,9 +1628,6 @@ exports.ordersForApp = function (req, res) {
     if (req.body.id) {
         orderHistoryWhere.id = req.body.id;
     }
-    // if (req.body.team_id)
-    //     where.team_id = req.body.team_id;
-    // else
         // orderHistoryWhere.user_id = appUtil.getUser(req.headers.authorization).id || null;
 
     sharingwhere = {
@@ -1689,16 +1686,84 @@ exports.ordersForApp = function (req, res) {
             
                 return temp;
             }));
+            result.data = revised;
+            res.send(result);
+        }).catch((err) => {
+            res.status(500).send(err)
+        })
+    }).catch((err) => {
+        res.status(500).send(err)
+    })
+}
 
-            // let revised = registered.map(async (x, i) => {
-            //     let temp = x && x.toJSON();
-            //     temp.sno = offset + (i + 1);
+exports.ordersForAdmin = function (req, res) {
+    let result = { count: 0, data: [] };
+    let offset = req.body.offset || 0;
+    let limit = req.body.limit || 1000;
+    // let orderHistoryWhere = { status: 1 };
+    // let endbooking = null;
+    // if (req.body.past) {
+    //     endbooking = 1;
+    //     orderHistoryWhere.status = [0, 1];
+    // }
+    // orderHistoryWhere.endbooking = endbooking;
+    // if (req.body.status) {
+    //     orderHistoryWhere.status = req.body.status;
+    // }
+    // if (req.body.id) {
+    //     orderHistoryWhere.id = req.body.id;
+    // }
+        // orderHistoryWhere.user_id = appUtil.getUser(req.headers.authorization).id || null;
 
-            //     let sharingCount = await OrderSharingModel.findAndCountAll({ where: {orderhistory_id: temp.id, owner: 0} });
-            //     temp.sharingCount = sharingCount ? sharingCount.count : 0;
-
-            //     return temp;
-            // })
+    // sharingwhere = {
+    //     user_id: appUtil.getUser(req.headers.authorization).id || null
+    // }
+    OrderHistoryModel.findAndCountAll({
+    }).then((output) => {
+        result.count = output.count;
+        OrderHistoryModel.findAll({
+            where: {
+                extra_id: {
+                    [Op.eq]: null
+                }
+            },
+            include: [{
+                model: OrderModel,
+                required: true,
+                include: [{
+                    model: OrderHistoryModel,
+                    where: {
+                        extra_id: {
+                            [Op.not]: null
+                        }
+                    },
+                    required: false
+                }]
+            },
+            {
+                model: OrderSharingModel,
+                include: [UserModel]
+            }, {
+                model: UserModel,
+                required: false
+            }, {
+                model: ScreenshotModel,
+                required: false
+            }, {
+                model: ProductModel,
+                required: false
+            }],
+            order: [
+                ['createdAt', 'DESC']
+            ],
+            offset: offset,
+            limit: limit
+        }).then(async (registered) => {
+            const revised = await Promise.all(registered.map(async (x, i) => {
+                let temp = x && x.toJSON();
+                temp.sno = offset + (i + 1);
+                return temp;
+            }));
             result.data = revised;
             res.send(result);
         }).catch((err) => {

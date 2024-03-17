@@ -35,6 +35,7 @@ router.get("/user/get/:id", user.getUser);
 router.post("/user/update", user.userUpdate);
 router.post("/orders", order.orders);
 router.post("/orders-app", order.ordersForApp);
+router.post("/orders-admin", order.ordersForAdmin);
 router.post("/orders-invitations", order.invitations);
 router.post("/orders-createinvitation", order.createinvitation);
 router.post("/orders-removeinvitation", order.removeinvitation);
