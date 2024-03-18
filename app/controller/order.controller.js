@@ -1075,9 +1075,9 @@ exports.makeOrder = function (req, res) {
         })
 
     }).
-    catch((err)=>{
-        console.log(err)
-    })
+        catch((err) => {
+            console.log(err)
+        })
 }
 
 
@@ -1155,7 +1155,7 @@ exports.checkAvailability = function (req, res) {
     where.status = 1;
     where.type = req.body.type;
     where.product_id = search.product_id;
-    where.extra_id = null ;
+    where.extra_id = null;
     OrderHistoryModel.findOne({
         where,
         include: [OrderModel],
@@ -1188,7 +1188,7 @@ exports.checkAvailability = function (req, res) {
                 hWhere.status = 1;
                 hWhere.type = req.body.type;
                 hWhere.product_id = search.product_id;
-                hWhere.extra_id = null ;
+                hWhere.extra_id = null;
                 OrderHistoryModel.findOne({
                     where: hWhere,
                     include: [{
@@ -1261,7 +1261,7 @@ exports.checkAvailability = function (req, res) {
             //hWhere.type = req.body.type;
             hWhere.product_id = search.product_id;
             hWhere.type = [req.body.type, 'maintenance'];
-            hWhere.extra_id = null ;
+            hWhere.extra_id = null;
             OrderHistoryModel.findOne({
                 where: hWhere,
             }).then((mResp) => {
@@ -1305,10 +1305,10 @@ exports.returnAvailableProducts = function (req, res) {
     let user_id = appUtil.getUser(req.headers.authorization).id || null;
     where.status = 1;
     where.type = req.body.type;
-    
+
     where.product_id = search.product_id;
     where.user_id != user_id;
-    where.extra_id = null ;
+    where.extra_id = null;
     OrderHistoryModel.findAll({
         where,
         include: [OrderModel, UserModel],
@@ -1317,7 +1317,7 @@ exports.returnAvailableProducts = function (req, res) {
         ]
     }).then((resp) => {
 
-        if (resp && Array.isArray(resp) && resp.length>0) {
+        if (resp && Array.isArray(resp) && resp.length > 0) {
             if (resp.length) {
                 res.send(resp);
             } else {
@@ -1334,7 +1334,7 @@ exports.returnAvailableProducts = function (req, res) {
                 hWhere.status = 1;
                 hWhere.type = req.body.type;
                 hWhere.product_id = search.product_id;
-                hWhere.extra_id = null ;
+                hWhere.extra_id = null;
                 OrderHistoryModel.findAll({
                     where: hWhere,
                     include: [{
@@ -1379,7 +1379,7 @@ exports.returnAvailableProducts = function (req, res) {
             hWhere.status = 1;
             hWhere.product_id = search.product_id;
             hWhere.type = [req.body.type, 'maintenance'];
-            hWhere.extra_id = null ;
+            hWhere.extra_id = null;
             OrderHistoryModel.findAll({
                 where: hWhere,
             }).then((mResp) => {
@@ -1513,7 +1513,7 @@ exports.updateOrder = function (req, res) {
             resp.user = USER;
             if (resp.status == 1)
                 // appUtil.sendOrderConfirmationMail(resp, resp.type);
-            res.send(resp);
+                res.send(resp);
         })
     }, function (err) {
         res.status(500).send(err);
@@ -1622,6 +1622,7 @@ exports.ordersForApp = function (req, res) {
         endbooking = 1;
         orderHistoryWhere.status = [0, 1];
     }
+    where.status = [1];
     orderHistoryWhere.endbooking = endbooking;
     if (req.body.status) {
         orderHistoryWhere.status = req.body.status;
@@ -1629,7 +1630,7 @@ exports.ordersForApp = function (req, res) {
     if (req.body.id) {
         orderHistoryWhere.id = req.body.id;
     }
-        // orderHistoryWhere.user_id = appUtil.getUser(req.headers.authorization).id || null;
+    // orderHistoryWhere.user_id = appUtil.getUser(req.headers.authorization).id || null;
 
     sharingwhere = {
         user_id: appUtil.getUser(req.headers.authorization).id || null
@@ -1639,6 +1640,9 @@ exports.ordersForApp = function (req, res) {
         include: [{
             model: OrderSharingModel,
             where: sharingwhere,
+        }, {
+            model: OrderModel,
+            where: where
         }]
     }).then((output) => {
         result.count = output.count;
@@ -1681,10 +1685,10 @@ exports.ordersForApp = function (req, res) {
             const revised = await Promise.all(registered.map(async (x, i) => {
                 let temp = x && x.toJSON();
                 temp.sno = offset + (i + 1);
-            
-                let sharingCount = await OrderSharingModel.findAndCountAll({ where: {orderhistory_id: temp.id, owner: 0} });
+
+                let sharingCount = await OrderSharingModel.findAndCountAll({ where: { orderhistory_id: temp.id, owner: 0 } });
                 temp.sharingCount = sharingCount ? sharingCount.count : 0;
-            
+
                 return temp;
             }));
             result.data = revised;
@@ -1714,7 +1718,7 @@ exports.ordersForAdmin = function (req, res) {
     // if (req.body.id) {
     //     orderHistoryWhere.id = req.body.id;
     // }
-        // orderHistoryWhere.user_id = appUtil.getUser(req.headers.authorization).id || null;
+    // orderHistoryWhere.user_id = appUtil.getUser(req.headers.authorization).id || null;
 
     // sharingwhere = {
     //     user_id: appUtil.getUser(req.headers.authorization).id || null
@@ -2640,7 +2644,7 @@ exports.paymentWebhook = async function (req, res) {
                 const updatedOrder = isOrder.toJSON();
                 updatedOrder.status = 1;
                 await OrderModel.update(updatedOrder, { where: { intentid: paymentIntent.id } });
-                const allHistories = await OrderHistoryModel.findAll({ where: { order_id: isOrder.id, extra_id: null} });
+                const allHistories = await OrderHistoryModel.findAll({ where: { order_id: isOrder.id, extra_id: null } });
 
                 // Loop through histories and send order confirmation emails
                 if (allHistories && Array.isArray(allHistories) && allHistories.length > 0) {
@@ -2778,7 +2782,7 @@ exports.updateWithdrawRead = function (req, res) {
 }
 
 exports.getunReadOrders = function (req, res) {
-    let where = {isreaded: 0, status: 1}
+    let where = { isreaded: 0, status: 1 }
     OrderModel.findAndCountAll({
         where
     }).then(function (result) {
@@ -2789,7 +2793,7 @@ exports.getunReadOrders = function (req, res) {
 }
 
 exports.getunReadUsers = function (req, res) {
-    let where = {isreaded: 0}
+    let where = { isreaded: 0 }
     UserModel.findAndCountAll({
         where
     }).then(function (result) {
@@ -2800,7 +2804,7 @@ exports.getunReadUsers = function (req, res) {
 }
 
 exports.getunReadWithdraw = function (req, res) {
-    let where = {isreaded: 0}
+    let where = { isreaded: 0 }
     WithdrawRequestModel.findAndCountAll({
         where
     }).then(function (result) {
