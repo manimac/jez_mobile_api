@@ -18,6 +18,7 @@ const OrderModel = (sequelize, Sequelize) => {
         factuurland: { type: Sequelize.STRING, allowNull: true },
         aanhef: { type: Sequelize.STRING, allowNull: true },
         voornaam: { type: Sequelize.STRING, allowNull: true },
+        endbooking: { type: Sequelize.BOOLEAN, allowNull: true, defaultValue: false },
         tussenvoegsel: { type: Sequelize.STRING, allowNull: true },
         achternaam: { type: Sequelize.STRING, allowNull: true },
         factuuremail: { type: Sequelize.STRING, allowNull: true },
