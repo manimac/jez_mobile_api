@@ -1783,11 +1783,12 @@ exports.myWallet = function (req, res) {
     let user_id = appUtil.getUser(req.headers.authorization).id || null;
     let team_id = req.body.team_id || null;
     let whereObj = {
-        maxcheckoutdate: {
-            [Op.lte]: Sequelize.literal("NOW()")
-            // [Op.lte]: moment().toDate()
-        },
-        status: 1,
+        // maxcheckoutdate: {
+        //     [Op.lte]: Sequelize.literal("NOW()")
+        //     // [Op.lte]: moment().toDate()
+        // },
+        'endbooking': 1,
+        'status': 1,
         // type: {
         //     [Op.ne]: 'wallet'
         // }
@@ -2538,8 +2539,23 @@ function createImages(req, res) {
 };
 exports.orderHistoryUpdate = function (req, res) {
     OrderHistoryModel.findByPk(req.body.id).then(function (resp1) {
-        resp1.update(req.body).then(function (result) {
-            res.send(result);
+        resp1.update(req.body).then(async function (result) {
+            const endOrderRef = await OrderHistoryModel.findOne({
+                where: {
+                    'order_id': result.order_id,
+                    'endbooking': {
+                        [Op.eq]: null
+                    }
+                }
+            });
+            if (endOrderRef && endOrderRef.length) {
+                res.send(result);
+            } else {
+                const updateOrder = { 'endorder': 1 };
+                const order = await OrderModel.update(updateOrder, { where: { 'id': result.order_id } });
+                res.send(result);
+            }
+
         }).catch((err) => {
             res.status(500).send(err)
         })
