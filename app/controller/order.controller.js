@@ -980,6 +980,7 @@ exports.makeOrder = function (req, res) {
     }
     if (req.body.type == 'wallet' || !req.body.maxcheckoutdate) {
         req.body.maxcheckoutdate = moment().format('YYYY-MM-DD HH:mm:ss');
+        req.body.endbooking = 1;
     }
     OrderModel.create(req.body).then((resp) => {
         // Push order history
@@ -1285,8 +1286,10 @@ exports.returnAvailableProducts = function (req, res) {
     const checkoutdatetime = moment(search.checkoutdate + ' ' + search.checkouttime, 'DD-MM-YYYY HH:mm');
     search.checkindatetimeex = checkindatetime.clone();
     search.checkoutdatetimeex = checkoutdatetime.clone();
-    search.checkindatetimeex = search.checkindatetimeex.subtract(60, 'minutes').format('YYYY-MM-DD HH:mm:ss');
-    search.checkoutdatetimeex = search.checkoutdatetimeex.add(60, 'minutes').format('YYYY-MM-DD HH:mm:ss');
+    // search.checkindatetimeex = search.checkindatetimeex.subtract(60, 'minutes').format('YYYY-MM-DD HH:mm:ss');
+    // search.checkoutdatetimeex = search.checkoutdatetimeex.add(60, 'minutes').format('YYYY-MM-DD HH:mm:ss');
+    search.checkindatetimeex = search.checkindatetimeex.format('YYYY-MM-DD HH:mm:ss');
+    search.checkoutdatetimeex = search.checkoutdatetimeex.format('YYYY-MM-DD HH:mm:ss');
 
     search.defaultcheckindatetimeex = checkindatetime.clone();
     search.defaultcheckoutdatetimeex = checkoutdatetime.clone();
@@ -2556,6 +2559,17 @@ exports.orderHistoryUpdate = function (req, res) {
                 res.send(result);
             }
 
+        }).catch((err) => {
+            res.status(500).send(err)
+        })
+    })
+}
+
+exports.orderHistoryUpdateOrder = function (req, res) {
+    OrderHistoryModel.findByPk(req.body.id).then(function (resp1) {
+        req.body.checkoutdate = moment(req.body.checkoutdate, 'DD-MM-YYYY').format('YYYY-MM-DD') + ' ' + moment(req.body.checkouttime, 'HH:mm').format('HH:mm:ss');
+        resp1.update(req.body).then(async function (result) {
+            res.send(result);
         }).catch((err) => {
             res.status(500).send(err)
         })
