@@ -143,6 +143,8 @@ router.post("/employer/updateEmployerStatus", employer.updateEmployerStatus);
 
 router.post("/reset/password", common.resetPassword);
 router.post("/withdraw/create", common.createWithdrawRequest);
+router.post('/withdraw/update', common.updateWithdrawRequest);
+router.delete('/withdraw/delete/:id', common.deleteWithdrawReques);
 router.post('/order/cancel-order', order.cancelOrderHistory);
 
 //categories

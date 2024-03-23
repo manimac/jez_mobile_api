@@ -1625,7 +1625,10 @@ exports.ordersForApp = function (req, res) {
         endbooking = 1;
         orderHistoryWhere.status = [0, 1];
     }
-    where.status = [1];
+    else{
+        where.status = [1];
+        orderHistoryWhere.status = [1];
+    }    
     orderHistoryWhere.endbooking = endbooking;
     if (req.body.status) {
         orderHistoryWhere.status = req.body.status;
@@ -1786,76 +1789,41 @@ exports.myWallet = function (req, res) {
     let user_id = appUtil.getUser(req.headers.authorization).id || null;
     let team_id = req.body.team_id || null;
     let whereObj = {
-        // maxcheckoutdate: {
-        //     [Op.lte]: Sequelize.literal("NOW()")
-        //     // [Op.lte]: moment().toDate()
-        // },
-        'endbooking': 1,
         'status': 1,
-        // type: {
-        //     [Op.ne]: 'wallet'
-        // }
     };
-    if (team_id) {
-        whereObj[Op.or] = [{
-            user_id: user_id
-        }, {
-            team_id: team_id
-        }]
-    } else {
-        whereObj.user_id = user_id;
-    }
+    whereObj.user_id = user_id;
 
     OrderModel.findAll({
         where: whereObj,
         include: [OrderHistoryModel],
     }).then(async (orders) => {
-        let totalAmountPaid = orders && orders.reduce(function (a, b) {
+        let filterOrders = orders.filter((element)=>(element.endbooking==1));
+        let totalAmountPaid = filterOrders && filterOrders.reduce(function (a, b) {
             return a + parseFloat(b.amountpaid);
         }, 0);
         /** Remove cancel amount - which immedietly added in wallet */
         let cancelAmountWithInCheckoutDate = 0;
         async.eachSeries(orders, function (order, oCallback) {
-            async.eachSeries(order.Orderhistories, function (history, hCallback) {
-                if (history.status == 0) {
-                    cancelAmountWithInCheckoutDate += parseFloat(history.advancepaid);
-                }
-                hCallback();
-            }, (err) => {
-                oCallback();
-            })
-
+            if(order.endbooking!=1){
+                async.eachSeries(order.Orderhistories, function (history, hCallback) {
+                    if (history.endbooking == 1) {
+                        cancelAmountWithInCheckoutDate += parseFloat(history.advancepaid);
+                    }
+                    hCallback();
+                }, (err) => {
+                    oCallback();
+                })
+            }            
         });
-        let totalWallet = totalAmountPaid - cancelAmountWithInCheckoutDate;
+        let totalWallet = totalAmountPaid + cancelAmountWithInCheckoutDate;
 
         let whereUser = {};
-        if (team_id) {
-            // whereUser.team_id = team_id;
-            whereUser.teamowner = 1;
-            whereUser[Op.or] = [{
-                user_id: user_id
-            }, {
-                team_id: team_id
-            }]
-        } else {
-            whereUser.id = user_id;
-        }
-        // let user = await UserModel.findOne({ where: whereUser });
-        // let totalWallet = Number(totalAmountPaid) + Number(user.wallet);
+        whereUser.id = user_id;
 
         let whereWallet = {
             status: 1
         }
-        if (team_id) {
-            // whereWallet.team_id = team_id
-            whereWallet[Op.or] = [{
-                user_id: user_id
-            }, {
-                team_id: team_id
-            }]
-        } else {
-            whereWallet.user_id = user_id;
-        }
+        whereWallet.user_id = user_id;
         let fromWallet = await OrderModel.findAll({
             where: whereWallet,
             include: [OrderHistoryModel],
@@ -1867,7 +1835,6 @@ exports.myWallet = function (req, res) {
             let toDate = new Date();
             let diffTime = Math.abs(toDate - fromDate);
             let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            // let today = new Date();
             if (diffDays && element.amountpaid) {
                 let months = (diffDays / 30);
                 let interestAmount = (((element.amountpaid / 100) * (parseInt(months) * 4.79)) / 12).toFixed(2);
@@ -1875,8 +1842,6 @@ exports.myWallet = function (req, res) {
             }
             wCallback();
         })
-        //commented on April 16 2023
-        // totalWallet += currentInterest;
 
         let whereeWallet = {
             status: 1,
@@ -1885,15 +1850,7 @@ exports.myWallet = function (req, res) {
                 // [Op.lte]: moment().toDate()
             },
         }
-        if (team_id) {
-            whereeWallet[Op.or] = [{
-                user_id: user_id
-            }, {
-                team_id: team_id
-            }]
-        } else {
-            whereeWallet.user_id = user_id;
-        }
+        whereeWallet.user_id = user_id;
         let fromeWallet = await OrderModel.findAll({
             where: whereeWallet,
             include: [OrderHistoryModel],
@@ -1904,34 +1861,25 @@ exports.myWallet = function (req, res) {
         }, 0);
         let currentWalletAmount = totalWallet - (totalWalletPaid || 0);
         /** Cancel amount add */
-        let cancelAmount = 0;
-        async.eachSeries(fromWallet, function (order, oCallback) {
-            async.eachSeries(order.Orderhistories, function (history, hCallback) {
-                if (history.status == 0) {
-                    cancelAmount += parseFloat(history.advancepaid);
-                }
-                hCallback();
-            }, (err) => {
-                oCallback();
-            })
+        // let cancelAmount = 0;
+        // async.eachSeries(fromWallet, function (order, oCallback) {
+        //     async.eachSeries(order.Orderhistories, function (history, hCallback) {
+        //         if (history.status == 0) {
+        //             cancelAmount += parseFloat(history.advancepaid);
+        //         }
+        //         hCallback();
+        //     }, (err) => {
+        //         oCallback();
+        //     })
 
-        });
-        currentWalletAmount += cancelAmount;
+        // });
+        // currentWalletAmount += cancelAmount;
         /** Withdrawrequests */
         let whereWithdraw = {}
         whereWithdraw.status = {
             [Op.ne]: 2
         };
-        if (team_id) {
-            // whereWithdraw.team_id = team_id;
-            whereWithdraw[Op.or] = [{
-                user_id: user_id
-            }, {
-                team_id: team_id
-            }]
-        } else {
-            whereWithdraw.user_id = user_id;
-        }
+        whereWithdraw.user_id = user_id;
         let allWithdrawRequests = await WithdrawRequestModel.findAll({ where: whereWithdraw });
         let withdrawAmount = allWithdrawRequests && allWithdrawRequests.reduce(function (a, b) {
             return a + parseFloat(b['amount']);
@@ -1939,7 +1887,6 @@ exports.myWallet = function (req, res) {
         currentWalletAmount = currentWalletAmount - withdrawAmount;
 
         res.send({ wallet: currentWalletAmount && currentWalletAmount.toFixed(2) || 0, interest: currentInterest && currentInterest.toFixed(2) });
-        // res.send(orders);
     }).catch((err) => {
         res.status(500).send(err)
     })
@@ -1963,22 +1910,47 @@ exports.cancelOrderHistory = function (req, res) {
             OrderModel.findOne({
                 where: {
                     id: result.order_id
-                }
-            }).then(function (resp1) {
+                },
+                include: [UserModel]
+            }).then(async function (resp1) {
                 if (!resp1) {
                     return res.status(404).send({ error: "Order not found." });
                 }
-                var obj1 = {
-                    status: req.body.status,
-                }
-                resp1.update(obj1).then(function (result1) {
-                    if (result1.Order && result1.Order.User) {
-                        appUtil.cancelNotification(result1.Order.User, result1);
+
+                const endOrderRef = await OrderHistoryModel.findOne({
+                    where: {
+                        'order_id': result.order_id,
+                        'endbooking': {
+                            [Op.eq]: null
+                        }
                     }
-                    res.send(result1);
-                }).catch(function (err) {
-                    res.status(500).send({ error: "Error updating order: " + err.message });
                 });
+                if (endOrderRef && endOrderRef.length) {
+                    if (resp1 && resp1.User) {
+                        appUtil.cancelNotification(resp1.User, resp1);
+                    }
+                    res.send(resp1);
+                } else {
+                    const updateOrder = { 'endbooking': 1 };
+                    await OrderModel.update(updateOrder, { where: { 'id': result.order_id } });
+                    if (resp1 && resp1.User) {
+                        appUtil.cancelNotification(resp1.User, resp1);
+                    }
+                    res.send(resp1);
+                }
+
+                // var obj1 = {
+                //     endbooking: 1,
+                //     status: req.body.status,
+                // }
+                // resp1.update(obj1).then(function (result1) {
+                    // if (result1.Order && result1.Order.User) {
+                    //     appUtil.cancelNotification(result1.Order.User, result1);
+                    // }
+                    // res.send(result1);
+                // }).catch(function (err) {
+                //     res.status(500).send({ error: "Error updating order: " + err.message });
+                // });
             }).catch(function (err) {
                 res.status(500).send({ error: "Error finding order: " + err.message });
             });
