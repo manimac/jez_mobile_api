@@ -1922,10 +1922,11 @@ exports.cancelOrderHistory = function (req, res) {
                         'order_id': result.order_id,
                         'endbooking': {
                             [Op.eq]: null
-                        }
+                        },
+                        'extra_id': { [Op.eq]: null }
                     }
                 });
-                if (endOrderRef && endOrderRef.length) {
+                if (endOrderRef && endOrderRef.id) {
                     if (resp1 && resp1.User) {
                         appUtil.cancelNotification(resp1.User, resp1);
                     }
@@ -2520,13 +2521,14 @@ exports.orderHistoryUpdate = function (req, res) {
                     'order_id': result.order_id,
                     'endbooking': {
                         [Op.eq]: null
-                    }
+                    },
+                    'extra_id': { [Op.eq]: null }
                 }
             });
             if (endOrderRef && endOrderRef.length) {
                 res.send(result);
             } else {
-                const updateOrder = { 'endorder': 1 };
+                const updateOrder = { 'endbooking': 1 };
                 const order = await OrderModel.update(updateOrder, { where: { 'id': result.order_id } });
                 res.send(result);
             }
