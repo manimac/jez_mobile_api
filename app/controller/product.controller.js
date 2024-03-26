@@ -36,17 +36,36 @@ exports.products = function (req, res) {
         search.checkindatetimeex = checkindatetimeex.subtract(60, 'minutes').format('YYYY-MM-DD HH:mm:ss');
         search.checkoutdatetimeex = checkoutdatetimeex.add(60, 'minutes').format('YYYY-MM-DD HH:mm:ss');
 
-        where[Op.or] = [{
-            [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.checkindatetimeex),
-            Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.checkindatetimeex)
-            ]
-        },
-        {
-            [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.checkoutdatetimeex),
-            Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.checkoutdatetimeex)
-            ]
-        }
-        ]
+        // where[Op.or] = [{
+        //     [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.checkindatetimeex),
+        //     Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.checkindatetimeex)
+        //     ]
+        // },
+        // {
+        //     [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.checkoutdatetimeex),
+        //     Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.checkoutdatetimeex)
+        //     ]
+        // }
+        // ]
+
+        where[Op.or] = [
+            {
+                [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.checkoutdatetimeex),
+                Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.checkindatetimeex)]
+            },
+            {
+                [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.checkoutdatetimeex),
+                Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.checkoutdatetimeex)]
+            },
+            {
+                [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '>=', search.checkindatetimeex),
+                Sequelize.where(Sequelize.col('checkindate'), '<=', search.checkoutdatetimeex)]
+            },
+            {
+                [Op.and]: [Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.checkindatetimeex),
+                Sequelize.where(Sequelize.col('checkoutdate'), '<=', search.checkoutdatetimeex)]
+            }
+        ];
 
         where.status = 1;
         where.type = [req.body.type, 'maintenance'];
@@ -81,17 +100,36 @@ exports.products = function (req, res) {
                 search.checkindatetimeex = checkindatetimeex.add(10, 'seconds').format('YYYY-MM-DD HH:mm:ss');
                 search.checkoutdatetimeex = checkoutdatetimeex.format('YYYY-MM-DD HH:mm:ss');
 
-                userWhere[Op.or] = [{
-                    [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.checkindatetimeex),
-                    Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.checkindatetimeex)
-                    ]
-                },
-                {
-                    [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.checkoutdatetimeex),
-                    Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.checkoutdatetimeex)
-                    ]
-                }
-                ]
+                // userWhere[Op.or] = [{
+                //     [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.checkindatetimeex),
+                //     Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.checkindatetimeex)
+                //     ]
+                // },
+                // {
+                //     [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.checkoutdatetimeex),
+                //     Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.checkoutdatetimeex)
+                //     ]
+                // }
+                // ]
+
+                userWhere[Op.or] = [
+                    {
+                        [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.defaultcheckoutdatetimeex),
+                        Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.checkindatetimeex)]
+                    },
+                    {
+                        [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.checkoutdatetimeex),
+                        Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.defaultcheckoutdatetimeex)]
+                    },
+                    {
+                        [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '>=', search.checkindatetimeex),
+                        Sequelize.where(Sequelize.col('checkindate'), '<=', search.checkoutdatetimeex)]
+                    },
+                    {
+                        [Op.and]: [Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.checkindatetimeex),
+                        Sequelize.where(Sequelize.col('checkoutdate'), '<=', search.checkoutdatetimeex)]
+                    }
+                ];
 
                 OrderHistoryModel.findAll({ where: userWhere }).then((resp) => {
                     let userBookedVehicle = resp.map((x, i) => {
