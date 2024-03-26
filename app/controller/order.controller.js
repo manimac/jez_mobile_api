@@ -1144,19 +1144,41 @@ exports.checkAvailability = function (req, res) {
     search.defaultcheckindatetimeex = search.defaultcheckindatetimeex.add(10, 'seconds').format('YYYY-MM-DD HH:mm:ss');
     search.defaultcheckoutdatetimeex = search.defaultcheckoutdatetimeex.format('YYYY-MM-DD HH:mm:ss');
 
-    where[Op.or] = [{
-        [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.checkindatetimeex),
-        Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.checkindatetimeex)]
-    },
-    {
-        [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.checkoutdatetimeex),
-        Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.checkoutdatetimeex)]
-    }]
+    // where[Op.or] = [{
+    //         [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.checkindatetimeex),
+    //         Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.checkindatetimeex)]
+    //     },
+    //     {
+    //         [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.checkoutdatetimeex),
+    //         Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.checkoutdatetimeex)]
+    //     }
+    // ];
+
+    where[Op.or] = [
+        {
+            [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.checkoutdatetimeex),
+            Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.checkindatetimeex)]
+        },
+        {
+            [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.checkoutdatetimeex),
+            Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.checkoutdatetimeex)]
+        },
+        {
+            [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '>=', search.checkindatetimeex),
+            Sequelize.where(Sequelize.col('checkindate'), '<=', search.checkoutdatetimeex)]
+        },
+        {
+            [Op.and]: [Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.checkindatetimeex),
+            Sequelize.where(Sequelize.col('checkoutdate'), '<=', search.checkoutdatetimeex)]
+        }
+    ];
 
     where.status = 1;
     where.type = req.body.type;
     where.product_id = search.product_id;
-    where.extra_id = null;
+    where.extra_id = {
+        [Op.eq]: null
+    };
     OrderHistoryModel.findOne({
         where,
         include: [OrderModel],
@@ -1174,14 +1196,33 @@ exports.checkAvailability = function (req, res) {
             } else {
                 let hWhere = {};
 
-                hWhere[Op.or] = [{
-                    [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.defaultcheckindatetimeex),
-                    Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.defaultcheckindatetimeex)]
-                },
-                {
-                    [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.defaultcheckoutdatetimeex),
-                    Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.defaultcheckoutdatetimeex)]
-                }];
+                // hWhere[Op.or] = [{
+                //     [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.defaultcheckindatetimeex),
+                //     Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.defaultcheckindatetimeex)]
+                // },
+                // {
+                //     [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.defaultcheckoutdatetimeex),
+                //     Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.defaultcheckoutdatetimeex)]
+                // }];
+
+                hWhere[Op.or] = [
+                    {
+                        [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.defaultcheckoutdatetimeex),
+                        Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.defaultcheckindatetimeex)]
+                    },
+                    {
+                        [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.defaultcheckoutdatetimeex),
+                        Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.defaultcheckoutdatetimeex)]
+                    },
+                    {
+                        [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '>=', search.defaultcheckindatetimeex),
+                        Sequelize.where(Sequelize.col('checkindate'), '<=', search.defaultcheckoutdatetimeex)]
+                    },
+                    {
+                        [Op.and]: [Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.defaultcheckindatetimeex),
+                        Sequelize.where(Sequelize.col('checkoutdate'), '<=', search.defaultcheckoutdatetimeex)]
+                    }
+                ];
 
                 // hWhere.checkoutdate = {
                 //     [Op.between]: [search.checkindatetime.toDate(), search.checkoutdatetime.toDate()]
@@ -1625,10 +1666,10 @@ exports.ordersForApp = function (req, res) {
         endbooking = 1;
         orderHistoryWhere.status = [0, 1];
     }
-    else{
+    else {
         where.status = [1];
         orderHistoryWhere.status = [1];
-    }    
+    }
     orderHistoryWhere.endbooking = endbooking;
     if (req.body.status) {
         orderHistoryWhere.status = req.body.status;
@@ -1797,14 +1838,14 @@ exports.myWallet = function (req, res) {
         where: whereObj,
         include: [OrderHistoryModel],
     }).then(async (orders) => {
-        let filterOrders = orders.filter((element)=>(element.endbooking==1));
+        let filterOrders = orders.filter((element) => (element.endbooking == 1));
         let totalAmountPaid = filterOrders && filterOrders.reduce(function (a, b) {
             return a + parseFloat(b.amountpaid);
         }, 0);
         /** Remove cancel amount - which immedietly added in wallet */
         let cancelAmountWithInCheckoutDate = 0;
         async.eachSeries(orders, function (order, oCallback) {
-            if(order.endbooking!=1){
+            if (order.endbooking != 1) {
                 async.eachSeries(order.Orderhistories, function (history, hCallback) {
                     if (history.endbooking == 1) {
                         cancelAmountWithInCheckoutDate += parseFloat(history.advancepaid);
@@ -1813,7 +1854,7 @@ exports.myWallet = function (req, res) {
                 }, (err) => {
                     oCallback();
                 })
-            }            
+            }
         });
         let totalWallet = totalAmountPaid + cancelAmountWithInCheckoutDate;
 
@@ -1945,10 +1986,10 @@ exports.cancelOrderHistory = function (req, res) {
                 //     status: req.body.status,
                 // }
                 // resp1.update(obj1).then(function (result1) {
-                    // if (result1.Order && result1.Order.User) {
-                    //     appUtil.cancelNotification(result1.Order.User, result1);
-                    // }
-                    // res.send(result1);
+                // if (result1.Order && result1.Order.User) {
+                //     appUtil.cancelNotification(result1.Order.User, result1);
+                // }
+                // res.send(result1);
                 // }).catch(function (err) {
                 //     res.status(500).send({ error: "Error updating order: " + err.message });
                 // });
