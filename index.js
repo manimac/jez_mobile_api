@@ -55,9 +55,9 @@ app.get('/', (request, response) => {
     response.sendfile(path.join(__dirname + '/dist/index.html'));
 })
 app.get('/jezsel', (request, response) => {
-        response.sendfile(path.join(__dirname + '/dist/index.html'));
-    })
-    /* End of Need for Build */
+    response.sendfile(path.join(__dirname + '/dist/index.html'));
+})
+/* End of Need for Build */
 app.use(bodyParser.urlencoded({
     extended: true
 }));
@@ -67,9 +67,9 @@ app.use(bodyParser.json({ type: 'application/*+json' }));
 const authRoutes = require('./routes/auth');
 app.use('/api', authRoutes);
 app.use('/jezsel/api', authRoutes);
-const userRoutes   = require('./routes/user');
-app.use('/user',userRoutes);
-app.use('/jezsel/user',userRoutes);
+const userRoutes = require('./routes/user');
+app.use('/user', userRoutes);
+app.use('/jezsel/user', userRoutes);
 const portalRoute = require('./routes/portal');
 app.use('/jezsel', portalRoute);
 // Server listener
@@ -83,9 +83,10 @@ app.listen(process.env.PORT || port, (err) => {
 const orderController = require('./app/controller/order.controller');
 var rule = new schedule.RecurrenceRule();
 rule.minute = new schedule.Range(0, 59, 1);
-// job = schedule.scheduleJob(rule, function() {
-    // console.log('Hi..............');
-    // console.error(rule);
-    // orderController.findOrderExpireNotification();
-    // orderController.findExpiredOrderForInvoice();
-// });
+job = schedule.scheduleJob(rule, function() {
+    console.log('Hi..............');
+// console.error(rule);
+    orderController.findOrderExpireNotification();
+    orderController.findExpiredOrderForInvoice(30);
+    orderController.findExpiredOrderImmediateNotifier(2);
+});

@@ -2310,11 +2310,11 @@ exports.userwallet = function (req, res) {
     })
 }
 
-exports.findExpiredOrderForInvoice = function (req, res) {
+exports.findExpiredOrderForInvoice = function (minutes = 60) {
     let where = {};
     where.maxcheckoutdateutc = {
         [Op.lt]: Sequelize.literal("NOW()"),
-        [Op.gte]: Sequelize.literal("DATE_SUB(NOW(), INTERVAL 1 HOUR)")
+        [Op.gte]: Sequelize.literal("DATE_SUB(NOW(), INTERVAL " + minutes + " MINUTE)")
     };
     where.status = 1;
     where.invoice = 0;
@@ -2404,6 +2404,118 @@ exports.findExpiredOrderForInvoice = function (req, res) {
                         let invId = resp.msg;
                         OrderHistoryModel.findByPk(order.id).then(function (resp1) {
                             resp1.update({ invoice: 1, invoiceid: invId }).then(function (result) {
+                                oCallback();
+                            });
+                        })
+                    });
+                }
+                else {
+                    oCallback();
+                }
+                console.log(invoiceResp);
+
+            }
+            core();
+        }, (err) => {
+            return true;
+        })
+    });
+}
+
+exports.findExpiredOrderImmediateNotifier = function (minutes = 60) {
+    let where = {};
+    where.maxcheckoutdateutc = {
+        [Op.lt]: Sequelize.literal("NOW()"),
+        [Op.gte]: Sequelize.literal("DATE_SUB(NOW(), INTERVAL " + minutes + " MINUTE)")
+    };
+    where.status = 1;
+    where.expireimmediate_notify = 0;
+    OrderHistoryModel.findAll({
+        // attributes: [
+        //     "*", Sequelize.literal("TIMESTAMPDIFF(MINUTE, checkindate, checkoutdate) AS minutes_diff"),
+        //     // [Sequelize.fn('TIMESTAMPDIFF', Sequelize.col('checkindate'), Sequelize.col('checkoutdate'), 'MINUTE'), 'minutes_diff']
+        // ],
+        where: where,
+        include: [UserModel, OrderModel],
+        // raw: true
+    }).then(function (resp) {
+        async.eachSeries(resp, function (order, oCallback) {
+            let invoiceResp = { user: {}, product: {} };
+            async function core() {
+                if (order.User && order.Order && order.Order.status == 1) {
+                    let firstOrder;
+                    try {
+                        firstOrder = await OrderHistoryModel.findOne({
+                            where: {
+                                user_id: order.User.id,
+                                expireimmediate_notify: 1
+                            }
+                        });
+                    } catch (e) {
+                        console.error('findImmediateExpiredOrderNotifier Await exception: ', e);
+                    }
+                    let extrasOrder;
+                    try {
+                        extrasOrder = await OrderHistoryModel.findAll({
+                            where: {
+                                order_id: order.order_id,
+                                extra_id: { [Op.ne]: null }
+                            }
+                        });
+                    } catch (e) {
+                        console.error('extrasOrder Await exception: ', e);
+                    }
+                    let user = {}
+                    user.name = order.User.firstname + ' ' + (order.User.lastname || '');
+                    user.email = order.User.email;
+                    user.phone = order.User.phone || '';
+                    user.address = {
+                        line1: order.User.vesiginghuisnr || '',
+                        line2: order.User.vesigingstraat || '',
+                        city: order.User.vesigingplaats || '',
+                        state: '',
+                        country: order.User.vesigingland || '',
+                        postal_code: order.User.vesigingpostcode || '',
+                    };
+                    // user.shipping = user;
+                    user.shipping = {
+                        name: order.User.firstname + ' ' + (order.User.lastname || ''),
+                        phone: order.User.phone || '',
+                        address: {
+                            line1: order.User.factuurhuisnr || '',
+                            line2: order.User.factuurstraat || '',
+                            city: order.User.factuurplaats || '',
+                            state: '',
+                            country: order.User.factuurland || '',
+                            postal_code: order.User.factuurpostcode || '',
+                        }
+                    };
+
+                    invoiceResp.user = user;
+                    let minutes_diff = order.minutes_diff;
+                    let discount = null;
+                    if (!firstOrder || (firstOrder && !firstOrder.id)) {
+                        // minutes_diff = minutes_diff - 60; // Reduce 1 hr for first order
+                        discount = {
+                            description: "1 uur korting",
+                            price: ((order.price * (1)) * 100).toFixed(2)
+                        }
+                    }
+                    let checkin = new Date(order.checkindate);
+                    let checkinDateNew = checkin.toDateString() + " " + checkin.toLocaleTimeString();;
+                    let checkout = new Date(order.checkoutdate);
+                    let checkoutDateNew = checkout.toDateString() + " " + checkout.toLocaleTimeString();;
+                    let product = {
+                        description: order.name + " ( " + checkinDateNew + " - " + checkoutDateNew + " )" || '',
+                        price: ((order.price * (minutes_diff / 60)) * 100).toFixed(2)
+                    };
+                    invoiceResp.product = product;
+                    invoiceResp.discount = discount;
+                    invoiceResp.extrasOrder = extrasOrder;
+                    appUtil.sendInvoice(invoiceResp).then(function (resp) {
+                        let invId = resp.msg;
+                        OrderHistoryModel.findByPk(order.id).then(function (resp1) {
+                            resp1.update({ expireimmediate_notify: 1 }).then(function (result) {
                                 oCallback();
                             });
                         })
