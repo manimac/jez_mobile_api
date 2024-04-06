@@ -2358,44 +2358,6 @@ exports.findOrderExpireNotificationFiveMinsBefore = function (req, res) {
         console.error("Error fetching orders:", err);
         // Handle error appropriately
     });
-
-
-    // let where = {};
-    // where.maxcheckoutdateutc = {
-    //     [Op.lt]: Sequelize.literal("DATE_ADD(NOW(), INTERVAL 5 MINUTE)"),
-    //     [Op.gte]: Sequelize.literal("NOW()")
-    // };
-    // where.status = 1;
-    // where.beforeemail = 0;
-    // OrderHistoryModel.findAll({
-    //     where: where,
-    //     include: [UserModel]
-    // }).then(function (resp) {
-    //     async.eachSeries(resp, async function (order, oCallback) {
-    //         if (order.User) {
-    //             appUtil.expireNotification(order);
-    //             const userTokens = await UserTokenModel.findAll({ where: { user_id: order.User.id } });
-    //             for (let i = 0; i < userTokens.length; i++) {
-    //                 let obj = {
-    //                     token: userTokens[i].token,
-    //                     type: 'Rent',
-    //                     msg: "Your order going to end in 5mins",
-    //                 };
-    //                 await appUtil.sendmessage(obj);
-    //             }
-    //             OrderHistoryModel.findByPk(order.id).then(function (resp1) {
-    //                 resp1.update({ beforeemail: 1 }).then(function (result) {
-
-    //                 });
-    //             })
-    //         }
-
-    //         oCallback();
-    //     }, (err) => {
-    //         return true;
-    //     })
-    //     return true;
-    // });
 }
 
 exports.findOrderExpireNotificationFifteenMinsAfter = function (req, res) {
