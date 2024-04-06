@@ -311,10 +311,6 @@ exports.verifyOTP = function (user, code) {
     })
 }
 
-
-
-
-
 exports.resetedPassword = function (user, password) {
     return new Promise(async function (resolve, reject) {
         readHTMLFile('./app/mail/email-temp.html', function (err, html) {
@@ -372,6 +368,41 @@ exports.expireNotification = function (order) {
         let detail = {
             from: 'support@jezsel.nl', // sender address
             to: user.email, // list of receivers
+            subject: 'JEZSEL Nog één uur - Herinnering', // Subject lin
+            html: htmlToSend
+        }
+        transporter.sendMail(detail, function (error, info) {
+            if (error) {
+                return (error);
+            } else {
+                return (true);
+            }
+        })
+    })
+}
+
+exports.expireNotificationAdmin= function (order) {
+    let user = order.User
+    readHTMLFile('./app/mail/email-temp.html', function (err, html) {
+        var template = handlebars.compile(html);
+        // let comments = `Your Service(` + order.id + `) going to expire in 1 Hour`;
+        let comments = `Wij willen u graag aan herinneren dat het laatste uur van de overeengekomen huurperiode is aangebroken. Wij verzoeken u vriendelijk om het voertuig op tijd op de afgesproken locatie terug te brengen.</p><p>
+        Graag maak ik u erop attent dat wanneer het gehuurde voertuig niet op tijd terug wordt gebracht €50,- euro per uur plus het huurtarief per uur naast de huursom zal worden gerekend.</p><p>
+        Heeft u het gehuurde voertuig langer nodig dan u dacht? Dit is geen enkel probleem. Zolang het voertuig beschikbaar is, kun u het voertuig wederom reserveren op de website via uw eigen account.</p><p>
+        Heeft u nog vragen naar aanleiding van dit bericht. Dan kunt u contact met ons opnemen.</p><p>
+        Bedankt voor het gebruik maken van de diensten van Jezsel en graag tot ziens.
+        `;
+        var replacements = {
+            username: "Admin",
+            message: comments,
+            message2: '',
+        };
+
+        var htmlToSend = template(replacements);
+        // send mail with defined transport object
+        let detail = {
+            from: 'support@jezsel.nl', // sender address
+            to: 'support@jezsel.nl', // list of receivers
             subject: 'JEZSEL Nog één uur - Herinnering', // Subject lin
             html: htmlToSend
         }

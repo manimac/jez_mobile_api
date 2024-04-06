@@ -22,6 +22,7 @@ const ScreenshotModel = MODELS.screenshot;
 const ProductSpecificationModel = MODELS.productspecification;
 const CategoryModel = MODELS.category;
 const OrderSharingModel = MODELS.orderSharing;
+const UserTokenModel = MODELS.usertoken;
 
 // SET STORAGE
 var storage = multer.diskStorage({
@@ -1016,13 +1017,13 @@ exports.makeOrder = function (req, res) {
                 }
                 delete orderhistory.id;
                 OrderHistoryModel.create(orderhistory).then(async (history) => {
-                    if(req.body.status == 1){
+                    if (req.body.status == 1) {
                         const User = await UserModel.findOne({
                             where: { id: req.body.user_id }
                         });
                         history.user = User;
                         appUtil.sendOrderConfirmationMail(history, resp.type ? resp.type : null);
-                    }                    
+                    }
                     resp.Orderhistories.push(history);
                     let userrid = USER.id || null;
                     if (req.body.freebooking == 1) {
@@ -2270,9 +2271,18 @@ exports.findOrderExpireNotification = function (req, res) {
         where: where,
         include: [UserModel]
     }).then(function (resp) {
-        async.eachSeries(resp, function (order, oCallback) {
+        async.eachSeries(resp, async function (order, oCallback) {
             if (order.User) {
                 appUtil.expireNotification(order);
+                const userTokens = await UserTokenModel.findAll({ where: { user_id: order.User.id } });
+                for (let i = 0; i < userTokens.length; i++) {
+                    let obj = {
+                        token: userTokens[i].token,
+                        type: 'Rent',
+                        msg: "Your order going to end in 1hour",
+                    };
+                    await appUtil.sendmessage(obj);
+                }
                 OrderHistoryModel.findByPk(order.id).then(function (resp1) {
                     resp1.update({ mail: 1 }).then(function (result) {
 
@@ -2300,9 +2310,18 @@ exports.findOrderExpireNotificationFiveMinsBefore = function (req, res) {
         where: where,
         include: [UserModel]
     }).then(function (resp) {
-        async.eachSeries(resp, function (order, oCallback) {
+        async.eachSeries(resp, async function (order, oCallback) {
             if (order.User) {
                 appUtil.expireNotification(order);
+                const userTokens = await UserTokenModel.findAll({ where: { user_id: order.User.id } });
+                for (let i = 0; i < userTokens.length; i++) {
+                    let obj = {
+                        token: userTokens[i].token,
+                        type: 'Rent',
+                        msg: "Your order going to end in 5mins",
+                    };
+                    await appUtil.sendmessage(obj);
+                }
                 OrderHistoryModel.findByPk(order.id).then(function (resp1) {
                     resp1.update({ beforeemail: 1 }).then(function (result) {
 
@@ -2330,9 +2349,19 @@ exports.findOrderExpireNotificationFifteenMinsAfter = function (req, res) {
         where: where,
         include: [UserModel]
     }).then(function (resp) {
-        async.eachSeries(resp, function (order, oCallback) {
+        async.eachSeries(resp, async function (order, oCallback) {
             if (order.User) {
                 appUtil.expireNotification(order);
+                appUtil.expireNotificationAdmin(order);
+                const userTokens = await UserTokenModel.findAll({ where: { user_id: order.User.id } });
+                for (let i = 0; i < userTokens.length; i++) {
+                    let obj = {
+                        token: userTokens[i].token,
+                        type: 'Rent',
+                        msg: "Your order already crossed your checkout time",
+                    };
+                    await appUtil.sendmessage(obj);
+                }
                 OrderHistoryModel.findByPk(order.id).then(function (resp1) {
                     resp1.update({ futureemail: 1 }).then(function (result) {
 
