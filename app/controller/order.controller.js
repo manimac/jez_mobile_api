@@ -976,7 +976,7 @@ exports.makeOrder = function (req, res) {
     if (checkOutDates && checkOutDates.length) {
         let maxCheckoutDate = moment.max(checkOutDates);
         req.body.maxcheckoutdate = maxCheckoutDate.format('YYYY-MM-DD HH:mm:ss');
-        req.body.maxcheckoutdateutc = moment(req.body.maxcheckoutdate).utc().format('YYYY-MM-DD') + ' ' + moment(req.body.maxcheckoutdate).utc().format('HH:mm:ss');
+        // req.body.maxcheckoutdateutc = moment(req.body.maxcheckoutdate).utc().format('YYYY-MM-DD') + ' ' + moment(req.body.maxcheckoutdate).utc().format('HH:mm:ss');
     }
     if (req.body.type == 'wallet' || !req.body.maxcheckoutdate) {
         req.body.maxcheckoutdate = moment().format('YYYY-MM-DD HH:mm:ss');
@@ -1016,6 +1016,13 @@ exports.makeOrder = function (req, res) {
                 }
                 delete orderhistory.id;
                 OrderHistoryModel.create(orderhistory).then(async (history) => {
+                    if(req.body.status == 1){
+                        const User = await UserModel.findOne({
+                            where: { id: req.body.user_id }
+                        });
+                        history.user = User;
+                        appUtil.sendOrderConfirmationMail(history, resp.type ? resp.type : null);
+                    }                    
                     resp.Orderhistories.push(history);
                     let userrid = USER.id || null;
                     if (req.body.freebooking == 1) {
@@ -2077,66 +2084,6 @@ exports.oldfindOrderExpireNotification = function (req, res) {
     });
 }
 
-exports.findOrderExpireNotification = function (req, res) {
-    let where = {};
-    where.maxcheckoutdateutc = {
-        [Op.lt]: Sequelize.literal("DATE_ADD(NOW(), INTERVAL 1 HOUR)"),
-        [Op.gte]: Sequelize.literal("NOW()")
-    };
-    where.status = 1;
-    where.mail = 0;
-    OrderHistoryModel.findAll({
-        where: where,
-        include: [UserModel]
-    }).then(function (resp) {
-        async.eachSeries(resp, function (order, oCallback) {
-            if (order.User) {
-                appUtil.expireNotification(order);
-                OrderHistoryModel.findByPk(order.id).then(function (resp1) {
-                    resp1.update({ mail: 1 }).then(function (result) {
-
-                    });
-                })
-            }
-
-            oCallback();
-        }, (err) => {
-            return true;
-        })
-        return true;
-    });
-}
-
-exports.findOrderExpireNotificationTemp = function (req, res) {
-    let where = {};
-    where.maxcheckoutdateutc = {
-        [Op.lt]: Sequelize.literal("DATE_ADD(NOW(), INTERVAL 1 HOUR)"),
-        [Op.gte]: Sequelize.literal("NOW()")
-    };
-    where.status = 1;
-    where.mail = 0;
-    OrderHistoryModel.findAll({
-        where: where,
-        include: [UserModel]
-    }).then(function (resp) {
-        // async.eachSeries(resp, function (order, oCallback) {
-        //     if (order.User) {
-        //         appUtil.expireNotification(order);
-        //         OrderHistoryModel.findByPk(order.id).then(function (resp1) {
-        //             resp1.update({ mail: 1 }).then(function (result) {
-
-        //             });
-        //         })
-        //     }
-
-        //     oCallback();
-        // }, (err) => {
-        //     // return true;
-        //     res.send(err);
-        // })
-        res.send(resp);
-    });
-}
 
 exports.updateDriverLicense = function (req, res) {
     var upload = multer({ storage: storage }).single('image');
@@ -2310,11 +2257,133 @@ exports.userwallet = function (req, res) {
     })
 }
 
-exports.findExpiredOrderForInvoice = function (minutes = 60) {
+
+exports.findOrderExpireNotification = function (req, res) {
+    let where = {};
+    where.maxcheckoutdateutc = {
+        [Op.lt]: Sequelize.literal("DATE_ADD(NOW(), INTERVAL 1 HOUR)"),
+        [Op.gte]: Sequelize.literal("NOW()")
+    };
+    where.status = 1;
+    where.mail = 0;
+    OrderHistoryModel.findAll({
+        where: where,
+        include: [UserModel]
+    }).then(function (resp) {
+        async.eachSeries(resp, function (order, oCallback) {
+            if (order.User) {
+                appUtil.expireNotification(order);
+                OrderHistoryModel.findByPk(order.id).then(function (resp1) {
+                    resp1.update({ mail: 1 }).then(function (result) {
+
+                    });
+                })
+            }
+
+            oCallback();
+        }, (err) => {
+            return true;
+        })
+        return true;
+    });
+}
+
+exports.findOrderExpireNotificationFiveMinsBefore = function (req, res) {
+    let where = {};
+    where.maxcheckoutdateutc = {
+        [Op.lt]: Sequelize.literal("DATE_ADD(NOW(), INTERVAL 5 MINUTE)"),
+        [Op.gte]: Sequelize.literal("NOW()")
+    };
+    where.status = 1;
+    where.beforeemail = 0;
+    OrderHistoryModel.findAll({
+        where: where,
+        include: [UserModel]
+    }).then(function (resp) {
+        async.eachSeries(resp, function (order, oCallback) {
+            if (order.User) {
+                appUtil.expireNotification(order);
+                OrderHistoryModel.findByPk(order.id).then(function (resp1) {
+                    resp1.update({ beforeemail: 1 }).then(function (result) {
+
+                    });
+                })
+            }
+
+            oCallback();
+        }, (err) => {
+            return true;
+        })
+        return true;
+    });
+}
+
+exports.findOrderExpireNotificationFifteenMinsAfter = function (req, res) {
     let where = {};
     where.maxcheckoutdateutc = {
         [Op.lt]: Sequelize.literal("NOW()"),
-        [Op.gte]: Sequelize.literal("DATE_SUB(NOW(), INTERVAL " + minutes + " MINUTE)")
+        [Op.gte]: Sequelize.literal("DATE_SUB(NOW(), INTERVAL 15 MINUTE)")
+    };
+    where.status = 1;
+    where.futureemail = 0;
+    OrderHistoryModel.findAll({
+        where: where,
+        include: [UserModel]
+    }).then(function (resp) {
+        async.eachSeries(resp, function (order, oCallback) {
+            if (order.User) {
+                appUtil.expireNotification(order);
+                OrderHistoryModel.findByPk(order.id).then(function (resp1) {
+                    resp1.update({ futureemail: 1 }).then(function (result) {
+
+                    });
+                })
+            }
+
+            oCallback();
+        }, (err) => {
+            return true;
+        })
+        return true;
+    });
+}
+
+exports.findOrderExpireNotificationTemp = function (req, res) {
+    let where = {};
+    where.maxcheckoutdateutc = {
+        [Op.lt]: Sequelize.literal("DATE_ADD(NOW(), INTERVAL 1 HOUR)"),
+        [Op.gte]: Sequelize.literal("NOW()")
+    };
+    where.status = 1;
+    where.mail = 0;
+    OrderHistoryModel.findAll({
+        where: where,
+        include: [UserModel]
+    }).then(function (resp) {
+        // async.eachSeries(resp, function (order, oCallback) {
+        //     if (order.User) {
+        //         appUtil.expireNotification(order);
+        //         OrderHistoryModel.findByPk(order.id).then(function (resp1) {
+        //             resp1.update({ mail: 1 }).then(function (result) {
+
+        //             });
+        //         })
+        //     }
+
+        //     oCallback();
+        // }, (err) => {
+        //     // return true;
+        //     res.send(err);
+        // })
+        res.send(resp);
+    });
+}
+
+exports.findExpiredOrderForInvoice = function (req, res) {
+    let where = {};
+    where.maxcheckoutdateutc = {
+        [Op.lt]: Sequelize.literal("NOW()"),
+        [Op.gte]: Sequelize.literal("DATE_SUB(NOW(), INTERVAL 1 HOUR)")
     };
     where.status = 1;
     where.invoice = 0;

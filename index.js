@@ -87,6 +87,8 @@ job = schedule.scheduleJob(rule, function() {
     console.log('Hi..............');
 // console.error(rule);
     orderController.findOrderExpireNotification();
-    orderController.findExpiredOrderForInvoice(30);
-    orderController.findExpiredOrderImmediateNotifier(2);
+    orderController.findOrderExpireNotificationFiveMinsBefore();
+    orderController.findOrderExpireNotificationFifteenMinsAfter();
+    // orderController.findExpiredOrderForInvoice();
+    // orderController.findExpiredOrderImmediateNotifier(2);
 });
