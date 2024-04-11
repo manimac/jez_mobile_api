@@ -2366,7 +2366,7 @@ exports.findOrderExpireNotificationFifteenMinsAfter = function (req, res) {
     where.maxcheckoutdateutc = {
         // [Op.lt]: Sequelize.literal("NOW() + INTERVAL 15 MINUTE"),
         // [Op.gte]: Sequelize.literal("DATE_SUB(NOW(), INTERVAL 15 MINUTE)")
-        [Op.lt]: Sequelize.literal("DATE_SUB(NOW(), INTERVAL -15 MINUTE)")
+        [Op.lt]: Sequelize.literal("DATE_SUB(NOW(), INTERVAL 15 MINUTE)")
     };
     where.status = 1;
     where.futureemail = 0;
