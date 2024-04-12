@@ -346,7 +346,7 @@ exports.resetedPassword = function (user, password) {
     });
 }
 
-exports.expireNotification = function (order) {
+exports.expireNotification = function (order, message) {
     let user = order.User
     readHTMLFile('./app/mail/email-temp.html', function (err, html) {
         var template = handlebars.compile(html);
@@ -368,7 +368,7 @@ exports.expireNotification = function (order) {
         let detail = {
             from: 'support@jezsel.nl', // sender address
             to: user.email, // list of receivers
-            subject: 'JEZSEL Nog één uur - Herinnering', // Subject lin
+            subject: message ? 'JEZSEL Nog één uur - '+ message : 'JEZSEL Nog één uur - Herinnering', // Subject lin
             html: htmlToSend
         }
         transporter.sendMail(detail, function (error, info) {

@@ -2069,7 +2069,7 @@ exports.oldfindOrderExpireNotification = function (req, res) {
     }).then(function (resp) {
         async.eachSeries(resp, function (order, oCallback) {
             if (order.User) {
-                appUtil.expireNotification(order);
+                appUtil.expireNotification(order, "old mail");
                 OrderModel.findByPk(order.id).then(function (resp1) {
                     resp1.update({ mail: 1 }).then(function (result) {
 
@@ -2272,7 +2272,7 @@ exports.findOrderExpireNotification = function (req, res) {
     }).then(function (resp) {
         async.eachSeries(resp, async function (order, oCallback) {
             if (order.User) {
-                appUtil.expireNotification(order);
+                appUtil.expireNotification(order, "Your order is going to end in 1 hour");
                 const userTokens = await UserTokenModel.findAll({ where: { user_id: order.User.id } });
                 for (let i = 0; i < userTokens.length; i++) {
                     let obj = {
@@ -2324,7 +2324,7 @@ exports.findOrderExpireNotificationFiveMinsBefore = function (req, res) {
     }).then(function (resp) {
         async.eachSeries(resp, async function (order, oCallback) {
             if (order.User) {
-                appUtil.expireNotification(order);
+                appUtil.expireNotification(order, "Your order going to end in 5mins");
                 const userTokens = await UserTokenModel.findAll({ where: { user_id: order.User.id } });
                 for (let i = 0; i < userTokens.length; i++) {
                     let obj = {
@@ -2376,7 +2376,7 @@ exports.findOrderExpireNotificationFifteenMinsAfter = function (req, res) {
     }).then(function (resp) {
         async.eachSeries(resp, async function (order, oCallback) {
             if (order.User) {
-                appUtil.expireNotification(order);
+                appUtil.expireNotification(order, "Your order already crossed your checkout time");
                 const userTokens = await UserTokenModel.findAll({ where: { user_id: order.User.id } });
                 for (let i = 0; i < userTokens.length; i++) {
                     let obj = {
