@@ -2261,7 +2261,8 @@ exports.userwallet = function (req, res) {
 exports.findOrderExpireNotification = function (req, res) {
     let where = {};
     where.maxcheckoutdateutc = {
-        [Op.lt]: Sequelize.literal("DATE_ADD(NOW(), INTERVAL 1 HOUR)"),
+        [Op.lt]: Sequelize.literal("DATE_ADD(NOW(), INTERVAL 58 MINUTE)"),
+        // [Op.lt]: Sequelize.literal("DATE_ADD(NOW(), INTERVAL 1 HOUR)"),
         [Op.gte]: Sequelize.literal("NOW()")
     };
     where.status = 1;
@@ -2272,13 +2273,13 @@ exports.findOrderExpireNotification = function (req, res) {
     }).then(function (resp) {
         async.eachSeries(resp, async function (order, oCallback) {
             if (order.User) {
-                appUtil.expireNotification(order, "Your order is going to end in 1 hour");
+                appUtil.expireNotification(order, order.id + " 1hr Before");
                 const userTokens = await UserTokenModel.findAll({ where: { user_id: order.User.id } });
                 for (let i = 0; i < userTokens.length; i++) {
                     let obj = {
                         token: userTokens[i].token,
                         type: 'Rent',
-                        msg: "Your order is going to end in 1 hour",
+                        msg: order.id + " Your order is going to end in 1 hour",
                     };
                     await appUtil.sendmessage(obj);
                 }
@@ -2313,7 +2314,7 @@ exports.findOrderExpireNotificationFiveMinsBefore = function (req, res) {
 
     let where = {};
     where.maxcheckoutdateutc = {
-        [Op.lt]: Sequelize.literal("DATE_ADD(NOW(), INTERVAL 5 MINUTE)"),
+        [Op.lt]: Sequelize.literal("DATE_ADD(NOW(), INTERVAL 6 MINUTE)"),
         [Op.gte]: Sequelize.literal("NOW()")
     };
     where.status = 1;
@@ -2324,13 +2325,13 @@ exports.findOrderExpireNotificationFiveMinsBefore = function (req, res) {
     }).then(function (resp) {
         async.eachSeries(resp, async function (order, oCallback) {
             if (order.User) {
-                appUtil.expireNotification(order, "Your order going to end in 5mins");
+                appUtil.expireNotification(order, order.id + " 5mins Before");
                 const userTokens = await UserTokenModel.findAll({ where: { user_id: order.User.id } });
                 for (let i = 0; i < userTokens.length; i++) {
                     let obj = {
                         token: userTokens[i].token,
                         type: 'Rent',
-                        msg: "Your order going to end in 5mins",
+                        msg: order.id + " Your order going to end in 5mins",
                     };
                     await appUtil.sendmessage(obj);
                 }
@@ -2366,7 +2367,7 @@ exports.findOrderExpireNotificationFifteenMinsAfter = function (req, res) {
     where.maxcheckoutdateutc = {
         // [Op.lt]: Sequelize.literal("NOW() + INTERVAL 15 MINUTE"),
         // [Op.gte]: Sequelize.literal("DATE_SUB(NOW(), INTERVAL 15 MINUTE)")
-        [Op.lt]: Sequelize.literal("DATE_SUB(NOW(), INTERVAL 15 MINUTE)")
+        [Op.lt]: Sequelize.literal("DATE_SUB(NOW(), INTERVAL 14 MINUTE)")
     };
     where.status = 1;
     where.futureemail = 0;
@@ -2376,13 +2377,13 @@ exports.findOrderExpireNotificationFifteenMinsAfter = function (req, res) {
     }).then(function (resp) {
         async.eachSeries(resp, async function (order, oCallback) {
             if (order.User) {
-                appUtil.expireNotification(order, "Your order already crossed your checkout time");
+                appUtil.expireNotification(order, order.id + " 15min After");
                 const userTokens = await UserTokenModel.findAll({ where: { user_id: order.User.id } });
                 for (let i = 0; i < userTokens.length; i++) {
                     let obj = {
                         token: userTokens[i].token,
                         type: 'Rent',
-                        msg: "Your order already crossed your checkout time",
+                        msg: order.id + " Your order already crossed your checkout time",
                     };
                     await appUtil.sendmessage(obj);
                 }
@@ -2455,7 +2456,8 @@ exports.findOrderExpireNotificationFifteenMinsAfter = function (req, res) {
 exports.findOrderExpireNotificationTemp = function (req, res) {
     let where = {};
     where.maxcheckoutdateutc = {
-        [Op.lt]: Sequelize.literal("DATE_ADD(NOW(), INTERVAL 1 HOUR)"),
+        // [Op.lt]: Sequelize.literal("DATE_ADD(NOW(), INTERVAL 1 HOUR)"),
+        [Op.lt]: Sequelize.literal("DATE_ADD(NOW(), INTERVAL 59 MINUTE)"),
         [Op.gte]: Sequelize.literal("NOW()")
     };
     where.status = 1;

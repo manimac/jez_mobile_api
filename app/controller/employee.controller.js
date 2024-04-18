@@ -154,7 +154,7 @@ exports.getExperience = function (req, res) {
     }).catch((err) => {
         res.status(500).send(err);
     })
-}; 
+};
 
 exports.getAssignments = async (req, res) => {
     try {
@@ -170,13 +170,16 @@ exports.getAssignments = async (req, res) => {
 
         if (search.type === 'transport') {
             const excludedIds = interests.map(({ staffortransportrequest_id }) => staffortransportrequest_id);
-
             const where = {
                 status,
-                from: { [Op.and]: [Sequelize.where(Sequelize.col('workstartdate'), '>=', checkindate),
-                                  Sequelize.where(Sequelize.col('workstartdate'), '<=', checkoutdate)] },
-                type,
-            };
+                type
+            }
+            if (checkindate && checkoutdate) {
+                where.from = {
+                    [Op.and]: [Sequelize.where(Sequelize.col('workstartdate'), '>=', checkindate),
+                    Sequelize.where(Sequelize.col('workstartdate'), '<=', checkoutdate)]
+                }
+            }
 
             if (excludedIds.length > 0) {
                 where.id = { [Op.notIn]: excludedIds };
@@ -198,10 +201,14 @@ exports.getAssignments = async (req, res) => {
             const categoryWhere = {
                 category_id: categoryIds,
                 status,
-                from: { [Op.and]: [Sequelize.where(Sequelize.col('workstartdate'), '>=', checkindate),
-                                  Sequelize.where(Sequelize.col('workstartdate'), '<=', checkoutdate)] },
-                [Op.and]: [Sequelize.where(Sequelize.col('staffaccepted'), { [Op.lt]: Sequelize.col('staffneeded') })],
-            };
+                [Op.and]: [Sequelize.where(Sequelize.col('staffaccepted'), { [Op.lt]: Sequelize.col('staffneeded') })]
+            }
+            if (checkindate && checkoutdate) {
+                categoryWhere.from = {
+                    [Op.and]: [Sequelize.where(Sequelize.col('workstartdate'), '>=', checkindate),
+                    Sequelize.where(Sequelize.col('workstartdate'), '<=', checkoutdate)]
+                };
+            }
 
             if (req.body.category_id) {
                 categoryWhere.category_id = [req.body.category_id];
@@ -240,13 +247,13 @@ exports.getAssignments = async (req, res) => {
 exports.successAssignments = async (req, res) => {
     try {
         const { employee_id, search } = req.body;
-        const status = [0,3];
+        const status = [0, 3];
 
-        const where = { employee_id, status };        
+        const where = { employee_id, status };
         const staffOrTransportInterest = await StaffOrTransportInterestModel.findAll({
             where
         });
-        if(staffOrTransportInterest.length==0){
+        if (staffOrTransportInterest.length == 0) {
             return res.json([]);
         }
         const requestIds = staffOrTransportInterest.map(Interest => Interest.staffortransportrequest_id);
@@ -254,9 +261,7 @@ exports.successAssignments = async (req, res) => {
             id: requestIds,
             type: search.type
         }
-        if (search && search.checkindate && search.checkintime && search.checkoutdate && search.checkouttime) {
-            search.checkindatetime = moment(`${search.checkindate} ${search.checkintime}`, 'DD-MM-YYYY HH:mm');
-            search.checkoutdatetime = moment(`${search.checkoutdate} ${search.checkouttime}`, 'DD-MM-YYYY HH:mm');
+        if (search && search.checkindate && search.checkoutdate) {
             let checkindate = search.checkindate;
             let checkoutdate = search.checkoutdate;
             requestWhere.from = {
@@ -283,11 +288,11 @@ exports.confirmAssignments = async (req, res) => {
         const { employee_id, search } = req.body;
         const status = 2;
 
-        const where = { employee_id, status };        
+        const where = { employee_id, status };
         const staffOrTransportInterest = await StaffOrTransportInterestModel.findAll({
             where
         });
-        if(staffOrTransportInterest.length==0){
+        if (staffOrTransportInterest.length == 0) {
             return res.json([]);
         }
         const requestIds = staffOrTransportInterest.map(Interest => Interest.staffortransportrequest_id);
@@ -295,9 +300,7 @@ exports.confirmAssignments = async (req, res) => {
             id: requestIds,
             type: search.type
         }
-        if (search && search.checkindate && search.checkintime && search.checkoutdate && search.checkouttime) {
-            search.checkindatetime = moment(`${search.checkindate} ${search.checkintime}`, 'DD-MM-YYYY HH:mm');
-            search.checkoutdatetime = moment(`${search.checkoutdate} ${search.checkouttime}`, 'DD-MM-YYYY HH:mm');
+        if (search && search.checkindate && search.checkoutdate) {
             let checkindate = search.checkindate;
             let checkoutdate = search.checkoutdate;
             requestWhere.from = {
@@ -336,7 +339,7 @@ exports.pendingAssignments = async (req, res) => {
                 status: 1,
             };
 
-            if (search && search.checkindate && search.checkintime && search.checkoutdate && search.checkouttime) {
+            if (search && search.checkindate && search.checkoutdate) {
                 let checkindate = search.checkindate;
                 let checkoutdate = search.checkoutdate;
                 where.from = {
@@ -373,13 +376,13 @@ exports.userUpdate = async (req, res) => {
         }]);
         upload(req, res, async function (err) {
             if (err) {
-                throw err; 
+                throw err;
             }
 
             const { id, userimage, username } = req.body;
             const updatedUser = await UserModel.findByPk(id);
 
-            if (updatedUser && res.req && res.req.files && res.req.files.profileimage && Array.isArray(res.req.files.profileimage) && (res.req.files.profileimage.length>0)) {
+            if (updatedUser && res.req && res.req.files && res.req.files.profileimage && Array.isArray(res.req.files.profileimage) && (res.req.files.profileimage.length > 0)) {
                 updatedUser.userimage = res.req.files.profileimage[0] ? res.req.files.profileimage[0].filename : userimage;
                 await updatedUser.save();
 

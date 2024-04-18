@@ -368,7 +368,7 @@ exports.expireNotification = function (order, message) {
         let detail = {
             from: 'support@jezsel.nl', // sender address
             to: user.email, // list of receivers
-            subject: message ? 'JEZSEL Nog één uur - '+ message : 'JEZSEL Nog één uur - Herinnering', // Subject lin
+            subject: message ? message : 'JEZSEL Nog één uur - Herinnering', // Subject lin
             html: htmlToSend
         }
         transporter.sendMail(detail, function (error, info) {
