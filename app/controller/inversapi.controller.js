@@ -153,11 +153,11 @@ const FormData = require('form-data');
 // These parameters should be used for all requests
 
 //Dev token
-// const SUMSUB_APP_TOKEN = 'sbx:oT49RNBi06bfl30Pkt9Aacbq.9aR75cAAhwiCLOc7XgVeo4tfrfLLEisU'; 
-// const SUMSUB_SECRET_KEY = '5lVazomoP4t45w1WrUqbnCSxPKgMZgCw';
+const SUMSUB_APP_TOKEN = 'sbx:oT49RNBi06bfl30Pkt9Aacbq.9aR75cAAhwiCLOc7XgVeo4tfrfLLEisU'; 
+const SUMSUB_SECRET_KEY = '5lVazomoP4t45w1WrUqbnCSxPKgMZgCw';
 //Prod token
-const SUMSUB_APP_TOKEN = 'prd:QK767GIH1gsSb2doneOTvyF0.kYUpdQ5H4WPn7JvW6jpc6Ip9XOwTg31I'; 
-const SUMSUB_SECRET_KEY = 'YUPiWPLJzUo0zpruKKLkjgboADaMpRlp';
+// const SUMSUB_APP_TOKEN = 'prd:QK767GIH1gsSb2doneOTvyF0.kYUpdQ5H4WPn7JvW6jpc6Ip9XOwTg31I'; 
+// const SUMSUB_SECRET_KEY = 'YUPiWPLJzUo0zpruKKLkjgboADaMpRlp';
 const SUMSUB_BASE_URL = 'https://api.sumsub.com';
 
 var config = {};

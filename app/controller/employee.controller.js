@@ -247,7 +247,7 @@ exports.getAssignments = async (req, res) => {
 exports.successAssignments = async (req, res) => {
     try {
         const { employee_id, search } = req.body;
-        const status = [0, 3];
+        const status = [3];
 
         const where = { employee_id, status };
         const staffOrTransportInterest = await StaffOrTransportInterestModel.findAll({
@@ -286,7 +286,7 @@ exports.successAssignments = async (req, res) => {
 exports.confirmAssignments = async (req, res) => {
     try {
         const { employee_id, search } = req.body;
-        const status = 2;
+        const status = [0, 2];
 
         const where = { employee_id, status };
         const staffOrTransportInterest = await StaffOrTransportInterestModel.findAll({
