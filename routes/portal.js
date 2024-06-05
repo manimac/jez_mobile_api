@@ -200,6 +200,7 @@ router.delete('/advertisement/delete/:id', common.deleteadvertisement);
 //backupwithout middleware
 router.get('/home', common.getHome);
 router.get('/aboutus', common.getAboutUs);
+router.get('/fuel', common.getFuel);
 router.get('/certificate', common.getcertificate);
 router.get('/contactus', common.contactus);
 router.get('/faqs', common.faqs);
@@ -215,4 +216,9 @@ router.get('/getunReadWithdraw', order.getunReadWithdraw);
 router.get('/userwallet/:id', order.userwallet);
 router.get('/userwithdraws/:id', common.userwithdraws);
 router.get('/userorders/:id', order.userorders);
+
+/** Fuel */
+router.post('/fuel/create', common.createFuel);
+router.post('/fuel/update', common.updateFuel);
+router.delete('/fuel/delete/:id', common.deleteFuel);
 module.exports = router;

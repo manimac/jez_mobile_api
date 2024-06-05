@@ -62,6 +62,7 @@ db.notificationmaster = require("./notificationmaster.model")(sequelize, Sequeli
 db.usernotification = require("./usernotification.model")(sequelize, Sequelize);
 db.functions = require("./functions.model")(sequelize, Sequelize);
 db.employeefunctions = require("./employeefunctions.model")(sequelize, Sequelize);
+db.fuel = require("./fuel.model")(sequelize, Sequelize);
 
 
 /** relationship */

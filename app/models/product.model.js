@@ -20,6 +20,8 @@ const ProductModel = (sequelize, Sequelize) => {
         description: { type: Sequelize.TEXT, allowNull: true },
         status: { type: Sequelize.INTEGER, defaultValue: 1 },
         showinindex: { type: Sequelize.INTEGER, defaultValue: 0 },
+        fueltype: { type: Sequelize.STRING, allowNull: true },
+        fuelcapacity: { type: Sequelize.STRING, allowNull: true },
         image1: { type: Sequelize.STRING, allowNull: true },
         image2: { type: Sequelize.STRING, allowNull: true },
         image3: { type: Sequelize.STRING, allowNull: true },

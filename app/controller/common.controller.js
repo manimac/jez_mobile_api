@@ -35,6 +35,7 @@ const NotificationMasterModel = MODELS.notificationmaster;
 const UserNotificationModel = MODELS.usernotification;
 const functionModel = MODELS.functions;
 const EmployeeFunctionModel = MODELS.employeefunctions;
+const FuelModel = MODELS.fuel;
 
 RandExp = require('randexp');
 const request = require('request');
@@ -298,6 +299,54 @@ exports.deleteFaq = function (req, res) {
             res.send(resp);
         })
     }, function (err) {
+        res.status(500).send(err);
+    })
+}
+
+exports.createFuel = function (req, res) {
+    FuelModel.create(req.body).then(function () {
+        res.send(req.body);
+    }, function (err) {
+        res.status(500).send(err);
+    })
+}
+
+exports.updateFuel = function (req, res) {
+    FuelModel.findOne({
+        where: {
+            id: 1
+        }
+    }).then(function (resp) {
+        if (resp) {
+            resp.update(req.body).then(function (result) {
+                res.send(result);
+            })
+        } else {
+            delete req.body.id;
+            FuelModel.create(req.body).then(function (respp) {
+                res.send(respp);
+            })
+        }
+    }, (err) => {
+        res.status(500).send(err);
+    })
+}
+exports.deleteFuel = function (req, res) {
+    FuelModel.findByPk(req.params.id).then(function (result) {
+        result.destroy().then((resp) => {
+            res.send(resp);
+        })
+    }, function (err) {
+        res.status(500).send(err);
+    })
+}
+
+
+exports.getFuel = function (req, res) {
+    FuelModel.findOne({
+    }).then(function (resp) {
+        res.send(resp);
+    }, (err) => {
         res.status(500).send(err);
     })
 }
