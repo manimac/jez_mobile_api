@@ -18,6 +18,10 @@ const OrderhistoryModel = (sequelize, Sequelize) => {
         canceleddate: { type: Sequelize.DATE, allowNull: true },
         cancelationfee: { type: Sequelize.STRING, allowNull: true },
         maxcheckoutdateutc: { type: Sequelize.STRING, allowNull: true },
+        hrprice: { type: Sequelize.STRING, allowNull: true },
+        pricemode: { type: Sequelize.STRING, allowNull: true },
+        fuelprice: { type: Sequelize.STRING, allowNull: true },
+        fuelFill: { type: Sequelize.STRING, allowNull: true },
         mail: { type: Sequelize.BOOLEAN, allowNull: true },
         invoiceid: { type: Sequelize.STRING, allowNull: true },
         invoice: { type: Sequelize.BOOLEAN, allowNull: true },
@@ -29,6 +33,7 @@ const OrderhistoryModel = (sequelize, Sequelize) => {
         futureemail: { type: Sequelize.INTEGER, defaultValue: 0 },
         created: { type: Sequelize.STRING, allowNull: true },
         isreaded: { type: Sequelize.BOOLEAN, allowNull: true },
+        intentid: { type: Sequelize.TEXT, allowNull: true },
         minutes_diff: {
             type: Sequelize.VIRTUAL,
             get() {

@@ -1014,6 +1014,14 @@ exports.makeOrder = function (req, res) {
                         orderhistory.maxcanceldate = moment(product.maxcanceldate, 'DD-MM-YYYY').format('YYYY-MM-DD') + ' ' + moment(search.checkintime, 'HH:mm').format('HH:mm:ss');
                     }
                     orderhistory.maxcheckoutdateutc = search.maxcheckoutdateutc;
+                    if(product.bookingType == 'dag'){
+                        orderhistory.hrprice = product.priceperday;
+                        orderhistory.pricemode = 'day';
+                    }
+                    else{
+                        orderhistory.hrprice = product.priceperhour;
+                        orderhistory.pricemode = 'hr';
+                    }                    
                 }
                 delete orderhistory.id;
                 OrderHistoryModel.create(orderhistory).then(async (history) => {
@@ -1734,6 +1742,9 @@ exports.ordersForApp = function (req, res) {
     }
     OrderHistoryModel.findAndCountAll({
         where: orderHistoryWhere,
+        order: [
+            ['id', 'DESC']
+        ],
         include: [{
             model: OrderSharingModel,
             where: sharingwhere,
@@ -1774,7 +1785,7 @@ exports.ordersForApp = function (req, res) {
                 required: false
             }],
             order: [
-                ['createdAt', 'DESC']
+                ['id', 'DESC']
             ],
             offset: offset,
             limit: limit
@@ -2909,6 +2920,16 @@ exports.orderHistoryUpdate = function (req, res) {
     })
 }
 
+exports.orderHistoryUpdateHr = function (req, res) {
+    OrderHistoryModel.findByPk(req.body.id).then(function (resp1) {
+        resp1.update(req.body).then(async function (result) {
+            res.send(result);
+        }).catch((err) => {
+            res.status(500).send(err)
+        })
+    })
+}
+
 exports.orderHistoryUpdateOrder = function (req, res) {
     OrderHistoryModel.findByPk(req.body.id).then(function (resp1) {
         req.body.checkoutdate = moment(req.body.checkoutdate, 'DD-MM-YYYY').format('YYYY-MM-DD') + ' ' + moment(req.body.checkouttime, 'HH:mm').format('HH:mm:ss');
@@ -3002,6 +3023,51 @@ exports.productIdeal = async function (req, res) {
     }
 };
 
+exports.productHistoryIdeal = async function (req, res) {
+    try {
+        stripeAmount = req.body.total * 100;
+        let pName = req.body.pname;
+
+        const session = await stripe.checkout.sessions.create({
+            line_items: [{
+                price_data: {
+                    currency: 'EUR',
+                    product_data: {
+                        name: pName,
+                        metadata: {
+                            'id': '',
+                            'name': pName
+                        }
+                    },
+                    unit_amount: Math.round(stripeAmount),
+                },
+                quantity: 1,
+            }],
+            payment_method_types: ['card', 'ideal'],
+            mode: 'payment',
+            success_url: `${process.env.appUrl}payment-mobile-success`,
+            cancel_url: `${process.env.appUrl}payment-mobile-failure`,
+        });
+
+        const isOrder = await OrderHistoryModel.findOne({
+            where: {
+                id: req.body.id
+            }
+        });
+
+        if (isOrder) {
+            const updatedOrder = isOrder.toJSON();
+            updatedOrder.intentid = session.payment_intent;
+            await OrderHistoryModel.update(updatedOrder, { where: { id: req.body.id } });
+            res.json({ url: session.url, paymentchargeid: session.payment_intent, sessionId: session.id });
+        } else {
+            res.status(500).send('Order not found');
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Internal Server Error');
+    }
+};
 
 exports.paymentWebhook = async function (req, res) {
     const event = req.body;
@@ -3009,6 +3075,12 @@ exports.paymentWebhook = async function (req, res) {
         case 'payment_intent.succeeded':
             const paymentIntent = event.data.object;
             var isOrder = await OrderModel.findOne({
+                where: {
+                    intentid: paymentIntent.id
+                },
+                include: [UserModel]
+            });
+            var isOrderHistory = await OrderHistoryModel.findOne({
                 where: {
                     intentid: paymentIntent.id
                 },
@@ -3028,6 +3100,11 @@ exports.paymentWebhook = async function (req, res) {
                     }
                 }
 
+            }
+            else if(isOrderHistory){
+                const updatedOrder = isOrderHistory.toJSON();
+                updatedOrder.status = 2;
+                await OrderHistoryModel.update(updatedOrder, { where: { intentid: paymentIntent.id } });
             } else {
                 res.status(500).send('Order not found');
             }
