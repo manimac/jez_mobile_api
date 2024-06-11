@@ -14,6 +14,7 @@ const EmployeeModel = (sequelize, Sequelize) => {
         bsn: { type: Sequelize.STRING, allowNull: true },
         profileimage: { type: Sequelize.STRING, allowNull: true },
         step: { type: Sequelize.STRING, allowNull: true },
+        skipstep: { type: Sequelize.STRING, allowNull: true },
         type: { type: Sequelize.STRING, allowNull: true },
     })
 

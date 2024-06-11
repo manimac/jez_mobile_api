@@ -5,7 +5,8 @@ const FuelModel = (sequelize, Sequelize) => {
         gas: { type: Sequelize.TEXT, allowNull: true },
         petrol: { type: Sequelize.TEXT, allowNull: true },
         electric: { type: Sequelize.TEXT, allowNull: true },
-        diesel: { type: Sequelize.TEXT, allowNull: true }
+        diesel: { type: Sequelize.TEXT, allowNull: true },
+        shareprice: { type: Sequelize.TEXT, allowNull: true }
     })
 
     return Fuel

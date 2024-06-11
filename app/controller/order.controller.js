@@ -1643,7 +1643,9 @@ exports.findOrderHistory = async function (req, res) {
             where: { id: req.body.id, extra_id: null },
             include: [
                 { model: UserModel },
-                { model: ProductModel }
+                { model: ProductModel },
+                { model: OrderModel },
+                { model: OrderSharingModel },
             ]
         });
 
@@ -2922,6 +2924,16 @@ exports.orderHistoryUpdate = function (req, res) {
 
 exports.orderHistoryUpdateHr = function (req, res) {
     OrderHistoryModel.findByPk(req.body.id).then(function (resp1) {
+        resp1.update(req.body).then(async function (result) {
+            res.send(result);
+        }).catch((err) => {
+            res.status(500).send(err)
+        })
+    })
+}
+
+exports.orderUpdateAny = function (req, res) {
+    OrderModel.findByPk(req.body.id).then(function (resp1) {
         resp1.update(req.body).then(async function (result) {
             res.send(result);
         }).catch((err) => {
