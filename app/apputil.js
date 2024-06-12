@@ -599,7 +599,7 @@ async function sendOTPSMS(userObj, otp, countrycode) {
     try {
         const headers = { 'Authorization': 'AccessKey 3z5juOZyiZoxMXbVKlN4A1hza2sWbdMKubwh', 'Accept': `application/json` };
         const cOptions = {
-            url: 'https://api.bird.com/workspaces/24e482ef-9608-4080-bce9-888bd2362a7d/channels/52892b02-ca92-4fc0-a102-8636abdce013/messages',
+            url: 'https://api.bird.com/workspaces/24e482ef-9608-4080-bce9-888bd2362a7d/channels/6de96eed-3722-488f-adc4-2b5d707d3d77/messages',
             method: 'POST',
             headers: headers,
             json: true,
