@@ -1724,7 +1724,7 @@ exports.ordersForApp = function (req, res) {
     let endbooking = null;
     if (req.body.past) {
         endbooking = 1;
-        orderHistoryWhere.status = [0, 1];
+        // orderHistoryWhere.status = [0, 1];
     }
     else {
         where.status = [1];
@@ -2280,6 +2280,7 @@ exports.findOrderExpireNotification = function (req, res) {
     };
     where.status = 1;
     where.mail = 0;
+    where.endbooking = { [Op.ne]: 1 };
     OrderHistoryModel.findAll({
         where: where,
         include: [UserModel]
@@ -2332,6 +2333,7 @@ exports.findOrderExpireNotificationFiveMinsBefore = function (req, res) {
     };
     where.status = 1;
     where.beforeemail = 0;
+    where.endbooking = { [Op.ne]: 1 };
     OrderHistoryModel.findAll({
         where: where,
         include: [UserModel]
@@ -2384,6 +2386,7 @@ exports.findOrderExpireNotificationFifteenMinsAfter = function (req, res) {
     };
     where.status = 1;
     where.futureemail = 0;
+    where.endbooking = { [Op.ne]: 1 };
     OrderHistoryModel.findAll({
         where: where,
         include: [UserModel]
@@ -3115,7 +3118,7 @@ exports.paymentWebhook = async function (req, res) {
             }
             else if(isOrderHistory){
                 const updatedOrder = isOrderHistory.toJSON();
-                updatedOrder.status = 2;
+                updatedOrder.status = 1;
                 await OrderHistoryModel.update(updatedOrder, { where: { intentid: paymentIntent.id } });
             } else {
                 res.status(500).send('Order not found');
@@ -3130,7 +3133,7 @@ exports.paymentWebhook = async function (req, res) {
             });
             if (isOrder) {
                 const updatedOrder = isOrder.toJSON();
-                updatedOrder.status = 2;
+                updatedOrder.status = 0;
                 await OrderModel.update(updatedOrder, { where: { intentid: paymentMethod.id } });
             } else {
                 res.status(500).send('Order not found');
