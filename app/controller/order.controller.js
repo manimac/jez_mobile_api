@@ -1644,7 +1644,9 @@ exports.findOrderHistory = async function (req, res) {
             include: [
                 { model: UserModel },
                 { model: ProductModel },
-                { model: OrderModel },
+                { model: OrderModel, include: [{
+                    model: OrderHistoryModel
+                } ]},
                 { model: OrderSharingModel },
             ]
         });
