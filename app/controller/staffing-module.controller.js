@@ -76,7 +76,7 @@ const uploadAsync = util.promisify(multer({ storage: assignmentStorage }).single
 
 function rememberNotification(request, usernotification) {
     if (usernotification && usernotification.rememberassignments && request.workstartdate && request.worktime) {
-        request.workstartdate = request.workstartdate.split("-").reverse().join("-");
+        // request.workstartdate = request.workstartdate.split("-").reverse().join("-");
         const workStartDateTime = new Date(`${request.workstartdate}T${request.worktime}`);
         
         // Mapping of rememberassignmentsoption to hours or days
@@ -323,13 +323,14 @@ exports.assignmentUpdate = async function (req, res) {
                         };
                         await appUtil.sendmessage(obj);
                     }
+                    rememberNotification(requestResult, UserNotification)
                 }
-                rememberNotification(requestResult, UserNotification)
+                
                 await interestResult.update({ status });
-                const workstartdate = order.workstartdate.split('-').reverse().join('-');
-                const workenddate = order.workenddate.split('-').reverse().join('-');
-                const startDate = new Date(workstartdate);
-                const endDate = new Date(workenddate);
+                // const workstartdate = order.workstartdate.split('-').reverse().join('-');
+                // const workenddate = order.workenddate.split('-').reverse().join('-');
+                const startDate = new Date(order.workstartdate);
+                const endDate = new Date(order.workenddate);
                 const dateArray = getDates(startDate, endDate);
 
                 if (Array.isArray(dateArray) && dateArray.length > 0) {
