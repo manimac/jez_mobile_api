@@ -295,7 +295,7 @@ exports.assignmentUpdate = async function (req, res) {
             for (let i = 0; i < userTokens.length; i++) {
                 let obj = {
                     token: userTokens[i].token,
-                    type: requestResult == 'staffing' ? 'Staffing' : 'Transport',
+                    type: requestResult.type == 'staffing' ? 'Staffing' : 'Transport',
                     msg: "Completed your order. please check in the completed assignments",
                 };
                 await appUtil.sendmessage(obj);
@@ -318,7 +318,7 @@ exports.assignmentUpdate = async function (req, res) {
                     for (let i = 0; i < userTokens.length; i++) {
                         let obj = {
                             token: userTokens[i].token,
-                            type: requestResult == 'staffing' ? 'Staffing' : 'Transport',
+                            type: requestResult.type == 'staffing' ? 'Staffing' : 'Transport',
                             msg: "Your order has been accepted.",
                         };
                         await appUtil.sendmessage(obj);
@@ -367,7 +367,7 @@ exports.assignmentUpdate = async function (req, res) {
                     for (let i = 0; i < userTokens.length; i++) {
                         let obj = {
                             token: userTokens[i].token,
-                            type: requestResult == 'staffing' ? 'Staffing' : 'Transport',
+                            type: requestResult.type == 'staffing' ? 'Staffing' : 'Transport',
                             msg: "Your order has been rejected.",
                         };
                         await appUtil.sendmessage(obj);
