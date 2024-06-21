@@ -224,4 +224,8 @@ router.get('/userorders/:id', order.userorders);
 router.post('/fuel/create', common.createFuel);
 router.post('/fuel/update', common.updateFuel);
 router.delete('/fuel/delete/:id', common.deleteFuel);
+
+router.post('/order/extra/create', order.createExtra);
+router.post('/order/extra/update', order.updateExtra);
+router.delete('/order/extra/delete/:id', order.deleteExtra);
 module.exports = router;
