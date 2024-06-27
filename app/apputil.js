@@ -729,6 +729,9 @@ exports.sendmessage = function (body) {
                 title: body.type,
                 body: body.msg,
                 sound: "default"
+            },
+            data: {
+                route: body.route 
             }
         }
     };

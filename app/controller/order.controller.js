@@ -2297,6 +2297,7 @@ exports.findOrderExpireNotification = function (req, res) {
                         token: userTokens[i].token,
                         type: 'Rent',
                         msg: order.id + " Your order is going to end in 1 hour",
+                        route: '/my-bookings'
                     };
                     await appUtil.sendmessage(obj);
                 }
@@ -2350,6 +2351,7 @@ exports.findOrderExpireNotificationFiveMinsBefore = function (req, res) {
                         token: userTokens[i].token,
                         type: 'Rent',
                         msg: order.id + " Your order going to end in 5mins",
+                        route: '/my-bookings'
                     };
                     await appUtil.sendmessage(obj);
                 }
@@ -2403,6 +2405,7 @@ exports.findOrderExpireNotificationFifteenMinsAfter = function (req, res) {
                         token: userTokens[i].token,
                         type: 'Rent',
                         msg: order.id + " Your order already crossed your checkout time",
+                        route: '/my-bookings'
                     };
                     await appUtil.sendmessage(obj);
                 }

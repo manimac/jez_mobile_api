@@ -143,6 +143,7 @@ async function yourMethodToExecute(userId, requestType, type) {
             token: userToken.token,
             type: requestType === 'staffing' ? 'Staffing' : 'Transport',
             msg: 'Remember for your order.Will start in ' + type,
+            route: requestType === 'staffing' ? '/tabs/staff-dashboard?tab=accept-read-only' : '/tabs/transport?tab=accept-read-only'
         };
 
         await appUtil.sendmessage(notification);
@@ -183,6 +184,7 @@ async function notifyUserTokens(userId, requestType) {
             token: userToken.token,
             type: requestType === 'staffing' ? 'Staffing' : 'Transport',
             msg: 'We have a new order. Please look into this',
+            route: requestType === 'staffing' ? '/tabs/staff-dashboard' : '/tabs/transport'
         };
 
         await appUtil.sendmessage(notification);
@@ -297,6 +299,7 @@ exports.assignmentUpdate = async function (req, res) {
                     token: userTokens[i].token,
                     type: requestResult.type == 'staffing' ? 'Staffing' : 'Transport',
                     msg: "Completed your order. please check in the completed assignments",
+                    route: requestType === 'staffing' ? '/tabs/staff-dashboard?tab=completed-assignments' : '/tabs/transport?tab=completed-assignments'
                 };
                 await appUtil.sendmessage(obj);
             }
@@ -320,6 +323,7 @@ exports.assignmentUpdate = async function (req, res) {
                             token: userTokens[i].token,
                             type: requestResult.type == 'staffing' ? 'Staffing' : 'Transport',
                             msg: "Your order has been accepted.",
+                            route: requestType === 'staffing' ? '/tabs/staff-dashboard?tab=pending-assignments' : '/tabs/transport?tab=pending-assignments'
                         };
                         await appUtil.sendmessage(obj);
                     }
@@ -369,6 +373,7 @@ exports.assignmentUpdate = async function (req, res) {
                             token: userTokens[i].token,
                             type: requestResult.type == 'staffing' ? 'Staffing' : 'Transport',
                             msg: "Your order has been rejected.",
+                            route: requestType === 'staffing' ? '/tabs/staff-dashboard?tab=accept-read-only' : '/tabs/transport?tab=accept-read-only'
                         };
                         await appUtil.sendmessage(obj);
                     }

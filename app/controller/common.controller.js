@@ -1094,6 +1094,9 @@ exports.sendmessage = function (req, res) {
                 title: "Success",
                 body: "There’s a new pickup order in line!",
                 sound: "default"
+            },
+            data: {
+                route: body.route 
             }
         }
     };
