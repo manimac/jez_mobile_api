@@ -114,12 +114,12 @@ exports.products = function (req, res) {
 
                 userWhere[Op.or] = [
                     {
-                        [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.defaultcheckoutdatetimeex),
+                        [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.checkoutdatetimeex),
                         Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.checkindatetimeex)]
                     },
                     {
                         [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '<=', search.checkoutdatetimeex),
-                        Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.defaultcheckoutdatetimeex)]
+                        Sequelize.where(Sequelize.col('checkoutdate'), '>=', search.checkoutdatetimeex)]
                     },
                     {
                         [Op.and]: [Sequelize.where(Sequelize.col('checkindate'), '>=', search.checkindatetimeex),

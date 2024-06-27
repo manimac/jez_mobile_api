@@ -1651,9 +1651,10 @@ exports.findOrderHistory = async function (req, res) {
             ]
         });
 
-        if (order && order.endbooking) {
-            res.status(404).send("Already booking completed");
-        } else if (order) {
+        // if (order && order.endbooking) {
+        //     res.status(404).send("Already booking completed");
+        // } else 
+        if (order) {
             res.send(order);
         } else {
             res.status(404).send("Order not found");
@@ -3120,7 +3121,8 @@ exports.paymentWebhook = async function (req, res) {
             }
             else if(isOrderHistory){
                 const updatedOrder = isOrderHistory.toJSON();
-                updatedOrder.status = 1;
+                updatedOrder.status = 2;
+                updatedOrder.endbooking = 1
                 await OrderHistoryModel.update(updatedOrder, { where: { intentid: paymentIntent.id } });
             } else {
                 res.status(500).send('Order not found');
