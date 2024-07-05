@@ -299,7 +299,7 @@ exports.assignmentUpdate = async function (req, res) {
                     token: userTokens[i].token,
                     type: requestResult.type == 'staffing' ? 'Staffing' : 'Transport',
                     msg: "Completed your order. please check in the completed assignments",
-                    route: requestType === 'staffing' ? '/tabs/staff-dashboard?tab=completed-assignments' : '/tabs/transport?tab=completed-assignments'
+                    route: requestResult.type === 'staffing' ? '/tabs/staff-dashboard?tab=completed-assignments' : '/tabs/transport?tab=completed-assignments'
                 };
                 await appUtil.sendmessage(obj);
             }
@@ -323,7 +323,7 @@ exports.assignmentUpdate = async function (req, res) {
                             token: userTokens[i].token,
                             type: requestResult.type == 'staffing' ? 'Staffing' : 'Transport',
                             msg: "Your order has been accepted.",
-                            route: requestType === 'staffing' ? '/tabs/staff-dashboard?tab=pending-assignments' : '/tabs/transport?tab=pending-assignments'
+                            route: requestResult.type === 'staffing' ? '/tabs/staff-dashboard?tab=pending-assignments' : '/tabs/transport?tab=pending-assignments'
                         };
                         await appUtil.sendmessage(obj);
                     }
@@ -373,7 +373,7 @@ exports.assignmentUpdate = async function (req, res) {
                             token: userTokens[i].token,
                             type: requestResult.type == 'staffing' ? 'Staffing' : 'Transport',
                             msg: "Your order has been rejected.",
-                            route: requestType === 'staffing' ? '/tabs/staff-dashboard?tab=accept-read-only' : '/tabs/transport?tab=accept-read-only'
+                            route: requestResult.type === 'staffing' ? '/tabs/staff-dashboard?tab=accept-read-only' : '/tabs/transport?tab=accept-read-only'
                         };
                         await appUtil.sendmessage(obj);
                     }

@@ -1096,7 +1096,7 @@ exports.sendmessage = function (req, res) {
                 sound: "default"
             },
             data: {
-                route: body.route 
+                route: req.body.route 
             }
         }
     };
