@@ -226,7 +226,7 @@ exports.hoursSingleUpdate = async function (req, res) {
                         token: userTokens[i].token,
                         type: staffortransportrequestresult.type == 'staffing' ? 'Staffing' : 'Transport',
                         msg: "Your hours has been rejected",
-                        route: '/tabs/staff-dashboard?tab=hours-view'
+                        route: staffortransportrequestresult.type === 'staffing' ? '/tabs/staff-dashboard?tab=hours-entry' : '/tabs/transport?tab=hours-entry'
                     };
                     await appUtil.sendmessage(obj);
                 }
@@ -235,7 +235,7 @@ exports.hoursSingleUpdate = async function (req, res) {
                         token: userTokens[i].token,
                         type: staffortransportrequestresult.type == 'staffing' ? 'Staffing' : 'Transport',
                         msg: "Your hours has been verified successfully",
-                        route: '/tabs/staff-dashboard?tab=hours-view'
+                        route: staffortransportrequestresult.type === 'staffing' ? '/tabs/staff-dashboard?tab=hours-entry' : '/tabs/transport?tab=hours-entry'
                     };
                     await appUtil.sendmessage(obj);
                 }                
