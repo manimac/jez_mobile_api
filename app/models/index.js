@@ -160,4 +160,5 @@ db.employeefunctions.belongsTo(db.employee, { foreignKey: 'employee_id', targetK
 db.functions.hasMany(db.employeefunctions, { foreignKey: 'function_id', targetKey: 'id' });
 db.employeefunctions.belongsTo(db.functions, { foreignKey: 'function_id', targetKey: 'id' });
 
+db.users.hasMany(db.employee, { foreignKey: 'user_id', targetKey: 'id' });
 module.exports = db;

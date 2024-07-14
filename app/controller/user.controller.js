@@ -11,6 +11,7 @@ const UserDetailModel = MODELS.userDetails;
 const UserModel = MODELS.users;
 const oldTrainingModel = MODELS.oldTraining;
 const AchievementModel = MODELS.achievement;
+const EmployeeModel = MODELS.employee;
 
 // SET STORAGE
 var storage = multer.diskStorage({
@@ -133,8 +134,18 @@ exports.allUsers = function (req, res) {
 }
 
 exports.getUser = function (req, res) {
-    UserModel.findByPk(req.params.id).then(function (result) {
-        res.send(result)
+    // UserModel.findByPk(req.params.id).then(function (result) {
+    //     res.send(result)
+    // }, function (err) {
+    //     res.status(500).send(err);
+    // })
+    UserModel.findOne({
+        where: { id: req.params.id },
+        include: [{
+            model: EmployeeModel
+        }],
+    }).then(function (resp) {
+        res.send(resp);
     }, function (err) {
         res.status(500).send(err);
     })
@@ -143,7 +154,9 @@ exports.userUpdate = function (req, res) {
     var upload = multer({ storage: storage }).single('userimage');
     upload(req, res, function (err) {
         let returns = null;
-        req.body.userimage = res.req.file && res.req.file.filename || req.body.userimage;
+        if(res.req.file && res.req.file.filename){
+            req.body.userimage = res.req.file.filename;
+        }        
         if (req.body.newpassword) {
             req.body.password = bcrypt.hashSync(req.body.newpassword, bcrypt.genSaltSync(8), null);
         }
