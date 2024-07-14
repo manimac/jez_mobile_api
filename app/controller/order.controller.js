@@ -2278,49 +2278,37 @@ exports.findOrderExpireNotification = function (req, res) {
     let where = {};
     where.maxcheckoutdateutc = {
         [Op.lt]: Sequelize.literal("DATE_ADD(NOW(), INTERVAL 58 MINUTE)"),
-        // [Op.lt]: Sequelize.literal("DATE_ADD(NOW(), INTERVAL 1 HOUR)"),
         [Op.gte]: Sequelize.literal("NOW()")
     };
     where.status = 1;
     where.mail = 0;
-    where.endbooking = { [Op.ne]: 1 };
+    where.endbooking = { [Op.is]: null }; // Changed to check only for null
+    
     OrderHistoryModel.findAll({
         where: where,
         include: [UserModel]
-    }).then(function (resp) {
-        async.eachSeries(resp, async function (order, oCallback) {
-            if (order.User) {
-                appUtil.expireNotification(order, order.id + " 1hr Before");
-                const userTokens = await UserTokenModel.findAll({ where: { user_id: order.User.id } });
-                for (let i = 0; i < userTokens.length; i++) {
-                    let obj = {
-                        token: userTokens[i].token,
-                        type: 'Rent',
-                        msg: order.id + " Your order is going to end in 1 hour",
-                        route: '/my-bookings'
-                    };
-                    await appUtil.sendmessage(obj);
+    }).then(async function (resp) {
+        try {
+            for (let order of resp) {
+                if (order.User) {
+                    await appUtil.expireNotification(order, order.id + " 1hr Before");
+                    const userTokens = await UserTokenModel.findAll({ where: { user_id: order.User.id } });
+                    for (let userToken of userTokens) {
+                        let obj = {
+                            token: userToken.token,
+                            type: 'Rent',
+                            msg: order.id + " Your order is going to end in 1 hour",
+                            route: '/my-bookings'
+                        };
+                        await appUtil.sendmessage(obj);
+                    }
+                    await OrderHistoryModel.update({ mail: 1 }, { where: { id: order.id } });
                 }
-                OrderHistoryModel.findByPk(order.id).then(function (resp1) {
-                    resp1.update({ mail: 1 }).then(function (result) {
-                        oCallback(); // Call the callback function here
-                    }).catch(function (err) {
-                        oCallback(err); // Pass the error to the callback function
-                    });
-                }).catch(function (err) {
-                    oCallback(err); // Pass the error to the callback function
-                });
-            } else {
-                oCallback(); // If there's no order.User, proceed to the next iteration
             }
-        }, function (err) {
-            if (err) {
-                console.error("Error:", err);
-            } else {
-                console.log("Processing complete.");
-            }
-            // You may return a response or handle any cleanup here if needed
-        });
+            console.log("Processing complete.");
+        } catch (err) {
+            console.error("Error:", err);
+        }
     }).catch(function (err) {
         console.error("Error fetching orders:", err);
         // Handle error appropriately
@@ -2328,8 +2316,8 @@ exports.findOrderExpireNotification = function (req, res) {
 };
 
 
-exports.findOrderExpireNotificationFiveMinsBefore = function (req, res) {
 
+exports.findOrderExpireNotificationFiveMinsBefore = function (req, res) {
     let where = {};
     where.maxcheckoutdateutc = {
         [Op.lt]: Sequelize.literal("DATE_ADD(NOW(), INTERVAL 6 MINUTE)"),
@@ -2337,143 +2325,80 @@ exports.findOrderExpireNotificationFiveMinsBefore = function (req, res) {
     };
     where.status = 1;
     where.beforeemail = 0;
-    where.endbooking = { [Op.ne]: 1 };
+    where.endbooking = { [Op.is]: null }; // Changed to check only for null
+    
     OrderHistoryModel.findAll({
         where: where,
         include: [UserModel]
-    }).then(function (resp) {
-        async.eachSeries(resp, async function (order, oCallback) {
-            if (order.User) {
-                appUtil.expireNotification(order, order.id + " 5mins Before");
-                const userTokens = await UserTokenModel.findAll({ where: { user_id: order.User.id } });
-                for (let i = 0; i < userTokens.length; i++) {
-                    let obj = {
-                        token: userTokens[i].token,
-                        type: 'Rent',
-                        msg: order.id + " Your order going to end in 5mins",
-                        route: '/my-bookings'
-                    };
-                    await appUtil.sendmessage(obj);
+    }).then(async function (resp) {
+        try {
+            for (let order of resp) {
+                if (order.User) {
+                    await appUtil.expireNotification(order, order.id + " 5mins Before");
+                    const userTokens = await UserTokenModel.findAll({ where: { user_id: order.User.id } });
+                    for (let userToken of userTokens) {
+                        let obj = {
+                            token: userToken.token,
+                            type: 'Rent',
+                            msg: order.id + " Your order going to end in 5mins",
+                            route: '/my-bookings'
+                        };
+                        await appUtil.sendmessage(obj);
+                    }
+                    await OrderHistoryModel.update({ beforeemail: 1 }, { where: { id: order.id } });
                 }
-                OrderHistoryModel.findByPk(order.id).then(function (resp1) {
-                    resp1.update({ beforeemail: 1 }).then(function (result) {
-                        oCallback(); // Call the callback function here
-                    }).catch(function (err) {
-                        oCallback(err); // Pass the error to the callback function
-                    });
-                }).catch(function (err) {
-                    oCallback(err); // Pass the error to the callback function
-                });
-            } else {
-                oCallback(); // If there's no order.User, proceed to the next iteration
             }
-        }, function (err) {
-            if (err) {
-                console.error("Error:", err);
-            } else {
-                console.log("Processing complete.");
-            }
-            // You may return a response or handle any cleanup here if needed
-        });
+            console.log("Processing complete.");
+        } catch (err) {
+            console.error("Error:", err);
+        }
     }).catch(function (err) {
         console.error("Error fetching orders:", err);
         // Handle error appropriately
     });
-}
+};
+
 
 exports.findOrderExpireNotificationFifteenMinsAfter = function (req, res) {
-
     let where = {};
     where.maxcheckoutdateutc = {
-        // [Op.lt]: Sequelize.literal("NOW() + INTERVAL 15 MINUTE"),
-        // [Op.gte]: Sequelize.literal("DATE_SUB(NOW(), INTERVAL 15 MINUTE)")
-        [Op.lt]: Sequelize.literal("DATE_SUB(NOW(), INTERVAL 14 MINUTE)")
+        [Op.lt]: Sequelize.literal("DATE_SUB(NOW(), INTERVAL 14 MINUTE)") // Changed to 14 minutes as per your requirement
     };
     where.status = 1;
     where.futureemail = 0;
-    where.endbooking = { [Op.ne]: 1 };
+    where.endbooking = { [Op.is]: null }; // Changed to check only for null
+    
     OrderHistoryModel.findAll({
         where: where,
         include: [UserModel]
-    }).then(function (resp) {
-        async.eachSeries(resp, async function (order, oCallback) {
-            if (order.User) {
-                appUtil.expireNotification(order, order.id + " 15min After");
-                const userTokens = await UserTokenModel.findAll({ where: { user_id: order.User.id } });
-                for (let i = 0; i < userTokens.length; i++) {
-                    let obj = {
-                        token: userTokens[i].token,
-                        type: 'Rent',
-                        msg: order.id + " Your order already crossed your checkout time",
-                        route: '/my-bookings'
-                    };
-                    await appUtil.sendmessage(obj);
+    }).then(async function (resp) {
+        try {
+            for (let order of resp) {
+                if (order.User) {
+                    await appUtil.expireNotification(order, order.id + " 15min After");
+                    const userTokens = await UserTokenModel.findAll({ where: { user_id: order.User.id } });
+                    for (let userToken of userTokens) {
+                        let obj = {
+                            token: userToken.token,
+                            type: 'Rent',
+                            msg: order.id + " Your order already crossed your checkout time",
+                            route: '/my-bookings'
+                        };
+                        await appUtil.sendmessage(obj);
+                    }
+                    await OrderHistoryModel.update({ futureemail: 1 }, { where: { id: order.id } });
                 }
-                OrderHistoryModel.findByPk(order.id).then(function (resp1) {
-                    resp1.update({ futureemail: 1 }).then(function (result) {
-                        oCallback(); // Call the callback function here
-                    }).catch(function (err) {
-                        oCallback(err); // Pass the error to the callback function
-                    });
-                }).catch(function (err) {
-                    oCallback(err); // Pass the error to the callback function
-                });
-            } else {
-                oCallback(); // If there's no order.User, proceed to the next iteration
             }
-        }, function (err) {
-            if (err) {
-                console.error("Error:", err);
-            } else {
-                console.log("Processing complete.");
-            }
-            // You may return a response or handle any cleanup here if needed
-        });
+            console.log("Processing complete.");
+        } catch (err) {
+            console.error("Error:", err);
+        }
     }).catch(function (err) {
         console.error("Error fetching orders:", err);
         // Handle error appropriately
     });
+};
 
-
-
-    // let where = {};
-    // where.maxcheckoutdateutc = {
-    //     [Op.lt]: Sequelize.literal("NOW()"),
-    //     [Op.gte]: Sequelize.literal("DATE_SUB(NOW(), INTERVAL 15 MINUTE)")
-    // };
-    // where.status = 1;
-    // where.futureemail = 0;
-    // OrderHistoryModel.findAll({
-    //     where: where,
-    //     include: [UserModel]
-    // }).then(function (resp) {
-    //     async.eachSeries(resp, async function (order, oCallback) {
-    //         if (order.User) {
-    //             appUtil.expireNotification(order);
-    //             appUtil.expireNotificationAdmin(order);
-    //             const userTokens = await UserTokenModel.findAll({ where: { user_id: order.User.id } });
-    //             for (let i = 0; i < userTokens.length; i++) {
-    //                 let obj = {
-    //                     token: userTokens[i].token,
-    //                     type: 'Rent',
-    //                     msg: "Your order already crossed your checkout time",
-    //                 };
-    //                 await appUtil.sendmessage(obj);
-    //             }
-    //             OrderHistoryModel.findByPk(order.id).then(function (resp1) {
-    //                 resp1.update({ futureemail: 1 }).then(function (result) {
-
-    //                 });
-    //             })
-    //         }
-
-    //         oCallback();
-    //     }, (err) => {
-    //         return true;
-    //     })
-    //     return true;
-    // });
-}
 
 exports.findOrderExpireNotificationTemp = function (req, res) {
     let where = {};

@@ -44,6 +44,8 @@ const UserModel = (sequelize, Sequelize) => {
         teamowner: { type: Sequelize.BOOLEAN, defaultValue: 0 },
         otp: { type: Sequelize.STRING, defaultValue: 0 },
         deviceId: { type: Sequelize.STRING,allowNull: true  },
+        btw: { type: Sequelize.STRING, allowNull: true },
+        bsn: { type: Sequelize.STRING, allowNull: true },
         path: {
             type: Sequelize.VIRTUAL,
             get() {
